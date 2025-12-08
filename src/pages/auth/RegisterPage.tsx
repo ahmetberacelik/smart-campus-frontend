@@ -1,0 +1,285 @@
+/**
+ * Register Page
+ * Kullanıcı kayıt sayfası
+ */
+
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useForm } from 'react-hook-form';
+import { yupResolver } from '@hookform/resolvers/yup';
+import * as yup from 'yup';
+import { useAuth } from '@/context/AuthContext';
+import { Button } from '@/components/common/Button';
+import { TextInput } from '@/components/common/TextInput';
+import { Select } from '@/components/common/Select';
+import './AuthPages.css';
+
+const registerSchema = yup.object({
+  name: yup.string().required('Ad Soyad gereklidir'),
+  email: yup
+    .string()
+    .email('Geçerli bir email adresi girin')
+    .matches(/\.edu$/, 'Sadece .edu uzantılı üniversite email adresleri kabul edilir')
+    .required('Email gereklidir'),
+  password: yup
+    .string()
+    .min(8, 'Şifre en az 8 karakter olmalıdır')
+    .matches(/[A-Z]/, 'Şifre en az bir büyük harf içermelidir')
+    .matches(/[0-9]/, 'Şifre en az bir rakam içermelidir')
+    .required('Şifre gereklidir'),
+  confirmPassword: yup
+    .string()
+    .oneOf([yup.ref('password')], 'Şifreler eşleşmiyor')
+    .required('Şifre tekrarı gereklidir'),
+  role: yup.string().oneOf(['student', 'faculty']).required('Kullanıcı tipi seçiniz'),
+  studentNumber: yup.string().when('role', {
+    is: 'student',
+    then: (schema) => schema.required('Öğrenci numarası gereklidir'),
+    otherwise: (schema) => schema,
+  }),
+  employeeNumber: yup.string().when('role', {
+    is: 'faculty',
+    then: (schema) => schema.required('Personel numarası gereklidir'),
+    otherwise: (schema) => schema,
+  }),
+  departmentId: yup.string().required('Bölüm seçiniz'),
+  terms: yup.boolean().oneOf([true], 'Kullanım şartlarını kabul etmelisiniz'),
+});
+
+type RegisterFormData = yup.InferType<typeof registerSchema>;
+
+// Recep Tayyip Erdoğan Üniversitesi Bölümleri
+const departments = [
+  // Tıp Fakültesi
+  { value: '1', label: 'Tıp' },
+  
+  // Diş Hekimliği Fakültesi
+  { value: '2', label: 'Diş Hekimliği' },
+  
+  // Hukuk Fakültesi
+  { value: '3', label: 'Hukuk' },
+  
+  // Eğitim Fakültesi
+  { value: '4', label: 'Sınıf Öğretmenliği' },
+  { value: '5', label: 'Rehberlik ve Psikolojik Danışmanlık' },
+  { value: '6', label: 'İlköğretim Matematik Öğretmenliği' },
+  { value: '7', label: 'Türkçe Öğretmenliği' },
+  
+  // Fen-Edebiyat Fakültesi
+  { value: '8', label: 'Fizik' },
+  { value: '9', label: 'Kimya' },
+  { value: '10', label: 'Matematik' },
+  { value: '11', label: 'Tarih' },
+  { value: '12', label: 'Türk Dili ve Edebiyatı' },
+  
+  // İktisadi ve İdari Bilimler Fakültesi
+  { value: '13', label: 'İşletme' },
+  { value: '14', label: 'İktisat' },
+  { value: '15', label: 'Siyaset Bilimi ve Kamu Yönetimi' },
+  { value: '16', label: 'Uluslararası İlişkiler (Türkçe)' },
+  { value: '17', label: 'Uluslararası İlişkiler (İngilizce)' },
+  { value: '18', label: 'Maliye' },
+  
+  // Mühendislik ve Mimarlık Fakültesi
+  { value: '19', label: 'Bilgisayar Mühendisliği' },
+  { value: '20', label: 'Elektrik-Elektronik Mühendisliği' },
+  { value: '21', label: 'Endüstri Mühendisliği' },
+  { value: '22', label: 'Makine Mühendisliği' },
+  { value: '23', label: 'İnşaat Mühendisliği' },
+  { value: '24', label: 'Mimarlık' },
+  { value: '25', label: 'Gıda Mühendisliği' },
+  { value: '26', label: 'Çevre Mühendisliği' },
+  { value: '27', label: 'Harita Mühendisliği' },
+  
+  // Ziraat ve Doğa Bilimleri Fakültesi
+  { value: '28', label: 'Ziraat Mühendisliği' },
+  { value: '29', label: 'Bitkisel Üretim ve Teknolojileri' },
+  { value: '30', label: 'Hayvansal Üretim ve Teknolojileri' },
+  { value: '31', label: 'Tarımsal Biyoteknoloji' },
+  
+  // Su Ürünleri Fakültesi
+  { value: '32', label: 'Su Ürünleri Mühendisliği' },
+  
+  // İlahiyat Fakültesi
+  { value: '33', label: 'İlahiyat' },
+  
+  // Sağlık Bilimleri Fakültesi
+  { value: '34', label: 'Hemşirelik' },
+  { value: '35', label: 'Sosyal Hizmet' },
+  
+  // Spor Bilimleri Fakültesi
+  { value: '36', label: 'Spor Yöneticiliği' },
+  { value: '37', label: 'Beden Eğitimi ve Spor Öğretmenliği' },
+  
+  // Güzel Sanatlar, Tasarım ve Mimarlık Fakültesi
+  { value: '38', label: 'Grafik Tasarım' },
+  { value: '39', label: 'İç Mimarlık' },
+  { value: '40', label: 'Resim' },
+  { value: '41', label: 'Müzik' },
+  
+  // Turizm Fakültesi
+  { value: '42', label: 'Turizm İşletmeciliği' },
+  { value: '43', label: 'Gastronomi ve Mutfak Sanatları' },
+  { value: '44', label: 'Rekreasyon Yönetimi' },
+  
+  // Denizcilik Fakültesi
+  { value: '45', label: 'Denizcilik İşletmeleri Yönetimi' },
+  { value: '46', label: 'Gemi Makineleri İşletme Mühendisliği' },
+  
+  // Eczacılık Fakültesi
+  { value: '47', label: 'Eczacılık' },
+  
+  // Fındıklı Uygulamalı Bilimler Yüksekokulu
+  { value: '48', label: 'Uluslararası Ticaret ve Lojistik' },
+  { value: '49', label: 'Finans ve Bankacılık' },
+];
+
+export const RegisterPage: React.FC = () => {
+  const { register: registerUser, isLoading } = useAuth();
+  const navigate = useNavigate();
+  const [error, setError] = useState<string>('');
+
+  const {
+    register,
+    handleSubmit,
+    watch,
+    formState: { errors },
+  } = useForm<RegisterFormData>({
+    resolver: yupResolver(registerSchema),
+  });
+
+  const selectedRole = watch('role');
+
+  const onSubmit = async (data: RegisterFormData) => {
+    try {
+      setError('');
+      await registerUser({
+        email: data.email,
+        password: data.password,
+        name: data.name,
+        role: data.role as 'student' | 'faculty',
+        studentNumber: data.studentNumber,
+        employeeNumber: data.employeeNumber,
+        departmentId: data.departmentId,
+      });
+      
+      navigate('/login', { state: { message: 'Kayıt başarılı! Lütfen email adresinizi doğrulayın.' } });
+    } catch (err: any) {
+      setError(err.message || 'Kayıt olurken bir hata oluştu');
+    }
+  };
+
+  return (
+    <div className="auth-page">
+      <div className="auth-container">
+        <div className="auth-header">
+          <h1 className="auth-title">🏫 Akıllı Kampüs</h1>
+          <p className="auth-subtitle">Yeni hesap oluşturun</p>
+        </div>
+
+        <form onSubmit={handleSubmit(onSubmit)} className="auth-form">
+          {error && <div className="auth-error">{error}</div>}
+
+          <TextInput
+            label="Ad Soyad"
+            placeholder="Adınız ve soyadınız"
+            error={errors.name?.message}
+            fullWidth
+            {...register('name')}
+          />
+
+          <TextInput
+            label="Email"
+            type="email"
+            placeholder="ornek@universite.edu.tr"
+            error={errors.email?.message}
+            fullWidth
+            {...register('email')}
+          />
+
+          <Select
+            label="Kullanıcı Tipi"
+            options={[
+              { value: '', label: 'Seçiniz...' },
+              { value: 'student', label: 'Öğrenci' },
+              { value: 'faculty', label: 'Öğretim Üyesi' },
+            ]}
+            error={errors.role?.message}
+            fullWidth
+            {...register('role')}
+          />
+
+          {selectedRole === 'student' && (
+            <TextInput
+              label="Öğrenci Numarası"
+              placeholder="2021001"
+              error={errors.studentNumber?.message}
+              fullWidth
+              {...register('studentNumber')}
+            />
+          )}
+
+          {selectedRole === 'faculty' && (
+            <TextInput
+              label="Personel Numarası"
+              placeholder="EMP001"
+              error={errors.employeeNumber?.message}
+              fullWidth
+              {...register('employeeNumber')}
+            />
+          )}
+
+          <Select
+            label="Bölüm"
+            options={departments}
+            error={errors.departmentId?.message}
+            fullWidth
+            {...register('departmentId')}
+          />
+
+          <TextInput
+            label="Şifre"
+            type="password"
+            placeholder="En az 8 karakter, büyük harf ve rakam içermeli"
+            error={errors.password?.message}
+            helperText="En az 8 karakter, bir büyük harf ve bir rakam içermelidir"
+            fullWidth
+            {...register('password')}
+          />
+
+          <TextInput
+            label="Şifre Tekrar"
+            type="password"
+            placeholder="Şifrenizi tekrar girin"
+            error={errors.confirmPassword?.message}
+            fullWidth
+            {...register('confirmPassword')}
+          />
+
+          <label className="auth-checkbox">
+            <input type="checkbox" {...register('terms')} />
+            <span>
+              <a href="#" target="_blank" rel="noopener noreferrer">
+                Kullanım şartlarını
+              </a>{' '}
+              kabul ediyorum
+            </span>
+          </label>
+          {errors.terms && <div className="auth-error">{errors.terms.message}</div>}
+
+          <Button type="submit" fullWidth isLoading={isLoading}>
+            Kayıt Ol
+          </Button>
+
+          <div className="auth-footer">
+            <span>Zaten hesabınız var mı?</span>
+            <Link to="/login" className="auth-link">
+              Giriş Yap
+            </Link>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
