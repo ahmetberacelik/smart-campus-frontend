@@ -34,11 +34,14 @@ export const Navbar: React.FC = () => {
         <div className="navbar-menu">
           <div className="navbar-user">
             <div className="navbar-user-info">
-              <span className="navbar-user-name">{user?.name}</span>
+              <span className="navbar-user-name">
+                {user?.name ||
+                  [user?.firstName, user?.lastName].filter(Boolean).join(' ')}
+              </span>
               <span className="navbar-user-role">
-                {user?.role === 'student' && 'Öğrenci'}
-                {user?.role === 'faculty' && 'Öğretim Üyesi'}
-                {user?.role === 'admin' && 'Yönetici'}
+                {['student', 'STUDENT'].includes(user?.role || '') && 'Öğrenci'}
+                {['faculty', 'FACULTY'].includes(user?.role || '') && 'Öğretim Üyesi'}
+                {['admin', 'ADMIN'].includes(user?.role || '') && 'Yönetici'}
               </span>
             </div>
             <div className="navbar-user-avatar">

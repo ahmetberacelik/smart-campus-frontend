@@ -12,6 +12,10 @@ import type {
   PaginationParams,
 } from '@/types/api.types';
 
+const buildDisplayName = (user: Partial<User>) =>
+  user.name ||
+  [user.firstName, user.lastName].filter(Boolean).join(' ').trim();
+
 export const userService = {
   /**
    * Kendi profil bilgilerini getir
@@ -20,6 +24,18 @@ export const userService = {
     const response = await apiClient.get<ApiResponse<User>>(
       API_ENDPOINTS.USERS.ME
     );
+
+    if (response.data.success && response.data.data) {
+      const user = response.data.data;
+      const normalizedUser = {
+        ...user,
+        name: buildDisplayName(user),
+        profilePictureUrl: user.profilePicture || user.profilePictureUrl,
+        phone: user.phoneNumber || user.phone,
+      };
+      response.data.data = normalizedUser as User;
+    }
+
     return response.data;
   },
 
@@ -27,16 +43,39 @@ export const userService = {
    * Profil güncelle
    */
   async updateMe(data: Partial<User>): Promise<ApiResponse<User>> {
+    // Frontend alanlarını backend beklediği alanlara çevir
+    const payload: Record<string, any> = {
+      phoneNumber: data.phone ?? data.phoneNumber,
+    };
+
+    if (data.firstName || data.lastName || data.name) {
+      if (data.firstName || data.lastName) {
+        payload.firstName = data.firstName;
+        payload.lastName = data.lastName;
+      } else if (data.name) {
+        const parts = data.name.split(' ');
+        payload.firstName = parts.slice(0, -1).join(' ') || parts[0];
+        payload.lastName = parts.slice(-1).join(' ') || '';
+      }
+    }
+
     const response = await apiClient.put<ApiResponse<User>>(
       API_ENDPOINTS.USERS.UPDATE_ME,
-      data
+      payload
     );
-    
-    // Güncellenmiş user bilgisini localStorage'a kaydet
+
     if (response.data.success && response.data.data) {
-      localStorage.setItem('user', JSON.stringify(response.data.data));
+      const user = response.data.data;
+      const normalizedUser = {
+        ...user,
+        name: buildDisplayName(user),
+        profilePictureUrl: user.profilePicture || user.profilePictureUrl,
+        phone: user.phoneNumber || user.phone,
+      };
+      localStorage.setItem('user', JSON.stringify(normalizedUser));
+      response.data.data = normalizedUser as User;
     }
-    
+
     return response.data;
   },
 
@@ -47,7 +86,7 @@ export const userService = {
     const formData = new FormData();
     formData.append('file', file);
 
-    const response = await apiClient.post<ApiResponse<{ url: string }>>(
+    const response = await apiClient.post<ApiResponse<string | { url: string }>>(
       API_ENDPOINTS.USERS.PROFILE_PICTURE,
       formData,
       {
@@ -56,7 +95,15 @@ export const userService = {
         },
       }
     );
-    return response.data;
+
+    // Backend sadece string dönerse normalize et
+    if (response.data.success) {
+      if (typeof response.data.data === 'string') {
+        response.data.data = { url: response.data.data };
+      }
+    }
+
+    return response.data as ApiResponse<{ url: string }>;
   },
 
   /**

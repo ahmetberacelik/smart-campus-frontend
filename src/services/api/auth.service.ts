@@ -33,18 +33,26 @@ export const authService = {
       API_ENDPOINTS.AUTH.LOGIN,
       credentials
     );
-    
-    // Token'ları localStorage'a kaydet
+
     if (response.data.success && response.data.data) {
-      const { accessToken, refreshToken } = response.data.data;
+      const { accessToken, refreshToken, user } = response.data.data;
       apiClient.setAuthTokens(accessToken, refreshToken);
-      
-      // User bilgisini de kaydet
-      if (response.data.data.user) {
-        localStorage.setItem('user', JSON.stringify(response.data.data.user));
+
+      // Kullanıcıyı frontend uyumlu hale getir (name, profilePictureUrl)
+      if (user) {
+        const displayName =
+          user.name ||
+          [user.firstName, user.lastName].filter(Boolean).join(' ').trim();
+        const normalizedUser = {
+          ...user,
+          name: displayName,
+          profilePictureUrl: user.profilePicture || user.profilePictureUrl,
+          phone: user.phoneNumber || user.phone,
+        };
+        localStorage.setItem('user', JSON.stringify(normalizedUser));
       }
     }
-    
+
     return response.data;
   },
 

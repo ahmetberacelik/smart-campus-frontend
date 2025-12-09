@@ -171,5 +171,12 @@ export const API_ENDPOINTS = {
     DATA: (id: string) => `/sensors/${id}/data`,
     STREAM: (id: string) => `/sensors/${id}/stream`,
   },
+  
+  // Departments
+  DEPARTMENTS: {
+    LIST: '/departments',
+    DETAIL: (id: string) => `/departments/${id}`,
+    BY_CODE: (code: string) => `/departments/code/${code}`,
+  },
 } as const;
 

@@ -3,15 +3,18 @@
  * Kullanıcı kayıt sayfası
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
 import { useAuth } from '@/context/AuthContext';
+import { departmentService } from '@/services/api';
 import { Button } from '@/components/common/Button';
 import { TextInput } from '@/components/common/TextInput';
 import { Select } from '@/components/common/Select';
+import { LoadingSpinner } from '@/components/common/LoadingSpinner';
+import { toast } from 'react-toastify';
 import './AuthPages.css';
 
 const registerSchema = yup.object({
@@ -48,96 +51,12 @@ const registerSchema = yup.object({
 
 type RegisterFormData = yup.InferType<typeof registerSchema>;
 
-// Recep Tayyip Erdoğan Üniversitesi Bölümleri
-const departments = [
-  // Tıp Fakültesi
-  { value: '1', label: 'Tıp' },
-  
-  // Diş Hekimliği Fakültesi
-  { value: '2', label: 'Diş Hekimliği' },
-  
-  // Hukuk Fakültesi
-  { value: '3', label: 'Hukuk' },
-  
-  // Eğitim Fakültesi
-  { value: '4', label: 'Sınıf Öğretmenliği' },
-  { value: '5', label: 'Rehberlik ve Psikolojik Danışmanlık' },
-  { value: '6', label: 'İlköğretim Matematik Öğretmenliği' },
-  { value: '7', label: 'Türkçe Öğretmenliği' },
-  
-  // Fen-Edebiyat Fakültesi
-  { value: '8', label: 'Fizik' },
-  { value: '9', label: 'Kimya' },
-  { value: '10', label: 'Matematik' },
-  { value: '11', label: 'Tarih' },
-  { value: '12', label: 'Türk Dili ve Edebiyatı' },
-  
-  // İktisadi ve İdari Bilimler Fakültesi
-  { value: '13', label: 'İşletme' },
-  { value: '14', label: 'İktisat' },
-  { value: '15', label: 'Siyaset Bilimi ve Kamu Yönetimi' },
-  { value: '16', label: 'Uluslararası İlişkiler (Türkçe)' },
-  { value: '17', label: 'Uluslararası İlişkiler (İngilizce)' },
-  { value: '18', label: 'Maliye' },
-  
-  // Mühendislik ve Mimarlık Fakültesi
-  { value: '19', label: 'Bilgisayar Mühendisliği' },
-  { value: '20', label: 'Elektrik-Elektronik Mühendisliği' },
-  { value: '21', label: 'Endüstri Mühendisliği' },
-  { value: '22', label: 'Makine Mühendisliği' },
-  { value: '23', label: 'İnşaat Mühendisliği' },
-  { value: '24', label: 'Mimarlık' },
-  { value: '25', label: 'Gıda Mühendisliği' },
-  { value: '26', label: 'Çevre Mühendisliği' },
-  { value: '27', label: 'Harita Mühendisliği' },
-  
-  // Ziraat ve Doğa Bilimleri Fakültesi
-  { value: '28', label: 'Ziraat Mühendisliği' },
-  { value: '29', label: 'Bitkisel Üretim ve Teknolojileri' },
-  { value: '30', label: 'Hayvansal Üretim ve Teknolojileri' },
-  { value: '31', label: 'Tarımsal Biyoteknoloji' },
-  
-  // Su Ürünleri Fakültesi
-  { value: '32', label: 'Su Ürünleri Mühendisliği' },
-  
-  // İlahiyat Fakültesi
-  { value: '33', label: 'İlahiyat' },
-  
-  // Sağlık Bilimleri Fakültesi
-  { value: '34', label: 'Hemşirelik' },
-  { value: '35', label: 'Sosyal Hizmet' },
-  
-  // Spor Bilimleri Fakültesi
-  { value: '36', label: 'Spor Yöneticiliği' },
-  { value: '37', label: 'Beden Eğitimi ve Spor Öğretmenliği' },
-  
-  // Güzel Sanatlar, Tasarım ve Mimarlık Fakültesi
-  { value: '38', label: 'Grafik Tasarım' },
-  { value: '39', label: 'İç Mimarlık' },
-  { value: '40', label: 'Resim' },
-  { value: '41', label: 'Müzik' },
-  
-  // Turizm Fakültesi
-  { value: '42', label: 'Turizm İşletmeciliği' },
-  { value: '43', label: 'Gastronomi ve Mutfak Sanatları' },
-  { value: '44', label: 'Rekreasyon Yönetimi' },
-  
-  // Denizcilik Fakültesi
-  { value: '45', label: 'Denizcilik İşletmeleri Yönetimi' },
-  { value: '46', label: 'Gemi Makineleri İşletme Mühendisliği' },
-  
-  // Eczacılık Fakültesi
-  { value: '47', label: 'Eczacılık' },
-  
-  // Fındıklı Uygulamalı Bilimler Yüksekokulu
-  { value: '48', label: 'Uluslararası Ticaret ve Lojistik' },
-  { value: '49', label: 'Finans ve Bankacılık' },
-];
-
 export const RegisterPage: React.FC = () => {
   const { register: registerUser, isLoading } = useAuth();
   const navigate = useNavigate();
   const [error, setError] = useState<string>('');
+  const [departments, setDepartments] = useState<{ value: string; label: string }[]>([]);
+  const [loadingDepartments, setLoadingDepartments] = useState(true);
 
   const {
     register,
@@ -150,14 +69,46 @@ export const RegisterPage: React.FC = () => {
 
   const selectedRole = watch('role');
 
+  // Backend'den bölümleri çek
+  useEffect(() => {
+    const fetchDepartments = async () => {
+      try {
+        setLoadingDepartments(true);
+        const response = await departmentService.getDepartments();
+        if (response.success && response.data) {
+          const deptOptions = response.data.map((dept) => ({
+            value: dept.id.toString(),
+            label: `${dept.name} (${dept.code})`,
+          }));
+          setDepartments(deptOptions);
+        } else {
+          toast.error('Bölümler yüklenemedi');
+        }
+      } catch (error: any) {
+        console.error('Bölümler yüklenirken hata:', error);
+        toast.error('Bölümler yüklenirken bir hata oluştu');
+      } finally {
+        setLoadingDepartments(false);
+      }
+    };
+
+    fetchDepartments();
+  }, []);
+
   const onSubmit = async (data: RegisterFormData) => {
     try {
       setError('');
+      // Ad soyadı split et
+      const parts = data.name.trim().split(' ');
+      const firstName = parts.slice(0, -1).join(' ') || parts[0];
+      const lastName = parts.slice(-1).join(' ') || '';
+
       await registerUser({
         email: data.email,
         password: data.password,
-        name: data.name,
-        role: data.role as 'student' | 'faculty',
+        firstName,
+        lastName,
+        role: data.role === 'student' ? 'STUDENT' : 'FACULTY',
         studentNumber: data.studentNumber,
         employeeNumber: data.employeeNumber,
         departmentId: data.departmentId,
@@ -231,9 +182,10 @@ export const RegisterPage: React.FC = () => {
 
           <Select
             label="Bölüm"
-            options={departments}
+            options={loadingDepartments ? [{ value: '', label: 'Yükleniyor...' }] : departments}
             error={errors.departmentId?.message}
             fullWidth
+            disabled={loadingDepartments}
             {...register('departmentId')}
           />
 

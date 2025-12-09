@@ -34,8 +34,10 @@ export const ProfilePage: React.FC = () => {
   } = useForm<ProfileFormData>({
     resolver: yupResolver(profileSchema),
     defaultValues: {
-      name: user?.name || '',
-      phone: user?.phone || '',
+      name:
+        user?.name ||
+        [user?.firstName, user?.lastName].filter(Boolean).join(' ').trim(),
+      phone: user?.phone || user?.phoneNumber || '',
     },
   });
 
@@ -57,9 +59,12 @@ export const ProfilePage: React.FC = () => {
     try {
       setIsUploading(true);
       const response = await userService.uploadProfilePicture(file);
-      
+
       if (response.success && response.data) {
-        await updateUser({ profilePictureUrl: response.data.url });
+        await updateUser({
+          profilePictureUrl: response.data.url,
+          profilePicture: response.data.url,
+        });
         toast.success('Profil fotoğrafı güncellendi');
       }
     } catch (error: any) {
@@ -102,7 +107,8 @@ export const ProfilePage: React.FC = () => {
                   <img src={user.profilePictureUrl} alt={user.name} className="profile-picture" />
                 ) : (
                   <div className="profile-picture-placeholder">
-                    {user.name?.charAt(0).toUpperCase()}
+                    {(user.name ||
+                      [user.firstName, user.lastName].filter(Boolean).join(' ')).charAt(0).toUpperCase()}
                   </div>
                 )}
               </div>

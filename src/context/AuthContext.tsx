@@ -9,6 +9,11 @@ import { authService, userService } from '@/services/api';
 import type { User, LoginRequest, RegisterRequest, ApiError } from '@/types/api.types';
 import { toast } from 'react-toastify';
 
+const getDisplayName = (user?: Partial<User>) =>
+  user?.name ||
+  [user?.firstName, user?.lastName].filter(Boolean).join(' ').trim() ||
+  '';
+
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
@@ -46,7 +51,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         const storedUser = localStorage.getItem('user');
         if (storedUser) {
           const parsedUser = JSON.parse(storedUser);
-          setUser(parsedUser);
+          // Eğer isim alanı yoksa oluştur
+          setUser({
+            ...parsedUser,
+            name: getDisplayName(parsedUser),
+            profilePictureUrl:
+              parsedUser.profilePicture || parsedUser.profilePictureUrl,
+            phone: parsedUser.phoneNumber || parsedUser.phone,
+          });
           
           // Token geçerli mi kontrol et
           try {
@@ -75,7 +87,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const response = await authService.login(credentials);
       
       if (response.success && response.data) {
-        setUser(response.data.user);
+        const normalizedUser = {
+          ...response.data.user,
+          name: getDisplayName(response.data.user),
+          profilePictureUrl:
+            response.data.user.profilePicture || response.data.user.profilePictureUrl,
+          phone:
+            response.data.user.phoneNumber || response.data.user.phone,
+        } as User;
+        setUser(normalizedUser);
         toast.success('Giriş başarılı!');
         navigate('/dashboard');
       } else {

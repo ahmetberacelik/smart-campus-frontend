@@ -35,9 +35,12 @@ export const Sidebar: React.FC = () => {
   const { user } = useAuth();
   const location = useLocation();
 
-  const filteredItems = navItems.filter(
-    (item) => !item.roles || (user && item.roles.includes(user.role))
-  );
+  const filteredItems = navItems.filter((item) => {
+    if (!item.roles) return true;
+    if (!user) return false;
+    const role = user.role?.toLowerCase();
+    return item.roles.some((r) => r.toLowerCase() === role);
+  });
 
   return (
     <aside className="sidebar">

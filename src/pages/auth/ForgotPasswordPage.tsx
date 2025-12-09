@@ -20,6 +20,7 @@ const forgotPasswordSchema = yup.object({
     .email('Geçerli bir email adresi girin')
     .matches(/\.edu$/, 'Sadece .edu uzantılı üniversite email adresleri kabul edilir')
     .required('Email gereklidir'),
+});
 
 type ForgotPasswordFormData = yup.InferType<typeof forgotPasswordSchema>;
 

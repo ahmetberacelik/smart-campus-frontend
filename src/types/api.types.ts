@@ -6,6 +6,7 @@
 // Generic API Response Wrapper
 export interface ApiResponse<T = any> {
   success: boolean;
+  message?: string;
   data?: T;
   error?: {
     code: string;
@@ -31,14 +32,45 @@ export interface PaginatedResponse<T> {
   };
 }
 
-// User Types
-export type UserRole = 'student' | 'faculty' | 'admin' | 'cafeteria_staff';
+// User Types (backend role'ları upper-case, front-end lower-case de desteklenir)
+export type UserRole =
+  | 'student'
+  | 'faculty'
+  | 'admin'
+  | 'cafeteria_staff'
+  | 'STUDENT'
+  | 'FACULTY'
+  | 'ADMIN';
+
+export interface StudentInfo {
+  studentNumber: string;
+  departmentId: number | string;
+  departmentName?: string;
+  gpa?: number;
+  cgpa?: number;
+}
+
+export interface FacultyInfo {
+  employeeNumber: string;
+  title?: string;
+  departmentId: number | string;
+  departmentName?: string;
+}
 
 export interface User {
   id: string;
   email: string;
-  name: string;
   role: UserRole;
+  // Backend alanları
+  firstName?: string;
+  lastName?: string;
+  phoneNumber?: string;
+  profilePicture?: string;
+  isVerified?: boolean;
+  studentInfo?: StudentInfo;
+  facultyInfo?: FacultyInfo;
+  // Frontend uyumluluğu için
+  name?: string;
   profilePictureUrl?: string;
   phone?: string;
   createdAt: string;
@@ -69,17 +101,23 @@ export interface LoginRequest {
 export interface LoginResponse {
   accessToken: string;
   refreshToken: string;
+  tokenType?: string;
+  expiresIn?: number;
   user: User;
 }
 
+// Backend register payload'ı
 export interface RegisterRequest {
   email: string;
   password: string;
-  name: string;
-  role: 'student' | 'faculty';
+  firstName: string;
+  lastName: string;
+  phoneNumber?: string;
+  role: 'STUDENT' | 'FACULTY';
+  departmentId: number | string;
   studentNumber?: string;
   employeeNumber?: string;
-  departmentId: string;
+  title?: string;
 }
 
 // Course Types

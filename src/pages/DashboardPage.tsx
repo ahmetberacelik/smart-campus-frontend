@@ -13,10 +13,13 @@ export const DashboardPage: React.FC = () => {
   const getRoleTitle = () => {
     switch (user?.role) {
       case 'student':
+      case 'STUDENT':
         return 'Öğrenci Paneli';
       case 'faculty':
+      case 'FACULTY':
         return 'Öğretim Üyesi Paneli';
       case 'admin':
+      case 'ADMIN':
         return 'Yönetici Paneli';
       default:
         return 'Hoş Geldiniz';
@@ -40,7 +43,9 @@ export const DashboardPage: React.FC = () => {
     <div className="dashboard-page">
       <div className="dashboard-header">
         <h1 className="dashboard-title">
-          Hoş Geldiniz, {user?.name}! 👋
+          Hoş Geldiniz,{' '}
+          {user?.name ||
+            [user?.firstName, user?.lastName].filter(Boolean).join(' ')}! 👋
         </h1>
         <p className="dashboard-subtitle">{getRoleDescription()}</p>
       </div>
