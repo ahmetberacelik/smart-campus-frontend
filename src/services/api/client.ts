@@ -64,11 +64,21 @@ class ApiClient {
         }
 
         // Error response'u standart formata çevir
+        // Backend'den gelen mesajı önce message field'ından, sonra error.message'dan al
+        const backendMessage = error.response?.data?.message || error.response?.data?.error?.message;
         const apiError: ApiError = {
           code: error.response?.data?.error?.code || 'UNKNOWN_ERROR',
-          message: error.response?.data?.error?.message || error.message || 'Bir hata oluştu',
+          message: backendMessage || error.message || 'Bir hata oluştu',
           details: error.response?.data?.error?.details,
         };
+
+        // Error response'u logla (debug için)
+        console.error('API Error:', {
+          status: error.response?.status,
+          data: error.response?.data,
+          message: apiError.message,
+          code: apiError.code,
+        });
 
         return Promise.reject(apiError);
       }

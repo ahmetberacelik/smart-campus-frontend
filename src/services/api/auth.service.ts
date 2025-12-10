@@ -82,6 +82,16 @@ export const authService = {
   },
 
   /**
+   * Email doğrulama emaili tekrar gönder
+   */
+  async resendVerificationEmail(email: string): Promise<ApiResponse<void>> {
+    const response = await apiClient.post<ApiResponse<void>>(
+      `${API_ENDPOINTS.AUTH.RESEND_VERIFICATION}?email=${encodeURIComponent(email)}`
+    );
+    return response.data;
+  },
+
+  /**
    * Şifre sıfırlama isteği
    */
   async forgotPassword(email: string): Promise<ApiResponse<void>> {

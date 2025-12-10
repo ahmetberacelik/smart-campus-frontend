@@ -103,7 +103,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
     } catch (error) {
       const apiError = error as ApiError;
-      toast.error(apiError.message || 'Giriş yapılırken bir hata oluştu');
+      const errorMessage = apiError.message || 'Giriş yapılırken bir hata oluştu';
+      
+      // Email doğrulama hatası için özel mesaj
+      if (apiError.code === 'EMAIL_NOT_VERIFIED' || errorMessage.includes('doğrulanmamış')) {
+        toast.error('Email adresiniz doğrulanmamış. Lütfen email adresinizi kontrol edin.');
+      } else {
+        toast.error(errorMessage);
+      }
+      
       throw error;
     } finally {
       setIsLoading(false);

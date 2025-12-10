@@ -4,7 +4,7 @@
  */
 
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { authService } from '@/services/api';
 import { Button } from '@/components/common/Button';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
@@ -12,7 +12,11 @@ import { toast } from 'react-toastify';
 import './AuthPages.css';
 
 export const EmailVerificationPage: React.FC = () => {
-  const { token } = useParams<{ token: string }>();
+  const { token: tokenFromPath } = useParams<{ token: string }>();
+  const [searchParams] = useSearchParams();
+  const tokenFromQuery = searchParams.get('token');
+  const token = tokenFromPath || tokenFromQuery; // Path veya query parameter'dan token al
+  
   const navigate = useNavigate();
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [message, setMessage] = useState<string>('');

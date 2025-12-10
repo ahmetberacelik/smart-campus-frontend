@@ -18,7 +18,7 @@ const forgotPasswordSchema = yup.object({
   email: yup
     .string()
     .email('Geçerli bir email adresi girin')
-    .matches(/\.edu$/, 'Sadece .edu uzantılı üniversite email adresleri kabul edilir')
+    .matches(/\.edu\.tr$/i, 'Sadece .edu.tr uzantılı üniversite email adresleri kabul edilir')
     .required('Email gereklidir'),
 });
 

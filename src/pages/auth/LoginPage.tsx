@@ -9,15 +9,17 @@ import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
 import { useAuth } from '@/context/AuthContext';
+import { authService } from '@/services/api';
 import { Button } from '@/components/common/Button';
 import { TextInput } from '@/components/common/TextInput';
+import { toast } from 'react-toastify';
 import './AuthPages.css';
 
 const loginSchema = yup.object({
   email: yup
     .string()
     .email('Geçerli bir email adresi girin')
-    .matches(/\.edu$/, 'Sadece .edu uzantılı üniversite email adresleri kabul edilir')
+    .matches(/\.edu\.tr$/i, 'Sadece .edu.tr uzantılı üniversite email adresleri kabul edilir')
     .required('Email gereklidir'),
   password: yup.string().required('Şifre gereklidir'),
   rememberMe: yup.boolean(),
@@ -30,14 +32,35 @@ export const LoginPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [error, setError] = useState<string>('');
+  const [isResendingEmail, setIsResendingEmail] = useState(false);
 
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors },
   } = useForm<LoginFormData>({
     resolver: yupResolver(loginSchema),
   });
+
+  const email = watch('email');
+
+  const handleResendVerification = async () => {
+    if (!email) {
+      toast.error('Lütfen email adresinizi girin');
+      return;
+    }
+
+    try {
+      setIsResendingEmail(true);
+      await authService.resendVerificationEmail(email);
+      toast.success('Doğrulama emaili gönderildi! Lütfen email adresinizi kontrol edin.');
+    } catch (err: any) {
+      toast.error(err.message || 'Email gönderilirken bir hata oluştu');
+    } finally {
+      setIsResendingEmail(false);
+    }
+  };
 
   const onSubmit = async (data: LoginFormData) => {
     try {
@@ -51,7 +74,15 @@ export const LoginPage: React.FC = () => {
       const from = (location.state as any)?.from?.pathname || '/dashboard';
       navigate(from, { replace: true });
     } catch (err: any) {
-      setError(err.message || 'Giriş yapılırken bir hata oluştu');
+      const errorMessage = err.message || 'Giriş yapılırken bir hata oluştu';
+      setError(errorMessage);
+      
+      // Email doğrulama hatası ise özel mesaj göster
+      if (errorMessage.includes('doğrulanmamış') || err.response?.data?.error?.code === 'EMAIL_NOT_VERIFIED') {
+        setError(
+          'Email adresiniz doğrulanmamış. Lütfen email adresinizi kontrol edin ve doğrulama linkine tıklayın. Email gelmediyse aşağıdaki butona tıklayarak tekrar gönderebilirsiniz.'
+        );
+      }
     }
   };
 
@@ -64,7 +95,24 @@ export const LoginPage: React.FC = () => {
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="auth-form">
-          {error && <div className="auth-error">{error}</div>}
+          {error && (
+            <div className="auth-error">
+              {error}
+              {error.includes('doğrulanmamış') && (
+                <div style={{ marginTop: '10px' }}>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleResendVerification}
+                    disabled={isResendingEmail || !email}
+                    style={{ width: '100%' }}
+                  >
+                    {isResendingEmail ? 'Gönderiliyor...' : 'Doğrulama Emaili Tekrar Gönder'}
+                  </Button>
+                </div>
+              )}
+            </div>
+          )}
 
           <TextInput
             label="Email"
