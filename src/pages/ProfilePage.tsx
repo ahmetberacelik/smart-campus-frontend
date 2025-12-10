@@ -165,16 +165,16 @@ export const ProfilePage: React.FC = () => {
                   {user.role === 'admin' && 'Yönetici'}
                 </span>
               </div>
-              {user.role === 'student' && 'studentNumber' in user && (
+              {(user.role === 'student' || user.role === 'STUDENT') && user.studentInfo && (
                 <div className="profile-info-item">
                   <span className="profile-info-label">Öğrenci No:</span>
-                  <span className="profile-info-value">{user.studentNumber}</span>
+                  <span className="profile-info-value">{user.studentInfo.studentNumber}</span>
                 </div>
               )}
-              {user.role === 'faculty' && 'employeeNumber' in user && (
+              {(user.role === 'faculty' || user.role === 'FACULTY') && user.facultyInfo && (
                 <div className="profile-info-item">
                   <span className="profile-info-label">Personel No:</span>
-                  <span className="profile-info-value">{user.employeeNumber}</span>
+                  <span className="profile-info-value">{user.facultyInfo.employeeNumber}</span>
                 </div>
               )}
             </div>

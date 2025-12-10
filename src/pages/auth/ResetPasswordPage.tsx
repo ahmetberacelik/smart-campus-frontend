@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
@@ -30,7 +30,11 @@ const resetPasswordSchema = yup.object({
 type ResetPasswordFormData = yup.InferType<typeof resetPasswordSchema>;
 
 export const ResetPasswordPage: React.FC = () => {
-  const { token } = useParams<{ token: string }>();
+  const { token: tokenFromPath } = useParams<{ token: string }>();
+  const [searchParams] = useSearchParams();
+  const tokenFromQuery = searchParams.get('token');
+  const token = tokenFromPath || tokenFromQuery; // Path veya query parameter'dan token al
+  
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);

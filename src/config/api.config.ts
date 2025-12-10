@@ -5,7 +5,7 @@
 
 export const API_CONFIG = {
   // Backend URL - Production'da gerçek backend URL'i olacak
-  BASE_URL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1',
+  BASE_URL: import.meta.env.VITE_API_URL || 'http://localhost:8080/api/v1',
   
   // Mock API kullanımı - Development'ta true, Production'da false
   USE_MOCK_API: import.meta.env.VITE_USE_MOCK_API === 'true' || false,

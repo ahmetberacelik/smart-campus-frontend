@@ -13,7 +13,6 @@ import { departmentService } from '@/services/api';
 import { Button } from '@/components/common/Button';
 import { TextInput } from '@/components/common/TextInput';
 import { Select } from '@/components/common/Select';
-import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { toast } from 'react-toastify';
 import './AuthPages.css';
 

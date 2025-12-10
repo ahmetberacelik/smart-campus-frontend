@@ -50,7 +50,9 @@ export const handlers = [
     const newUser: User = {
       id: `user_${Date.now()}`,
       email: body.email,
-      name: body.name,
+      name: `${body.firstName} ${body.lastName}`.trim(),
+      firstName: body.firstName,
+      lastName: body.lastName,
       role: body.role,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
@@ -143,9 +145,7 @@ export const handlers = [
   }),
 
   // Forgot Password
-  http.post(`${API_BASE}${API_ENDPOINTS.AUTH.FORGOT_PASSWORD}`, async ({ request }) => {
-    const body = await request.json() as { email: string };
-    
+  http.post(`${API_BASE}${API_ENDPOINTS.AUTH.FORGOT_PASSWORD}`, async () => {
     // Her zaman başarılı dön (güvenlik için)
     return HttpResponse.json<ApiResponse<void>>({
       success: true,

@@ -3,7 +3,7 @@
  * Backend hazır olduğunda bu dosyayı kullanmayacaksınız
  */
 
-import type { User, Student, Faculty } from '@/types/api.types';
+import type { User } from '@/types/api.types';
 
 export const mockData = {
   users: [

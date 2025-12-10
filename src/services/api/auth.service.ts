@@ -3,7 +3,7 @@
  * Backend hazır olduğunda bu dosyada değişiklik yapmaya gerek yok
  */
 
-import apiClient from './client';
+import httpClient, { apiClient } from './client';
 import { API_ENDPOINTS } from '@/config/api.config';
 import type {
   ApiResponse,
@@ -18,7 +18,7 @@ export const authService = {
    * Kullanıcı kaydı
    */
   async register(data: RegisterRequest): Promise<ApiResponse<User>> {
-    const response = await apiClient.post<ApiResponse<User>>(
+    const response = await httpClient.post<ApiResponse<User>>(
       API_ENDPOINTS.AUTH.REGISTER,
       data
     );
@@ -29,7 +29,7 @@ export const authService = {
    * Kullanıcı girişi
    */
   async login(credentials: LoginRequest): Promise<ApiResponse<LoginResponse>> {
-    const response = await apiClient.post<ApiResponse<LoginResponse>>(
+    const response = await httpClient.post<ApiResponse<LoginResponse>>(
       API_ENDPOINTS.AUTH.LOGIN,
       credentials
     );
@@ -61,7 +61,7 @@ export const authService = {
    */
   async logout(): Promise<void> {
     try {
-      await apiClient.post(API_ENDPOINTS.AUTH.LOGOUT);
+      await httpClient.post(API_ENDPOINTS.AUTH.LOGOUT);
     } catch (error) {
       // Hata olsa bile token'ları temizle
       console.error('Logout error:', error);
@@ -74,7 +74,7 @@ export const authService = {
    * Email doğrulama
    */
   async verifyEmail(token: string): Promise<ApiResponse<void>> {
-    const response = await apiClient.post<ApiResponse<void>>(
+    const response = await httpClient.post<ApiResponse<void>>(
       API_ENDPOINTS.AUTH.VERIFY_EMAIL,
       { token }
     );
@@ -85,7 +85,7 @@ export const authService = {
    * Email doğrulama emaili tekrar gönder
    */
   async resendVerificationEmail(email: string): Promise<ApiResponse<void>> {
-    const response = await apiClient.post<ApiResponse<void>>(
+    const response = await httpClient.post<ApiResponse<void>>(
       `${API_ENDPOINTS.AUTH.RESEND_VERIFICATION}?email=${encodeURIComponent(email)}`
     );
     return response.data;
@@ -95,7 +95,7 @@ export const authService = {
    * Şifre sıfırlama isteği
    */
   async forgotPassword(email: string): Promise<ApiResponse<void>> {
-    const response = await apiClient.post<ApiResponse<void>>(
+    const response = await httpClient.post<ApiResponse<void>>(
       API_ENDPOINTS.AUTH.FORGOT_PASSWORD,
       { email }
     );
@@ -106,7 +106,7 @@ export const authService = {
    * Şifre sıfırlama
    */
   async resetPassword(token: string, newPassword: string): Promise<ApiResponse<void>> {
-    const response = await apiClient.post<ApiResponse<void>>(
+    const response = await httpClient.post<ApiResponse<void>>(
       API_ENDPOINTS.AUTH.RESET_PASSWORD,
       { token, newPassword }
     );
@@ -122,7 +122,7 @@ export const authService = {
       throw new Error('Refresh token not found');
     }
 
-    const response = await apiClient.post<ApiResponse<{ accessToken: string }>>(
+    const response = await httpClient.post<ApiResponse<{ accessToken: string }>>(
       API_ENDPOINTS.AUTH.REFRESH,
       { refreshToken }
     );
