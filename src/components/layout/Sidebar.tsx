@@ -11,21 +11,29 @@ import './Sidebar.css';
 interface NavItem {
   path: string;
   label: string;
-  icon: string;
+  icon: React.ReactNode;
   roles?: string[];
 }
 
 const navItems: NavItem[] = [
   {
     path: '/dashboard',
-    label: 'Ana Sayfa',
-    icon: '🏠',
+    label: 'Dashboard',
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M3 13H11V3H3V13ZM3 21H11V15H3V21ZM13 21H21V11H13V21ZM13 3V9H21V3H13Z" fill="currentColor"/>
+      </svg>
+    ),
     roles: ['student', 'faculty', 'admin'],
   },
   {
     path: '/profile',
     label: 'Profil',
-    icon: '👤',
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 12C14.21 12 16 10.21 16 8C16 5.79 14.21 4 12 4C9.79 4 8 5.79 8 8C8 10.21 9.79 12 12 12ZM12 14C9.33 14 4 15.34 4 18V20H20V18C20 15.34 14.67 14 12 14Z" fill="currentColor"/>
+      </svg>
+    ),
     roles: ['student', 'faculty', 'admin'],
   },
   // Part 2, 3, 4 için diğer menü öğeleri eklenecek
@@ -42,22 +50,77 @@ export const Sidebar: React.FC = () => {
     return item.roles.some((r) => r.toLowerCase() === role);
   });
 
+  const getRoleDisplay = () => {
+    if (!user) return '';
+    const role = user.role?.toLowerCase();
+    if (role === 'student' || role === 'STUDENT') return 'Öğrenci';
+    if (role === 'faculty' || role === 'FACULTY') return 'Öğretim Üyesi';
+    if (role === 'admin' || role === 'ADMIN') return 'Yönetici';
+    return 'Kullanıcı';
+  };
+
+  const isVerified = user?.isVerified ?? false;
+
   return (
     <aside className="sidebar">
+      {/* User Profile Section */}
+      <div className="sidebar-profile">
+        <div className="sidebar-profile-header">
+          <div className="sidebar-profile-avatar">
+            {user?.profilePictureUrl || user?.profilePicture ? (
+              <img 
+                src={user.profilePictureUrl || user.profilePicture} 
+                alt={user.name || 'Profil'} 
+              />
+            ) : (
+              <div className="sidebar-profile-avatar-placeholder">
+                {(user?.name || [user?.firstName, user?.lastName].filter(Boolean).join(' ')).charAt(0).toUpperCase()}
+              </div>
+            )}
+            {!isVerified && (
+              <div className="sidebar-profile-badge">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M20 4H4C2.9 4 2.01 4.9 2.01 6L2 18C2 19.1 2.9 20 4 20H20C21.1 20 22 19.1 22 18V6C22 4.9 21.1 4 20 4ZM20 8L12 13L4 8V6L12 11L20 6V8Z" fill="currentColor"/>
+                </svg>
+              </div>
+            )}
+          </div>
+          <div className="sidebar-profile-info">
+            <div className="sidebar-profile-name">
+              {user?.name || [user?.firstName, user?.lastName].filter(Boolean).join(' ') || 'Kullanıcı'}
+            </div>
+            <div className="sidebar-profile-role">{getRoleDisplay()}</div>
+          </div>
+        </div>
+        {!isVerified && (
+          <div className="sidebar-profile-warning">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM13 17H11V15H13V17ZM13 13H11V7H13V13Z" fill="currentColor"/>
+            </svg>
+            <span>E-posta doğrulanmadı</span>
+          </div>
+        )}
+      </div>
+
+      {/* Navigation */}
       <nav className="sidebar-nav">
-        {filteredItems.map((item) => {
-          const isActive = location.pathname === item.path;
-          return (
-            <Link
-              key={item.path}
-              to={item.path}
-              className={`sidebar-item ${isActive ? 'active' : ''}`}
-            >
-              <span className="sidebar-icon">{item.icon}</span>
-              <span className="sidebar-label">{item.label}</span>
-            </Link>
-          );
-        })}
+        <div className="sidebar-nav-section">
+          <div className="sidebar-nav-label">Menü</div>
+          {filteredItems.map((item) => {
+            const isActive = location.pathname === item.path;
+            return (
+              <Link
+                key={item.path}
+                to={item.path}
+                className={`sidebar-item ${isActive ? 'active' : ''}`}
+              >
+                <span className="sidebar-icon">{item.icon}</span>
+                <span className="sidebar-label">{item.label}</span>
+                {isActive && <div className="sidebar-item-indicator" />}
+              </Link>
+            );
+          })}
+        </div>
       </nav>
     </aside>
   );

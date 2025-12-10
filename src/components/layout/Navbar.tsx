@@ -26,8 +26,26 @@ export const Navbar: React.FC = () => {
     <nav className="navbar">
       <div className="navbar-container">
         <Link to="/dashboard" className="navbar-brand">
-          <span className="navbar-logo">🏫</span>
-          <span className="navbar-title">Akıllı Kampüs</span>
+          <div className="navbar-logo-wrapper">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="navbar-logo">
+              <path d="M12 2L2 7L12 12L22 7L12 2Z" fill="url(#navbarGradient1)"/>
+              <path d="M2 17L12 22L22 17M2 12L12 17L22 12" stroke="url(#navbarGradient2)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <defs>
+                <linearGradient id="navbarGradient1" x1="2" y1="7" x2="22" y2="7" gradientUnits="userSpaceOnUse">
+                  <stop stopColor="#40e0d0"/>
+                  <stop offset="1" stopColor="#2eb8a8"/>
+                </linearGradient>
+                <linearGradient id="navbarGradient2" x1="2" y1="14.5" x2="22" y2="14.5" gradientUnits="userSpaceOnUse">
+                  <stop stopColor="#40e0d0"/>
+                  <stop offset="1" stopColor="#2eb8a8"/>
+                </linearGradient>
+              </defs>
+            </svg>
+          </div>
+          <div className="navbar-title-wrapper">
+            <span className="navbar-title">Akıllı</span>
+            <span className="navbar-title-accent">Kampüs</span>
+          </div>
         </Link>
 
         <div className="navbar-menu">
