@@ -17,6 +17,11 @@ import { ResetPasswordPage } from './pages/auth/ResetPasswordPage'
 import { DashboardPage } from './pages/DashboardPage'
 import { ProfilePage } from './pages/ProfilePage'
 import { NotFoundPage } from './pages/NotFoundPage'
+import { CoursesPage } from './pages/CoursesPage'
+import { MyCoursesPage } from './pages/MyCoursesPage'
+import { GradesPage } from './pages/GradesPage'
+import { AttendancePage } from './pages/AttendancePage'
+import { SectionsPage } from './pages/SectionsPage'
 
 // Query Client setup
 const queryClient = new QueryClient({
@@ -70,6 +75,86 @@ function App() {
                       <Sidebar />
                       <main className="app-main">
                         <ProfilePage />
+                      </main>
+                    </div>
+                  </div>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/courses"
+              element={
+                <ProtectedRoute>
+                  <div className="app-layout">
+                    <Navbar />
+                    <div className="app-content">
+                      <Sidebar />
+                      <main className="app-main">
+                        <CoursesPage />
+                      </main>
+                    </div>
+                  </div>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/my-courses"
+              element={
+                <ProtectedRoute>
+                  <div className="app-layout">
+                    <Navbar />
+                    <div className="app-content">
+                      <Sidebar />
+                      <main className="app-main">
+                        <MyCoursesPage />
+                      </main>
+                    </div>
+                  </div>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/grades"
+              element={
+                <ProtectedRoute>
+                  <div className="app-layout">
+                    <Navbar />
+                    <div className="app-content">
+                      <Sidebar />
+                      <main className="app-main">
+                        <GradesPage />
+                      </main>
+                    </div>
+                  </div>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/attendance"
+              element={
+                <ProtectedRoute>
+                  <div className="app-layout">
+                    <Navbar />
+                    <div className="app-content">
+                      <Sidebar />
+                      <main className="app-main">
+                        <AttendancePage />
+                      </main>
+                    </div>
+                  </div>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/sections"
+              element={
+                <ProtectedRoute>
+                  <div className="app-layout">
+                    <Navbar />
+                    <div className="app-content">
+                      <Sidebar />
+                      <main className="app-main">
+                        <SectionsPage />
                       </main>
                     </div>
                   </div>
