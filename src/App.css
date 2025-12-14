@@ -2,7 +2,7 @@
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  background: linear-gradient(180deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+  background: linear-gradient(to bottom, #ffffff 0%, #f8fafc 100%);
 }
 
 .app-content {
@@ -13,8 +13,9 @@
 .app-main {
   flex: 1;
   background: transparent;
-  min-height: calc(100vh - 64px);
+  min-height: calc(100vh - 80px);
   overflow-x: hidden;
+  padding: 0;
 }
 
 @media (max-width: 768px) {

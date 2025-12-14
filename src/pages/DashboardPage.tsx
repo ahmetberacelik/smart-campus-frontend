@@ -4,7 +4,11 @@
  */
 
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
+import { PageHeader } from '@/components/ui/PageHeader';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
+import { Badge } from '@/components/ui/Badge';
 import './DashboardPage.css';
 
 export const DashboardPage: React.FC = () => {
@@ -39,42 +43,49 @@ export const DashboardPage: React.FC = () => {
     }
   };
 
+  const userName = user?.name || [user?.firstName, user?.lastName].filter(Boolean).join(' ');
+
   return (
     <div className="dashboard-page">
-      <div className="dashboard-header">
-        <h1 className="dashboard-title">
-          Hoş Geldiniz,{' '}
-          {user?.name ||
-            [user?.firstName, user?.lastName].filter(Boolean).join(' ')}! 👋
-        </h1>
-        <p className="dashboard-subtitle">{getRoleDescription()}</p>
-      </div>
+      <PageHeader
+        title={`Hoş Geldiniz, ${userName}!`}
+        description={getRoleDescription()}
+      />
 
       <div className="dashboard-content">
-        <div className="dashboard-card">
-          <div className="dashboard-card-icon">📚</div>
-          <h2 className="dashboard-card-title">{getRoleTitle()}</h2>
-          <p className="dashboard-card-description">
-            Part 1 tamamlandı! Part 2'de akademik yönetim ve GPS yoklama özellikleri eklenecek.
-          </p>
-        </div>
+        <Card variant="elevated" className="dashboard-hero-card">
+          <CardHeader>
+            <CardTitle>{getRoleTitle()}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="dashboard-hero-description">
+              Part 1 tamamlandı! Part 2'de akademik yönetim ve GPS yoklama özellikleri eklenecek.
+            </p>
+          </CardContent>
+        </Card>
 
         <div className="dashboard-grid">
-          <div className="dashboard-card">
-            <div className="dashboard-card-icon">👤</div>
-            <h3 className="dashboard-card-title">Profil</h3>
-            <p className="dashboard-card-description">
-              Profil bilgilerinizi görüntüleyin ve güncelleyin.
-            </p>
-          </div>
+          <Link to="/profile" className="dashboard-card-link">
+            <Card variant="default" className="dashboard-feature-card">
+              <CardContent>
+                <div className="dashboard-feature-icon">👤</div>
+                <h3 className="dashboard-feature-title">Profil</h3>
+                <p className="dashboard-feature-description">
+                  Profil bilgilerinizi görüntüleyin ve güncelleyin.
+                </p>
+              </CardContent>
+            </Card>
+          </Link>
 
-          <div className="dashboard-card">
-            <div className="dashboard-card-icon">🔐</div>
-            <h3 className="dashboard-card-title">Güvenlik</h3>
-            <p className="dashboard-card-description">
-              Şifrenizi değiştirin ve güvenlik ayarlarınızı yönetin.
-            </p>
-          </div>
+          <Card variant="default" className="dashboard-feature-card">
+            <CardContent>
+              <div className="dashboard-feature-icon">🔐</div>
+              <h3 className="dashboard-feature-title">Güvenlik</h3>
+              <p className="dashboard-feature-description">
+                Şifrenizi değiştirin ve güvenlik ayarlarınızı yönetin.
+              </p>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>

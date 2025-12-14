@@ -4,8 +4,7 @@ import { ToastContainer } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
 import { AuthProvider } from './context/AuthContext'
 import { ProtectedRoute } from './components/common/ProtectedRoute'
-import { Navbar } from './components/layout/Navbar'
-import { Sidebar } from './components/layout/Sidebar'
+import { MainLayout } from './components/layout/MainLayout'
 import './App.css'
 
 // Pages
@@ -53,15 +52,9 @@ function App() {
               path="/dashboard"
               element={
                 <ProtectedRoute>
-                  <div className="app-layout">
-                    <Navbar />
-                    <div className="app-content">
-                      <Sidebar />
-                      <main className="app-main">
-                        <DashboardPage />
-                      </main>
-                    </div>
-                  </div>
+                  <MainLayout>
+                    <DashboardPage />
+                  </MainLayout>
                 </ProtectedRoute>
               }
             />
@@ -69,15 +62,9 @@ function App() {
               path="/profile"
               element={
                 <ProtectedRoute>
-                  <div className="app-layout">
-                    <Navbar />
-                    <div className="app-content">
-                      <Sidebar />
-                      <main className="app-main">
-                        <ProfilePage />
-                      </main>
-                    </div>
-                  </div>
+                  <MainLayout>
+                    <ProfilePage />
+                  </MainLayout>
                 </ProtectedRoute>
               }
             />
@@ -85,15 +72,9 @@ function App() {
               path="/courses"
               element={
                 <ProtectedRoute>
-                  <div className="app-layout">
-                    <Navbar />
-                    <div className="app-content">
-                      <Sidebar />
-                      <main className="app-main">
-                        <CoursesPage />
-                      </main>
-                    </div>
-                  </div>
+                  <MainLayout>
+                    <CoursesPage />
+                  </MainLayout>
                 </ProtectedRoute>
               }
             />
@@ -101,15 +82,9 @@ function App() {
               path="/my-courses"
               element={
                 <ProtectedRoute>
-                  <div className="app-layout">
-                    <Navbar />
-                    <div className="app-content">
-                      <Sidebar />
-                      <main className="app-main">
-                        <MyCoursesPage />
-                      </main>
-                    </div>
-                  </div>
+                  <MainLayout>
+                    <MyCoursesPage />
+                  </MainLayout>
                 </ProtectedRoute>
               }
             />
@@ -117,15 +92,9 @@ function App() {
               path="/grades"
               element={
                 <ProtectedRoute>
-                  <div className="app-layout">
-                    <Navbar />
-                    <div className="app-content">
-                      <Sidebar />
-                      <main className="app-main">
-                        <GradesPage />
-                      </main>
-                    </div>
-                  </div>
+                  <MainLayout>
+                    <GradesPage />
+                  </MainLayout>
                 </ProtectedRoute>
               }
             />
@@ -133,15 +102,9 @@ function App() {
               path="/attendance"
               element={
                 <ProtectedRoute>
-                  <div className="app-layout">
-                    <Navbar />
-                    <div className="app-content">
-                      <Sidebar />
-                      <main className="app-main">
-                        <AttendancePage />
-                      </main>
-                    </div>
-                  </div>
+                  <MainLayout>
+                    <AttendancePage />
+                  </MainLayout>
                 </ProtectedRoute>
               }
             />
@@ -149,15 +112,9 @@ function App() {
               path="/sections"
               element={
                 <ProtectedRoute>
-                  <div className="app-layout">
-                    <Navbar />
-                    <div className="app-content">
-                      <Sidebar />
-                      <main className="app-main">
-                        <SectionsPage />
-                      </main>
-                    </div>
-                  </div>
+                  <MainLayout>
+                    <SectionsPage />
+                  </MainLayout>
                 </ProtectedRoute>
               }
             />

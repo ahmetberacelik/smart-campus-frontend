@@ -20,33 +20,48 @@
 
 /* Variants */
 .btn-primary {
-  background-color: var(--color-primary);
+  background: var(--color-primary);
   color: var(--color-white);
+  font-weight: var(--font-weight-semibold);
+  box-shadow: var(--shadow-sm);
+  transition: all var(--transition-base);
+  border: none;
 }
 
 .btn-primary:hover:not(:disabled) {
-  background-color: var(--color-primary-dark);
-  transform: translateY(-1px);
+  background: var(--color-primary-dark);
   box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+}
+
+.btn-primary:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: var(--shadow-sm);
 }
 
 .btn-secondary {
-  background-color: var(--color-gray-200);
+  background-color: var(--bg-tertiary);
   color: var(--text-primary);
+  border: 1px solid var(--border-color-dark);
 }
 
 .btn-secondary:hover:not(:disabled) {
-  background-color: var(--color-gray-300);
+  background-color: var(--color-gray-200);
+  border-color: var(--color-gray-300);
 }
 
 .btn-outline {
   background-color: transparent;
   color: var(--color-primary);
   border: 2px solid var(--color-primary);
+  font-weight: var(--font-weight-semibold);
+  transition: all var(--transition-base);
 }
 
 .btn-outline:hover:not(:disabled) {
   background-color: var(--color-primary-lightest);
+  border-color: var(--color-primary-dark);
+  color: var(--color-primary-dark);
 }
 
 .btn-danger {

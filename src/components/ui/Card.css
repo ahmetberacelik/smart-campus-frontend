@@ -1,0 +1,62 @@
+.corporate-card {
+  background: var(--bg-primary);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-color);
+  transition: all var(--transition-base);
+}
+
+.corporate-card--outlined {
+  border: 2px solid var(--border-color-dark);
+  box-shadow: none;
+}
+
+.corporate-card--elevated {
+  box-shadow: var(--shadow-md);
+  border: none;
+}
+
+.corporate-card:hover {
+  box-shadow: var(--shadow-md);
+}
+
+.corporate-card--padding-none {
+  padding: 0;
+}
+
+.corporate-card--padding-sm {
+  padding: var(--spacing-md);
+}
+
+.corporate-card--padding-md {
+  padding: var(--spacing-xl);
+}
+
+.corporate-card--padding-lg {
+  padding: var(--spacing-2xl);
+}
+
+.corporate-card__header {
+  padding-bottom: var(--spacing-md);
+  border-bottom: 1px solid var(--border-color);
+  margin-bottom: var(--spacing-lg);
+}
+
+.corporate-card__title {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.corporate-card__content {
+  color: var(--text-secondary);
+  line-height: var(--line-height-relaxed);
+}
+
+.corporate-card__footer {
+  padding-top: var(--spacing-md);
+  border-top: 1px solid var(--border-color);
+  margin-top: var(--spacing-lg);
+}
+

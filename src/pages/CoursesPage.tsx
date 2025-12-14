@@ -7,6 +7,11 @@ import { Button } from '@/components/common/Button';
 import { TextInput } from '@/components/common/TextInput';
 import { Select } from '@/components/common/Select';
 import { useAuth } from '@/context/AuthContext';
+import { PageHeader } from '@/components/ui/PageHeader';
+import { Breadcrumb } from '@/components/ui/Breadcrumb';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
+import { Badge } from '@/components/ui/Badge';
+import { Modal } from '@/components/ui/Modal';
 import './CoursesPage.css';
 
 export const CoursesPage: React.FC = () => {
@@ -90,14 +95,23 @@ export const CoursesPage: React.FC = () => {
 
   return (
     <div className="courses-page">
-      <div className="courses-header">
-        <h1>Dersler</h1>
-        {isAdmin && (
-          <Button onClick={() => toast.info('Ders oluşturma özelliği yakında eklenecek')}>
-            Yeni Ders Ekle
-          </Button>
-        )}
-      </div>
+      <Breadcrumb
+        items={[
+          { label: 'Ana Sayfa', to: '/dashboard' },
+          { label: 'Dersler' },
+        ]}
+      />
+      <PageHeader
+        title="Dersler"
+        description="Tüm dersleri görüntüleyin, arayın ve detaylarını inceleyin."
+        actions={
+          isAdmin ? (
+            <Button onClick={() => toast.info('Ders oluşturma özelliği yakında eklenecek')}>
+              Yeni Ders Ekle
+            </Button>
+          ) : undefined
+        }
+      />
 
       {/* Search and Filters */}
       <form onSubmit={handleSearch} className="courses-filters">
@@ -118,29 +132,36 @@ export const CoursesPage: React.FC = () => {
       {/* Course List */}
       <div className="courses-grid">
         {courses.length === 0 ? (
-          <div className="empty-state">Ders bulunamadı</div>
+          <Card className="courses-empty-state">
+            <CardContent>
+              <p>Ders bulunamadı</p>
+            </CardContent>
+          </Card>
         ) : (
           courses.map((course: any) => (
-            <div
+            <Card
               key={course.id}
+              variant="default"
               className="course-card"
               onClick={() => handleCourseClick(course.id)}
             >
-              <div className="course-card-header">
-                <h3>{course.code}</h3>
-                <span className="course-credits">{course.credits} AKTS</span>
-              </div>
-              <h4 className="course-name">{course.name}</h4>
-              {course.description && (
-                <p className="course-description">{course.description}</p>
-              )}
-              <div className="course-footer">
-                <span className="course-ects">{course.ects} ECTS</span>
-                {isAdmin && (
-                  <div className="course-actions">
+              <CardHeader>
+                <div className="course-card-header">
+                  <CardTitle>{course.code}</CardTitle>
+                  <Badge variant="primary">{course.credits} AKTS</Badge>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <h4 className="course-name">{course.name}</h4>
+                {course.description && (
+                  <p className="course-description">{course.description}</p>
+                )}
+                <div className="course-footer">
+                  <Badge variant="default">{course.ects} ECTS</Badge>
+                  {isAdmin && (
                     <Button
                       variant="secondary"
-                      size="small"
+                      size="sm"
                       onClick={(e) => {
                         e.stopPropagation();
                         toast.info('Ders düzenleme özelliği yakında eklenecek');
@@ -148,10 +169,10 @@ export const CoursesPage: React.FC = () => {
                     >
                       Düzenle
                     </Button>
-                  </div>
-                )}
-              </div>
-            </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
           ))
         )}
       </div>
@@ -180,42 +201,39 @@ export const CoursesPage: React.FC = () => {
       )}
 
       {/* Course Detail Modal */}
-      {selectedCourse && (
-        <div className="modal-overlay" onClick={() => setSelectedCourse(null)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h2>{selectedCourse.code} - {selectedCourse.name}</h2>
-              <button className="modal-close" onClick={() => setSelectedCourse(null)}>
-                ×
-              </button>
+      <Modal
+        isOpen={!!selectedCourse}
+        onClose={() => setSelectedCourse(null)}
+        title={selectedCourse ? `${selectedCourse.code} - ${selectedCourse.name}` : ''}
+        size="lg"
+      >
+        {selectedCourse && (
+          <div className="course-detail-content">
+            <div className="course-detail-section">
+              <h3>Açıklama</h3>
+              <p>{selectedCourse.description || 'Açıklama bulunmuyor'}</p>
             </div>
-            <div className="modal-body">
-              <div className="course-detail-section">
-                <h3>Açıklama</h3>
-                <p>{selectedCourse.description || 'Açıklama bulunmuyor'}</p>
+            <div className="course-detail-info">
+              <div className="info-item">
+                <strong>Kredi:</strong> {selectedCourse.credits}
               </div>
-              <div className="course-detail-info">
-                <div className="info-item">
-                  <strong>Kredi:</strong> {selectedCourse.credits}
-                </div>
-                <div className="info-item">
-                  <strong>ECTS:</strong> {selectedCourse.ects}
-                </div>
-                {selectedCourse.prerequisites && selectedCourse.prerequisites.length > 0 && (
-                  <div className="info-item">
-                    <strong>Önkoşullar:</strong>
-                    <ul>
-                      {selectedCourse.prerequisites.map((prereq: any) => (
-                        <li key={prereq.id}>{prereq.code} - {prereq.name}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
+              <div className="info-item">
+                <strong>ECTS:</strong> {selectedCourse.ects}
               </div>
+              {selectedCourse.prerequisites && selectedCourse.prerequisites.length > 0 && (
+                <div className="info-item">
+                  <strong>Önkoşullar:</strong>
+                  <ul>
+                    {selectedCourse.prerequisites.map((prereq: any) => (
+                      <li key={prereq.id}>{prereq.code} - {prereq.name}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </Modal>
     </div>
   );
 };
