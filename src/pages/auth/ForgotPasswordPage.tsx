@@ -18,7 +18,6 @@ const forgotPasswordSchema = yup.object({
   email: yup
     .string()
     .email('Geçerli bir email adresi girin')
-    .matches(/\.edu\.tr$/i, 'Sadece .edu.tr uzantılı üniversite email adresleri kabul edilir')
     .required('Email gereklidir'),
 });
 
@@ -81,7 +80,7 @@ export const ForgotPasswordPage: React.FC = () => {
           <TextInput
             label="Email"
             type="email"
-            placeholder="ornek@universite.edu.tr"
+            placeholder="ornek@email.com"
             error={errors.email?.message}
             fullWidth
             {...register('email')}

@@ -1,0 +1,36 @@
+.gradebook-page {
+  padding: var(--spacing-xl);
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.gradebook-table-container {
+  overflow-x: auto;
+  margin-top: var(--spacing-lg);
+}
+
+.average-value {
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+}
+
+.empty-cell {
+  text-align: center;
+  padding: var(--spacing-2xl);
+  color: var(--text-secondary);
+}
+
+.error-message {
+  text-align: center;
+  padding: var(--spacing-2xl);
+}
+
+@media (max-width: 768px) {
+  .gradebook-page {
+    padding: var(--spacing-md);
+  }
+
+  .gradebook-table-container {
+    font-size: var(--font-size-sm);
+  }
+}

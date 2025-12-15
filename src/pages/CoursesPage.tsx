@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery } from 'react-query';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { courseService, type CourseListParams } from '@/services/api/course.service';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
@@ -16,6 +17,7 @@ import './CoursesPage.css';
 
 export const CoursesPage: React.FC = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [page, setPage] = useState(0);
   const [search, setSearch] = useState('');
   const [departmentId, setDepartmentId] = useState<string>('');
@@ -54,18 +56,22 @@ export const CoursesPage: React.FC = () => {
     refetch();
   };
 
-  const handleCourseClick = async (courseId: string) => {
-    try {
-      const response = await courseService.getCourseById(courseId);
-      if (response.success && response.data) {
-        setSelectedCourse(response.data);
-      }
-    } catch (error: any) {
-      toast.error('Ders detayları yüklenirken bir hata oluştu');
-    }
+  const handleCourseClick = (courseId: string) => {
+    navigate(`/courses/${courseId}`);
+  };
+
+  // Not: Enrollment işlemi artık CourseDetailPage'de yapılıyor
+  // Bu sayede backend'deki 500 hatalarından bağımsız çalışıyoruz
+
+  const handleEnrollClick = (e: React.MouseEvent, course: any) => {
+    e.stopPropagation();
+    // Backend'de 500 hatası olduğu için direkt CourseDetailPage'e yönlendiriyoruz
+    // Orada zaten çalışan bir enrollment sistemi var
+    navigate(`/courses/${course.id}`);
   };
 
   const isAdmin = user?.role?.toLowerCase() === 'admin' || user?.role === 'ADMIN';
+  const isStudent = user?.role?.toLowerCase() === 'student' || user?.role === 'STUDENT';
 
   if (isLoading) {
     return (
@@ -158,18 +164,29 @@ export const CoursesPage: React.FC = () => {
                 )}
                 <div className="course-footer">
                   <Badge variant="default">{course.ects} ECTS</Badge>
-                  {isAdmin && (
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        toast.info('Ders düzenleme özelliği yakında eklenecek');
-                      }}
-                    >
-                      Düzenle
-                    </Button>
-                  )}
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    {isStudent && (
+                      <Button
+                        variant="primary"
+                        size="sm"
+                        onClick={(e) => handleEnrollClick(e, course)}
+                      >
+                        Kayıt Ol
+                      </Button>
+                    )}
+                    {isAdmin && (
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toast.info('Ders düzenleme özelliği yakında eklenecek');
+                        }}
+                      >
+                        Düzenle
+                      </Button>
+                    )}
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -199,6 +216,7 @@ export const CoursesPage: React.FC = () => {
           </Button>
         </div>
       )}
+
 
       {/* Course Detail Modal */}
       <Modal

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery } from 'react-query';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { gradeService } from '@/services/api/grade.service';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
@@ -8,13 +9,24 @@ import { format } from 'date-fns';
 import './GradesPage.css';
 
 export const GradesPage: React.FC = () => {
+  const navigate = useNavigate();
   const [showTranscript, setShowTranscript] = useState(false);
 
-  const { data: gradesData, isLoading: gradesLoading } = useQuery(
+  const { data: gradesData, isLoading: gradesLoading, error: gradesError } = useQuery(
     'my-grades',
     () => gradeService.getMyGrades(),
     {
       retry: 1,
+      onError: (err: any) => {
+        const statusCode = err?.response?.status || err?.status;
+        if (statusCode === 401) {
+          toast.error('Oturumunuzun süresi dolmuş. Lütfen tekrar giriş yapın.');
+          setTimeout(() => {
+            localStorage.clear();
+            navigate('/login');
+          }, 2000);
+        }
+      },
     }
   );
 
@@ -48,6 +60,40 @@ export const GradesPage: React.FC = () => {
     return (
       <div className="grades-page">
         <LoadingSpinner />
+      </div>
+    );
+  }
+
+  if (gradesError) {
+    const errorData = gradesError as any;
+    const statusCode = errorData?.response?.status || errorData?.status;
+    
+    if (statusCode === 401) {
+      return (
+        <div className="grades-page">
+          <div className="error-message">
+            <h3>Kimlik Doğrulama Gerekli</h3>
+            <p>Oturumunuzun süresi dolmuş olabilir. Lütfen tekrar giriş yapın.</p>
+            <Button 
+              onClick={() => {
+                localStorage.clear();
+                navigate('/login');
+              }}
+              style={{ marginTop: '1rem' }}
+            >
+              Giriş Sayfasına Dön
+            </Button>
+          </div>
+        </div>
+      );
+    }
+    
+    return (
+      <div className="grades-page">
+        <div className="error-message">
+          <h3>Hata Oluştu</h3>
+          <p>{errorData?.message || 'Notlar yüklenirken bir hata oluştu'}</p>
+        </div>
       </div>
     );
   }

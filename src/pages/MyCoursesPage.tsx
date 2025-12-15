@@ -1,5 +1,6 @@
 import React from 'react';
 import { useQuery, useMutation, useQueryClient } from 'react-query';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { enrollmentService } from '@/services/api/enrollment.service';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
@@ -9,6 +10,7 @@ import './MyCoursesPage.css';
 
 export const MyCoursesPage: React.FC = () => {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
   const { data, isLoading, error } = useQuery(
     'my-courses',
@@ -17,7 +19,16 @@ export const MyCoursesPage: React.FC = () => {
       retry: 1,
       onError: (err: any) => {
         console.error('My courses fetch error:', err);
-        toast.error(err?.message || 'Dersler yüklenirken bir hata oluştu');
+        const statusCode = err?.response?.status || err?.status;
+        if (statusCode === 401) {
+          // 401 hatası durumunda token süresi dolmuş olabilir
+          toast.error('Oturumunuzun süresi dolmuş. Lütfen tekrar giriş yapın.');
+          setTimeout(() => {
+            navigate('/login');
+          }, 2000);
+        } else {
+          toast.error(err?.message || 'Dersler yüklenirken bir hata oluştu');
+        }
       },
     }
   );
@@ -56,7 +67,34 @@ export const MyCoursesPage: React.FC = () => {
   }
 
   if (error) {
-    const errorMessage = (error as any)?.message || 'Dersler yüklenirken bir hata oluştu';
+    const errorData = error as any;
+    const statusCode = errorData?.response?.status || errorData?.status;
+    const errorMessage = errorData?.message || 'Dersler yüklenirken bir hata oluştu';
+    
+    // 401 Unauthorized hatası
+    if (statusCode === 401) {
+      return (
+        <div className="my-courses-page">
+          <div className="error-message">
+            <h3>Kimlik Doğrulama Gerekli</h3>
+            <p>Oturumunuzun süresi dolmuş olabilir. Lütfen tekrar giriş yapın.</p>
+            <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginTop: '1rem' }}>
+              Bu sayfa öğrenci rolüne sahip kullanıcılar için özeldir.
+            </p>
+            <Button 
+              onClick={() => {
+                localStorage.clear();
+                navigate('/login');
+              }}
+              style={{ marginTop: '1rem' }}
+            >
+              Giriş Sayfasına Dön
+            </Button>
+          </div>
+        </div>
+      );
+    }
+    
     return (
       <div className="my-courses-page">
         <div className="error-message">

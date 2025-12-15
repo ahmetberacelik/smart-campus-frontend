@@ -35,14 +35,6 @@ export const CorporateHeader: React.FC = () => {
     return null;
   }
 
-  const mainNavItems = [
-    { path: '/dashboard', label: 'Ana Sayfa' },
-    { path: '/courses', label: 'Dersler' },
-    { path: '/my-courses', label: 'Kayıtlı Derslerim' },
-    { path: '/grades', label: 'Notlar' },
-    { path: '/attendance', label: 'Yoklama' },
-  ];
-
   return (
     <header className={`corporate-header ${isScrolled ? 'corporate-header--scrolled' : ''}`}>
       <div className="corporate-header__container">
@@ -69,22 +61,6 @@ export const CorporateHeader: React.FC = () => {
             <span className="corporate-header__brand-accent">Kampüs</span>
           </div>
         </Link>
-
-        {/* Desktop Navigation */}
-        <nav className="corporate-header__nav">
-          {mainNavItems.map((item) => {
-            const isActive = location.pathname === item.path;
-            return (
-              <Link
-                key={item.path}
-                to={item.path}
-                className={`corporate-header__nav-link ${isActive ? 'corporate-header__nav-link--active' : ''}`}
-              >
-                {item.label}
-              </Link>
-            );
-          })}
-        </nav>
 
         {/* Right Side Actions */}
         <div className="corporate-header__actions">
@@ -168,24 +144,6 @@ export const CorporateHeader: React.FC = () => {
         </div>
       </div>
 
-      {/* Mobile Menu */}
-      {showMobileMenu && (
-        <div className="corporate-header__mobile-menu">
-          {mainNavItems.map((item) => {
-            const isActive = location.pathname === item.path;
-            return (
-              <Link
-                key={item.path}
-                to={item.path}
-                className={`corporate-header__mobile-link ${isActive ? 'corporate-header__mobile-link--active' : ''}`}
-                onClick={() => setShowMobileMenu(false)}
-              >
-                {item.label}
-              </Link>
-            );
-          })}
-        </div>
-      )}
     </header>
   );
 };

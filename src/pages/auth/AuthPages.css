@@ -4,7 +4,11 @@
   align-items: center;
   justify-content: center;
   padding: var(--spacing-2xl);
-  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  background-image: url('/images/university-background.jpg');
+  background-size: cover;
+  background-position: center center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
   position: relative;
   overflow: hidden;
 }
@@ -16,23 +20,22 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: 
-    radial-gradient(circle at 20% 50%, rgba(64, 224, 208, 0.1) 0%, transparent 50%),
-    radial-gradient(circle at 80% 80%, rgba(46, 184, 168, 0.1) 0%, transparent 50%);
+  background: rgba(0, 0, 0, 0.35);
   pointer-events: none;
 }
 
 .auth-container {
   width: 100%;
   max-width: 520px;
-  background: linear-gradient(to bottom, #ffffff 0%, #f8fafc 100%);
+  background: rgba(255, 255, 255, 0.1);
   border-radius: var(--radius-2xl);
-  box-shadow: var(--shadow-2xl);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
   padding: var(--spacing-4xl);
-  border: 2px solid #e2e8f0;
+  border: 1px solid rgba(255, 255, 255, 0.2);
   position: relative;
   z-index: 1;
-  backdrop-filter: blur(10px);
+  backdrop-filter: blur(2px) saturate(100%);
+  -webkit-backdrop-filter: blur(2px) saturate(100%);
 }
 
 .auth-header {
@@ -78,9 +81,10 @@
 }
 
 .auth-title-text-main {
-  color: #0f172a;
+  color: #ffffff;
   font-weight: var(--font-weight-extrabold);
   letter-spacing: -0.04em;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .auth-title-text-accent {
@@ -129,7 +133,8 @@
   gap: var(--spacing-sm);
   cursor: pointer;
   font-size: var(--font-size-sm);
-  color: #6b7280;
+  color: #ffffff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
 .auth-checkbox:hover {
@@ -159,10 +164,11 @@
 .auth-footer {
   text-align: center;
   font-size: var(--font-size-sm);
-  color: #6b7280;
+  color: #ffffff;
   margin-top: var(--spacing-md);
   padding-top: var(--spacing-lg);
-  border-top: 1px solid #e5e7eb;
+  border-top: 1px solid rgba(255, 255, 255, 0.3);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
 .auth-link {
@@ -181,7 +187,15 @@
 
 /* Form elements */
 .auth-form .text-input-label {
-  color: #374151;
+  color: #ffffff;
+  font-weight: 600;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.auth-form .select-label {
+  color: #ffffff !important;
+  font-weight: 600;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
 .auth-form .text-input {

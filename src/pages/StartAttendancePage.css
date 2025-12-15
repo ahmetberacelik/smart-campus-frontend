@@ -1,0 +1,57 @@
+.start-attendance-page {
+  padding: var(--spacing-xl);
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.start-attendance-container {
+  margin-top: var(--spacing-xl);
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--spacing-lg);
+  margin-bottom: var(--spacing-xl);
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.form-group.full-width {
+  grid-column: 1 / -1;
+}
+
+.form-group label {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+}
+
+.form-group small {
+  font-size: var(--font-size-xs);
+  color: var(--text-secondary);
+  margin-top: calc(var(--spacing-xs) * -1);
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--spacing-md);
+  padding-top: var(--spacing-xl);
+  border-top: 2px solid var(--border-color);
+}
+
+@media (max-width: 768px) {
+  .start-attendance-page {
+    padding: var(--spacing-md);
+  }
+
+  .form-grid {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-md);
+  }
+}

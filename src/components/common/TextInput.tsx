@@ -14,10 +14,15 @@ interface TextInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   fullWidth?: boolean;
   leftIcon?: React.ReactNode;
   rightIcon?: React.ReactNode;
+  type?: 'text' | 'email' | 'password' | 'number' | 'tel' | 'url' | 'date' | 'time' | 'textarea';
+  rows?: number;
 }
 
-export const TextInput = React.forwardRef<HTMLInputElement, TextInputProps>(
-  ({ label, error, helperText, fullWidth = false, leftIcon, rightIcon, className, ...props }, ref) => {
+export const TextInput = React.forwardRef<HTMLInputElement | HTMLTextAreaElement, TextInputProps>(
+  ({ label, error, helperText, fullWidth = false, leftIcon, rightIcon, className, type = 'text', rows, ...props }, ref) => {
+    const isTextarea = type === 'textarea';
+    const InputComponent = isTextarea ? 'textarea' : 'input';
+    
     return (
       <div className={clsx('text-input-wrapper', { 'full-width': fullWidth })}>
         {label && (
@@ -27,21 +32,38 @@ export const TextInput = React.forwardRef<HTMLInputElement, TextInputProps>(
           </label>
         )}
         <div className="text-input-container">
-          {leftIcon && <span className="text-input-icon left">{leftIcon}</span>}
-          <input
-            ref={ref}
-            className={clsx(
-              'text-input',
-              {
-                'has-error': !!error,
-                'has-left-icon': !!leftIcon,
-                'has-right-icon': !!rightIcon,
-              },
-              className
-            )}
-            {...props}
-          />
-          {rightIcon && <span className="text-input-icon right">{rightIcon}</span>}
+          {leftIcon && !isTextarea && <span className="text-input-icon left">{leftIcon}</span>}
+          {isTextarea ? (
+            <textarea
+              ref={ref as React.ForwardedRef<HTMLTextAreaElement>}
+              rows={rows || 4}
+              className={clsx(
+                'text-input',
+                'text-input-textarea',
+                {
+                  'has-error': !!error,
+                },
+                className
+              )}
+              {...(props as any)}
+            />
+          ) : (
+            <input
+              ref={ref as React.ForwardedRef<HTMLInputElement>}
+              type={type}
+              className={clsx(
+                'text-input',
+                {
+                  'has-error': !!error,
+                  'has-left-icon': !!leftIcon,
+                  'has-right-icon': !!rightIcon,
+                },
+                className
+              )}
+              {...props}
+            />
+          )}
+          {rightIcon && !isTextarea && <span className="text-input-icon right">{rightIcon}</span>}
         </div>
         {error && <span className="text-input-error">{error}</span>}
         {helperText && !error && <span className="text-input-helper">{helperText}</span>}

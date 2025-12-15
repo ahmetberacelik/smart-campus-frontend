@@ -1,0 +1,219 @@
+.course-detail-page {
+  padding: var(--spacing-xl);
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.course-detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--spacing-xl);
+  margin-top: var(--spacing-xl);
+}
+
+.course-info-card,
+.sections-card {
+  height: fit-content;
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--spacing-md);
+}
+
+.info-item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.info-item.full-width {
+  grid-column: 1 / -1;
+}
+
+.info-label {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.info-value {
+  font-size: var(--font-size-base);
+  color: var(--text-primary);
+}
+
+.prerequisites-section {
+  margin-top: var(--spacing-xl);
+  padding-top: var(--spacing-xl);
+  border-top: 2px solid var(--border-color);
+}
+
+.prerequisites-section h3 {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+  margin-bottom: var(--spacing-md);
+  color: var(--text-primary);
+}
+
+.prerequisites-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.prerequisites-list li {
+  padding: var(--spacing-sm) 0;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.prerequisites-list li:last-child {
+  border-bottom: none;
+}
+
+.prerequisite-link {
+  color: var(--primary);
+  text-decoration: none;
+  font-weight: var(--font-weight-medium);
+  transition: color 0.2s ease;
+}
+
+.prerequisite-link:hover {
+  color: var(--primary-dark);
+  text-decoration: underline;
+}
+
+.sections-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.section-item {
+  padding: var(--spacing-lg);
+  border: 2px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  background: var(--background-secondary);
+  transition: all 0.2s ease;
+}
+
+.section-item:hover {
+  border-color: var(--primary);
+  box-shadow: var(--shadow-md);
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-md);
+}
+
+.section-header h4 {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.section-details {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-md);
+}
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.detail-label {
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  font-weight: var(--font-weight-medium);
+}
+
+.detail-value {
+  font-size: var(--font-size-sm);
+  color: var(--text-primary);
+  font-weight: var(--font-weight-semibold);
+}
+
+.section-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--spacing-sm);
+  margin-top: var(--spacing-md);
+  padding-top: var(--spacing-md);
+  border-top: 1px solid var(--border-color);
+}
+
+.enroll-modal-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xl);
+}
+
+.enroll-info {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  padding: var(--spacing-lg);
+  background: var(--background-secondary);
+  border-radius: var(--radius-md);
+}
+
+.enroll-info p {
+  margin: 0;
+  font-size: var(--font-size-base);
+  color: var(--text-primary);
+}
+
+.enroll-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--spacing-md);
+}
+
+.error-message {
+  text-align: center;
+  padding: var(--spacing-2xl);
+}
+
+.empty-state {
+  text-align: center;
+  padding: var(--spacing-xl);
+  color: var(--text-secondary);
+}
+
+@media (max-width: 1024px) {
+  .course-detail-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .course-detail-page {
+    padding: var(--spacing-md);
+  }
+
+  .info-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .section-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-sm);
+  }
+
+  .detail-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-xs);
+  }
+}

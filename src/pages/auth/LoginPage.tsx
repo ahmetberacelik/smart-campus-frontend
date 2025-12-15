@@ -19,7 +19,6 @@ const loginSchema = yup.object({
   email: yup
     .string()
     .email('Geçerli bir email adresi girin')
-    .matches(/\.edu\.tr$/i, 'Sadece .edu.tr uzantılı üniversite email adresleri kabul edilir')
     .required('Email gereklidir'),
   password: yup.string().required('Şifre gereklidir'),
   rememberMe: yup.boolean(),
@@ -74,14 +73,39 @@ export const LoginPage: React.FC = () => {
       const from = (location.state as any)?.from?.pathname || '/dashboard';
       navigate(from, { replace: true });
     } catch (err: any) {
-      const errorMessage = err.message || 'Giriş yapılırken bir hata oluştu';
-      setError(errorMessage);
+      console.error('Login error:', err);
+      console.error('Error response:', err.response);
+      console.error('Error status:', err.response?.status);
+      console.error('Error data:', err.response?.data);
       
-      // Email doğrulama hatası ise özel mesaj göster
-      if (errorMessage.includes('doğrulanmamış') || err.response?.data?.error?.code === 'EMAIL_NOT_VERIFIED') {
-        setError(
-          'Email adresiniz doğrulanmamış. Lütfen email adresinizi kontrol edin ve doğrulama linkine tıklayın. Email gelmediyse aşağıdaki butona tıklayarak tekrar gönderebilirsiniz.'
-        );
+      // Backend'den gelen hata mesajını al
+      const backendError = err.response?.data?.error || err.response?.data;
+      const errorCode = backendError?.code || err.code;
+      let errorMessage = backendError?.message || err.message || 'Giriş yapılırken bir hata oluştu';
+      
+      // 401 Unauthorized için özel mesajlar
+      if (err.response?.status === 401 || err.response?.status === 403) {
+        // Backend'den gelen spesifik mesajları kontrol et
+        const errorMessageLower = errorMessage.toLowerCase();
+        
+        if (errorCode === 'EMAIL_NOT_VERIFIED' || errorMessageLower.includes('doğrulanmamış') || errorMessageLower.includes('not verified')) {
+          setError(
+            'Email adresiniz doğrulanmamış. Lütfen email adresinizi kontrol edin ve doğrulama linkine tıklayın. Email gelmediyse aşağıdaki butona tıklayarak tekrar gönderebilirsiniz.'
+          );
+        } else if (errorMessageLower.includes('yanlış') || errorMessageLower.includes('hatalı') || 
+                   errorMessageLower.includes('invalid') || errorMessageLower.includes('incorrect') ||
+                   errorMessageLower.includes('bad credentials') || errorMessageLower.includes('wrong password')) {
+          setError('Email veya şifre hatalı. Lütfen bilgilerinizi kontrol edip tekrar deneyin.');
+        } else if (errorMessageLower.includes('user not found') || errorMessageLower.includes('kullanıcı bulunamadı')) {
+          setError('Bu email adresi ile kayıtlı bir kullanıcı bulunamadı. Lütfen email adresinizi kontrol edin veya kayıt olun.');
+        } else {
+          // Genel 401 hatası
+          setError(`Giriş başarısız. ${errorMessage || 'Email veya şifre hatalı olabilir. Lütfen bilgilerinizi kontrol edip tekrar deneyin.'}`);
+        }
+      } else if (err.response?.status === 500) {
+        setError('Sunucu hatası oluştu. Lütfen daha sonra tekrar deneyin veya sistem yöneticisi ile iletişime geçin.');
+      } else {
+        setError(errorMessage);
       }
     }
   };
@@ -136,7 +160,7 @@ export const LoginPage: React.FC = () => {
           <TextInput
             label="Email"
             type="email"
-            placeholder="ornek@universite.edu.tr"
+            placeholder="ornek@email.com"
             error={errors.email?.message}
             fullWidth
             {...register('email')}

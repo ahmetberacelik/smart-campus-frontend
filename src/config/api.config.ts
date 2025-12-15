@@ -55,13 +55,14 @@ export const API_ENDPOINTS = {
     DETAIL: (id: string) => `/sections/${id}`,
     CREATE: '/sections',
     UPDATE: (id: string) => `/sections/${id}`,
+    MY_SECTIONS: '/sections/my-sections',
   },
   
   // Enrollments
   ENROLLMENTS: {
     CREATE: '/enrollments',
     DELETE: (id: string) => `/enrollments/${id}`,
-    MY_COURSES: '/enrollments/my-courses',
+    MY_COURSES: '/enrollments/my-enrollments', // Backend endpoint: /my-enrollments
     STUDENTS: (sectionId: string) => `/enrollments/students/${sectionId}`,
   },
   

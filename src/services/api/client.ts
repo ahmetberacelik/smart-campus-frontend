@@ -57,10 +57,19 @@ class ApiClient {
               return this.client(originalRequest);
             }
           } catch (refreshError) {
-            // Refresh token da geçersizse logout
-            this.handleLogout();
-            return Promise.reject(refreshError);
+            // Refresh token da geçersizse sadece hata döndür, logout yapma
+            console.warn('Token refresh failed:', refreshError);
           }
+          
+          // Token yenilenemedi, ama logout yapmayalım - component'ler kendi hata yönetimini yapsın
+          // Sadece hatayı reject et, böylece sayfa kendi hata UI'ını gösterebilir
+          return Promise.reject(error);
+        }
+
+        // 401 hatası ve retry zaten yapıldıysa sadece hatayı döndür
+        if (error.response?.status === 401) {
+          // Logout yapma, component'ler kendi yönetimini yapsın
+          return Promise.reject(error);
         }
 
         // Error response'u standart formata çevir
@@ -100,21 +109,30 @@ class ApiClient {
 
   private async refreshAccessToken(): Promise<string | null> {
     const refreshToken = this.getRefreshToken();
-    if (!refreshToken) return null;
+    if (!refreshToken) {
+      console.warn('No refresh token available');
+      return null;
+    }
 
     try {
-      const response = await axios.post<ApiResponse<{ accessToken: string }>>(
+      const response = await axios.post<ApiResponse<{ accessToken: string; refreshToken?: string }>>(
         `${API_CONFIG.BASE_URL}/auth/refresh`,
         { refreshToken }
       );
 
       if (response.data.success && response.data.data) {
-        const newAccessToken = response.data.data.accessToken;
-        localStorage.setItem('accessToken', newAccessToken);
-        return newAccessToken;
+        const { accessToken, refreshToken: newRefreshToken } = response.data.data;
+        localStorage.setItem('accessToken', accessToken);
+        // Eğer yeni refresh token geliyorsa onu da güncelle
+        if (newRefreshToken) {
+          localStorage.setItem('refreshToken', newRefreshToken);
+        }
+        console.log('Token refreshed successfully');
+        return accessToken;
       }
       return null;
-    } catch (error) {
+    } catch (error: any) {
+      console.warn('Token refresh failed:', error?.response?.status, error?.message);
       return null;
     }
   }

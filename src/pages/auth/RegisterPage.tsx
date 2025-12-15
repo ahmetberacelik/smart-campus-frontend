@@ -21,7 +21,6 @@ const registerSchema = yup.object({
   email: yup
     .string()
     .email('Geçerli bir email adresi girin')
-    .matches(/\.edu\.tr$/i, 'Sadece .edu.tr uzantılı üniversite email adresleri kabul edilir')
     .required('Email gereklidir'),
   password: yup
     .string()
@@ -42,6 +41,11 @@ const registerSchema = yup.object({
   employeeNumber: yup.string().when('role', {
     is: 'faculty',
     then: (schema) => schema.required('Personel numarası gereklidir'),
+    otherwise: (schema) => schema,
+  }),
+  title: yup.string().when('role', {
+    is: 'faculty',
+    then: (schema) => schema.required('Unvan gereklidir'),
     otherwise: (schema) => schema,
   }),
   departmentId: yup.string().required('Bölüm seçiniz'),
@@ -110,6 +114,7 @@ export const RegisterPage: React.FC = () => {
         role: data.role === 'student' ? 'STUDENT' : 'FACULTY',
         studentNumber: data.studentNumber,
         employeeNumber: data.employeeNumber,
+        title: data.title,
         departmentId: data.departmentId,
       });
       
@@ -160,8 +165,9 @@ export const RegisterPage: React.FC = () => {
           <TextInput
             label="Email"
             type="email"
-            placeholder="ornek@universite.edu.tr"
+            placeholder={selectedRole === 'faculty' ? 'ornek@gmail.com veya herhangi bir email' : 'ornek@email.com'}
             error={errors.email?.message}
+            helperText={selectedRole === 'faculty' ? 'Öğretim üyeleri herhangi bir email adresi kullanabilir (gmail, yahoo, vb.)' : 'Geçerli bir email adresi girin'}
             fullWidth
             {...register('email')}
           />
@@ -189,13 +195,31 @@ export const RegisterPage: React.FC = () => {
           )}
 
           {selectedRole === 'faculty' && (
-            <TextInput
-              label="Personel Numarası"
-              placeholder="EMP001"
-              error={errors.employeeNumber?.message}
-              fullWidth
-              {...register('employeeNumber')}
-            />
+            <>
+              <TextInput
+                label="Personel Numarası"
+                placeholder="EMP001"
+                error={errors.employeeNumber?.message}
+                fullWidth
+                {...register('employeeNumber')}
+              />
+              <Select
+                label="Unvan"
+                options={[
+                  { value: '', label: 'Seçiniz...' },
+                  { value: 'Prof. Dr.', label: 'Prof. Dr.' },
+                  { value: 'Doç. Dr.', label: 'Doç. Dr.' },
+                  { value: 'Dr. Öğr. Üyesi', label: 'Dr. Öğr. Üyesi' },
+                  { value: 'Öğr. Gör. Dr.', label: 'Öğr. Gör. Dr.' },
+                  { value: 'Öğr. Gör.', label: 'Öğr. Gör.' },
+                  { value: 'Arş. Gör. Dr.', label: 'Arş. Gör. Dr.' },
+                  { value: 'Arş. Gör.', label: 'Arş. Gör.' },
+                ]}
+                error={errors.title?.message}
+                fullWidth
+                {...register('title')}
+              />
+            </>
           )}
 
           <Select

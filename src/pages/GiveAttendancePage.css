@@ -1,0 +1,135 @@
+.give-attendance-page {
+  padding: var(--spacing-xl);
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+.give-attendance-container {
+  margin-top: var(--spacing-xl);
+}
+
+.session-info,
+.location-section {
+  margin-bottom: var(--spacing-2xl);
+}
+
+.session-info h3,
+.location-section h3 {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+  color: var(--text-primary);
+  margin-bottom: var(--spacing-md);
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--spacing-md);
+}
+
+.info-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-md);
+  background: var(--background-secondary);
+  border-radius: var(--radius-md);
+}
+
+.info-label {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-secondary);
+}
+
+.info-value {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
+  color: var(--text-primary);
+}
+
+.location-placeholder {
+  text-align: center;
+  padding: var(--spacing-2xl);
+  background: var(--background-secondary);
+  border-radius: var(--radius-lg);
+  border: 2px dashed var(--border-color);
+}
+
+.location-placeholder p {
+  margin-bottom: var(--spacing-lg);
+  color: var(--text-secondary);
+}
+
+.error-message-text {
+  color: var(--danger);
+  margin-bottom: var(--spacing-lg);
+  font-weight: var(--font-weight-medium);
+}
+
+.location-display {
+  padding: var(--spacing-xl);
+  background: var(--background-secondary);
+  border-radius: var(--radius-lg);
+}
+
+.location-coords {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-lg);
+}
+
+.coord-item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  text-align: center;
+}
+
+.coord-label {
+  font-size: var(--font-size-xs);
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.coord-value {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-bold);
+  color: var(--primary);
+  font-family: 'Courier New', monospace;
+}
+
+.distance-info {
+  text-align: center;
+  padding: var(--spacing-md);
+  background: var(--primary-lightest);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--spacing-md);
+  font-weight: var(--font-weight-semibold);
+  color: var(--primary-dark);
+}
+
+.action-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  padding-top: var(--spacing-xl);
+  border-top: 2px solid var(--border-color);
+}
+
+.error-message {
+  text-align: center;
+  padding: var(--spacing-2xl);
+}
+
+@media (max-width: 768px) {
+  .give-attendance-page {
+    padding: var(--spacing-md);
+  }
+
+  .location-coords {
+    grid-template-columns: 1fr;
+  }
+}
