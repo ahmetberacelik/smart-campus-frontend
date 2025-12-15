@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useQuery } from 'react-query';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
@@ -20,27 +20,70 @@ export const CoursesPage: React.FC = () => {
   const navigate = useNavigate();
   const [page, setPage] = useState(0);
   const [search, setSearch] = useState('');
+  const [searchQuery, setSearchQuery] = useState(''); // Debounced search value
   const [departmentId, setDepartmentId] = useState<string>('');
   const [selectedCourse, setSelectedCourse] = useState<any>(null);
 
-  const params: CourseListParams = {
+  // Debounce search: Kullanıcı yazmayı bıraktıktan 500ms sonra searchQuery'yi güncelle
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setSearchQuery(search.trim());
+      setPage(0); // Arama değiştiğinde sayfayı sıfırla
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [search]);
+
+  // Trimmed search value (query için kullanılacak)
+  const trimmedSearch = searchQuery.trim();
+  
+  const params: CourseListParams = useMemo(() => ({
     page,
     limit: 20,
-    search: search || undefined,
+    search: trimmedSearch || undefined,
     departmentId: departmentId || undefined,
     sortBy: 'name',
     direction: 'ASC',
-  };
+  }), [page, trimmedSearch, departmentId]);
 
-  const { data, isLoading, error, refetch } = useQuery(
-    ['courses', params],
-    () => courseService.getCourses(params),
+  // Query key'i stabilize et - sadece değerler değiştiğinde query yeniden çalışsın
+  const queryKey = useMemo(() => [
+    'courses',
+    page,
+    trimmedSearch || '',
+    departmentId || '',
+  ], [page, trimmedSearch, departmentId]);
+  
+  const { data, isLoading, error } = useQuery(
+    queryKey,
+    () => {
+      console.log('🔍 Query çalışıyor, params:', params);
+      // Eğer search varsa, /courses/search endpoint'ini kullan
+      if (trimmedSearch) {
+        return courseService.searchCourses(trimmedSearch, params.page, params.limit, departmentId || undefined);
+      } else {
+        // Search yoksa normal /courses endpoint'ini kullan
+        return courseService.getCourses(params);
+      }
+    },
     {
-      keepPreviousData: true,
+      keepPreviousData: true, // Geçiş sırasında önceki verileri göster
       retry: 1,
+      staleTime: 10000, // 10 saniye boyunca cache'i fresh tut
+      onSuccess: (data) => {
+        const courseCount = data?.data?.content?.length || data?.data?.length || 0;
+        console.log('✅ Courses yüklendi:', courseCount, 'ders bulundu');
+        if (trimmedSearch && courseCount === 0) {
+          toast.info(`"${trimmedSearch}" için ders bulunamadı`);
+        }
+      },
       onError: (err: any) => {
-        console.error('Courses fetch error:', err);
-        toast.error(err?.message || 'Dersler yüklenirken bir hata oluştu');
+        // Sadece gerçek hataları göster, network hatası gibi
+        if (err?.response?.status !== 500 || !err?.response?.data?.code) {
+          console.error('❌ Courses fetch error:', err);
+          const errorMessage = err?.response?.data?.message || err?.message || 'Dersler yüklenirken bir hata oluştu';
+          toast.error(errorMessage);
+        }
       },
     }
   );
@@ -52,8 +95,9 @@ export const CoursesPage: React.FC = () => {
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
+    // Form submit edildiğinde searchQuery'yi hemen güncelle (debounce beklemeden)
+    setSearchQuery(search.trim());
     setPage(0);
-    refetch();
   };
 
   const handleCourseClick = (courseId: string) => {
@@ -129,7 +173,11 @@ export const CoursesPage: React.FC = () => {
         />
         <Button type="submit">Ara</Button>
         {search && (
-          <Button variant="secondary" onClick={() => { setSearch(''); setPage(0); }}>
+          <Button variant="secondary" onClick={() => { 
+            setSearch(''); 
+            setSearchQuery(''); 
+            setPage(0); 
+          }}>
             Temizle
           </Button>
         )}

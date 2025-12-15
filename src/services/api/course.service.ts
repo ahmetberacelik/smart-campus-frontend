@@ -40,13 +40,33 @@ export const courseService = {
     const queryParams = new URLSearchParams();
     if (params?.page !== undefined) queryParams.append('page', params.page.toString());
     if (params?.limit !== undefined) queryParams.append('size', params.limit.toString());
-    if (params?.search) queryParams.append('search', params.search);
     if (params?.departmentId) queryParams.append('departmentId', params.departmentId.toString());
     if (params?.sortBy) queryParams.append('sortBy', params.sortBy);
     if (params?.direction) queryParams.append('direction', params.direction);
 
     const response = await httpClient.get<ApiResponse<any>>(
       `${API_ENDPOINTS.COURSES.LIST}?${queryParams.toString()}`
+    );
+    return response.data;
+  },
+
+  /**
+   * Ders arama (search endpoint kullanarak)
+   */
+  async searchCourses(
+    keyword: string,
+    page: number = 0,
+    limit: number = 20,
+    departmentId?: number | string
+  ): Promise<ApiResponse<any>> {
+    const queryParams = new URLSearchParams();
+    queryParams.append('keyword', keyword);
+    queryParams.append('page', page.toString());
+    queryParams.append('size', limit.toString());
+    if (departmentId) queryParams.append('departmentId', departmentId.toString());
+
+    const response = await httpClient.get<ApiResponse<any>>(
+      `${API_ENDPOINTS.COURSES.LIST}/search?${queryParams.toString()}`
     );
     return response.data;
   },
