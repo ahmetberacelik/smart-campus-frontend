@@ -10,7 +10,7 @@ import { Button } from '@/components/common/Button';
 import { TextInput } from '@/components/common/TextInput';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Breadcrumb } from '@/components/ui/Breadcrumb';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
+import { Card, CardContent } from '@/components/ui/Card';
 import { Table } from '@/components/ui/Table';
 import './GradebookPage.css';
 
@@ -28,7 +28,7 @@ export const GradebookPage: React.FC = () => {
     {
       enabled: !!sectionId,
       retry: 1,
-      onError: (err: any) => {
+      onError: () => {
         toast.error('Bölüm bilgileri yüklenirken bir hata oluştu');
       },
     }
@@ -41,7 +41,7 @@ export const GradebookPage: React.FC = () => {
     {
       enabled: !!sectionId,
       retry: 1,
-      onError: (err: any) => {
+      onError: () => {
         toast.error('Öğrenci listesi yüklenirken bir hata oluştu');
       },
     }
@@ -77,7 +77,7 @@ export const GradebookPage: React.FC = () => {
   };
 
   const saveGradeMutation = useMutation(
-    ({ enrollmentId, data }: { enrollmentId: string; data: EnterGradeRequest }) =>
+    ({ enrollmentId, data }: { enrollmentId: string; data: Omit<EnterGradeRequest, 'enrollmentId'> }) =>
       gradeService.enterGrade({ enrollmentId, ...data }),
     {
       onSuccess: () => {
@@ -98,7 +98,7 @@ export const GradebookPage: React.FC = () => {
 
     setSaving(enrollmentId);
     
-    const data: EnterGradeRequest = {};
+    const data: Omit<EnterGradeRequest, 'enrollmentId'> = {};
     if (gradeData.midterm !== undefined) data.midtermGrade = gradeData.midterm;
     if (gradeData.final !== undefined) data.finalGrade = gradeData.final;
     if (gradeData.letterGrade) data.letterGrade = gradeData.letterGrade;

@@ -11,14 +11,24 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Modal } from '@/components/ui/Modal';
 import { TextInput } from '@/components/common/TextInput';
+import type { AttendanceSession } from '@/types/api.types';
 import './MyAttendancePage.css';
 
 export const MyAttendancePage: React.FC = () => {
   const navigate = useNavigate();
-  const [selectedCourse, setSelectedCourse] = useState<any>(null);
   const [excuseModalOpen, setExcuseModalOpen] = useState(false);
   const [excuseReason, setExcuseReason] = useState('');
   const [selectedSessionId, setSelectedSessionId] = useState<string>('');
+
+  // Aktif yoklama oturumları (öğrencinin kayıtlı olduğu derslerde)
+  const { data: activeSessionsData } = useQuery(
+    'active-sessions',
+    () => attendanceService.getActiveSessions(),
+    {
+      retry: 1,
+      refetchInterval: 30000, // Her 30 saniyede bir yenile
+    }
+  );
 
   const { data: attendanceData, isLoading, error } = useQuery(
     'my-attendance',
@@ -40,12 +50,9 @@ export const MyAttendancePage: React.FC = () => {
     }
   );
 
-  const attendance = attendanceData?.data?.courses || [];
-
-  const handleRequestExcuse = (sessionId: string) => {
-    setSelectedSessionId(sessionId);
-    setExcuseModalOpen(true);
-  };
+  // Backend doğrudan array döndürüyor, courses wrapper yok
+  const attendance = attendanceData?.data || [];
+  const activeSessions = activeSessionsData?.data || [];
 
   const handleSubmitExcuse = async () => {
     if (!excuseReason.trim()) {
@@ -122,6 +129,43 @@ export const MyAttendancePage: React.FC = () => {
         description="Tüm dersleriniz için yoklama durumunuzu görüntüleyebilir ve mazeret talebinde bulunabilirsiniz"
       />
 
+      {/* Aktif Yoklama Oturumları */}
+      {activeSessions.length > 0 && (
+        <div className="active-sessions-section">
+          <h2 className="section-title">🟢 Aktif Yoklama Oturumları</h2>
+          <p className="section-description">Aşağıdaki derslerde yoklama oturumu açık. Yoklama vermek için tıklayın.</p>
+          <div className="active-sessions-grid">
+            {activeSessions.map((session: AttendanceSession) => (
+              <Card key={session.id} className="active-session-card">
+                <CardContent>
+                  <div className="active-session-content">
+                    <div className="session-info">
+                      <h3 className="course-code">{session.courseCode || 'Ders'}</h3>
+                      <h4 className="course-name">{session.courseName || 'Bilinmiyor'}</h4>
+                      <p className="section-number">Bölüm {session.sectionNumber || '?'}</p>
+                      <p className="session-time">
+                        {session.date} • {session.startTime?.substring(0, 5)} - {session.endTime?.substring(0, 5)}
+                      </p>
+                    </div>
+                    <Button
+                      onClick={() => navigate(`/attendance/give/${session.id}`)}
+                      className="give-attendance-btn"
+                    >
+                      📍 Yoklama Ver
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Geçmiş Yoklama Durumu */}
+      <h2 className="section-title" style={{ marginTop: activeSessions.length > 0 ? '2rem' : 0 }}>
+        📊 Geçmiş Yoklama Durumu
+      </h2>
+
       {attendance.length === 0 ? (
         <Card className="empty-state-card">
           <CardContent>
@@ -141,9 +185,10 @@ export const MyAttendancePage: React.FC = () => {
             const status = course.status || 'NORMAL';
             const statusClass = status.toLowerCase();
             const totalSessions = course.totalSessions || 0;
-            const attendedSessions = course.attendedSessions || 0;
-            const excusedAbsences = course.excusedAbsences || 0;
-            const absences = totalSessions - attendedSessions - excusedAbsences;
+            // Backend: presentCount, excusedCount kullanıyor
+            const attendedSessions = course.presentCount || course.attendedSessions || 0;
+            const excusedAbsences = course.excusedCount || course.excusedAbsences || 0;
+            const absences = course.absentCount || (totalSessions - attendedSessions - excusedAbsences);
 
             return (
               <Card key={course.sectionId} className="attendance-card">
@@ -153,7 +198,7 @@ export const MyAttendancePage: React.FC = () => {
                       <CardTitle className="course-code">{course.courseCode}</CardTitle>
                       <h4 className="course-name">{course.courseName}</h4>
                     </div>
-                    <Badge variant={statusClass === 'critical' ? 'danger' : statusClass === 'warning' ? 'warning' : 'success'}>
+                    <Badge variant={statusClass === 'critical' ? 'error' : statusClass === 'warning' ? 'warning' : 'success'}>
                       {status === 'NORMAL' ? 'Normal' : status === 'WARNING' ? 'Uyarı' : 'Kritik'}
                     </Badge>
                   </div>
@@ -210,7 +255,7 @@ export const MyAttendancePage: React.FC = () => {
                                   {session.startTime ? new Date(`2000-01-01T${session.startTime}`).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }) : ''}
                                 </span>
                                 {session.excuseStatus && (
-                                  <Badge variant={session.excuseStatus === 'APPROVED' ? 'success' : session.excuseStatus === 'REJECTED' ? 'danger' : 'warning'}>
+                                  <Badge variant={session.excuseStatus === 'APPROVED' ? 'success' : session.excuseStatus === 'REJECTED' ? 'error' : 'warning'}>
                                     {session.excuseStatus === 'APPROVED' ? 'Onaylandı' : session.excuseStatus === 'REJECTED' ? 'Reddedildi' : 'Beklemede'}
                                   </Badge>
                                 )}

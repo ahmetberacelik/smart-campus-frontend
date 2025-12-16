@@ -9,22 +9,27 @@ import type { ApiResponse, AttendanceSession, AttendanceRecord, AttendanceStats,
 
 export interface CreateAttendanceSessionRequest {
   sectionId: number | string;
-  date: string; // ISO date string
-  startTime: string; // ISO datetime string
-  endTime: string; // ISO datetime string
+  sessionDate?: string; // ISO date string (YYYY-MM-DD)
+  startTime?: string; // ISO datetime string
+  endTime?: string; // ISO datetime string
   geofenceRadius?: number; // Metre cinsinden, varsayılan 15m
+  durationMinutes?: number; // Oturum süresi (dakika)
+  latitude?: number; // GPS koordinatları (opsiyonel)
+  longitude?: number;
 }
 
 export interface CheckInRequest {
   latitude: number;
   longitude: number;
   accuracy?: number; // GPS doğruluğu (metre cinsinden)
+  deviceInfo?: string; // Cihaz bilgisi (tarayıcı, işletim sistemi)
+  isMockLocation?: boolean; // Sahte konum tespiti
 }
 
 export interface CreateExcuseRequest {
   sessionId: number | string;
   reason: string;
-  documentUrl?: string;
+  document?: File; // Belge dosyası (opsiyonel)
 }
 
 export interface AttendanceReportParams extends PaginationParams {
@@ -118,10 +123,21 @@ export const attendanceService = {
 
   /**
    * Yoklama durumum (student)
+   * Backend List<MyAttendanceResponse> döndürüyor
    */
-  async getMyAttendance(): Promise<ApiResponse<{ courses: AttendanceStats[] }>> {
-    const response = await httpClient.get<ApiResponse<{ courses: AttendanceStats[] }>>(
+  async getMyAttendance(): Promise<ApiResponse<AttendanceStats[]>> {
+    const response = await httpClient.get<ApiResponse<AttendanceStats[]>>(
       API_ENDPOINTS.ATTENDANCE.MY_ATTENDANCE
+    );
+    return response.data;
+  },
+
+  /**
+   * Öğrencinin katılabileceği aktif yoklama oturumları
+   */
+  async getActiveSessions(): Promise<ApiResponse<AttendanceSession[]>> {
+    const response = await httpClient.get<ApiResponse<AttendanceSession[]>>(
+      API_ENDPOINTS.ATTENDANCE.ACTIVE_SESSIONS
     );
     return response.data;
   },
@@ -129,12 +145,24 @@ export const attendanceService = {
   // ========== Excuse Requests ==========
 
   /**
-   * Mazeret bildirme (student)
+   * Mazeret bildirme (student) - multipart/form-data kullanır
    */
   async createExcuseRequest(data: CreateExcuseRequest): Promise<ApiResponse<ExcuseRequest>> {
+    const formData = new FormData();
+    formData.append('sessionId', data.sessionId.toString());
+    formData.append('reason', data.reason);
+    if (data.document) {
+      formData.append('document', data.document);
+    }
+
     const response = await httpClient.post<ApiResponse<ExcuseRequest>>(
       API_ENDPOINTS.ATTENDANCE.EXCUSE_REQUESTS.CREATE,
-      data
+      formData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      }
     );
     return response.data;
   },

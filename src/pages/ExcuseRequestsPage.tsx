@@ -27,7 +27,7 @@ export const ExcuseRequestsPage: React.FC = () => {
     }),
     {
       retry: 1,
-      onError: (err: any) => {
+      onError: () => {
         toast.error('Mazeret istekleri yüklenirken bir hata oluştu');
       },
     }
@@ -195,7 +195,7 @@ export const ExcuseRequestsPage: React.FC = () => {
                         {request.studentName} ({request.studentNumber})
                       </p>
                     </div>
-                    <Badge variant={request.status === 'APPROVED' ? 'success' : 'danger'}>
+                    <Badge variant={request.status === 'APPROVED' ? 'success' : 'error'}>
                       {request.status === 'APPROVED' ? 'Onaylandı' : 'Reddedildi'}
                     </Badge>
                   </div>

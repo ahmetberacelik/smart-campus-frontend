@@ -8,7 +8,6 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
-import { Badge } from '@/components/ui/Badge';
 import './DashboardPage.css';
 
 export const DashboardPage: React.FC = () => {

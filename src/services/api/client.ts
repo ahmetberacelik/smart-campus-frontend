@@ -231,14 +231,6 @@ class ApiClient {
     }
   }
 
-  private handleLogout() {
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('refreshToken');
-    localStorage.removeItem('user');
-    // Redirect to login - React Router kullanıyorsanız navigate kullanın
-    window.location.href = '/login';
-  }
-
   // Public methods
   getInstance(): AxiosInstance {
     return this.client;

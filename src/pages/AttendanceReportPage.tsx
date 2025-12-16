@@ -8,7 +8,7 @@ import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { Button } from '@/components/common/Button';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Breadcrumb } from '@/components/ui/Breadcrumb';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
+import { Card, CardContent, CardHeader } from '@/components/ui/Card';
 import { Table } from '@/components/ui/Table';
 import { Badge } from '@/components/ui/Badge';
 import './AttendanceReportPage.css';
@@ -160,13 +160,13 @@ export const AttendanceReportPage: React.FC = () => {
                           </span>
                         </td>
                         <td>
-                          <Badge variant={status === 'CRITICAL' ? 'danger' : status === 'WARNING' ? 'warning' : 'success'}>
+                          <Badge variant={status === 'CRITICAL' ? 'error' : status === 'WARNING' ? 'warning' : 'success'}>
                             {status === 'NORMAL' ? 'Normal' : status === 'WARNING' ? 'Uyarı' : 'Kritik'}
                           </Badge>
                         </td>
                         <td>
                           {isFlagged && (
-                            <Badge variant="danger">Şüpheli</Badge>
+                            <Badge variant="error">Şüpheli</Badge>
                           )}
                         </td>
                       </tr>

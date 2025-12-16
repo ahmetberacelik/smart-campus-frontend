@@ -4,6 +4,87 @@
   margin: 0 auto;
 }
 
+/* Active Sessions Section */
+.active-sessions-section {
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+  border-radius: 12px;
+  border: 2px solid #22c55e;
+}
+
+.section-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1a365d;
+  margin: 0 0 0.5rem 0;
+}
+
+.section-description {
+  color: #166534;
+  margin: 0 0 1rem 0;
+  font-size: 0.9rem;
+}
+
+.active-sessions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1rem;
+}
+
+.active-session-card {
+  background: white;
+  border: 2px solid #22c55e;
+  border-radius: 8px;
+}
+
+.active-session-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.active-session-content .session-info {
+  flex: 1;
+}
+
+.active-session-content .course-code {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #1a365d;
+  margin: 0;
+}
+
+.active-session-content .course-name {
+  font-size: 0.95rem;
+  color: #475569;
+  margin: 0.25rem 0;
+}
+
+.active-session-content .section-number {
+  font-size: 0.85rem;
+  color: #64748b;
+  margin: 0;
+}
+
+.active-session-content .session-time {
+  font-size: 0.85rem;
+  color: #64748b;
+  margin: 0.25rem 0 0 0;
+}
+
+.give-attendance-btn {
+  background: #22c55e !important;
+  color: white !important;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.give-attendance-btn:hover {
+  background: #16a34a !important;
+}
+
 .attendance-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));

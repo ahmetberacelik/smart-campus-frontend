@@ -5,7 +5,7 @@ import { toast } from 'react-toastify';
 import { gradeService } from '@/services/api/grade.service';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { Button } from '@/components/common/Button';
-import { format } from 'date-fns';
+// format from date-fns - gelecekte tarih formatlaması için kullanılabilir
 import './GradesPage.css';
 
 export const GradesPage: React.FC = () => {
@@ -30,7 +30,7 @@ export const GradesPage: React.FC = () => {
     }
   );
 
-  const { data: transcriptData, isLoading: transcriptLoading } = useQuery(
+  const { data: transcriptData } = useQuery(
     'transcript',
     () => gradeService.getTranscript(),
     {
@@ -134,7 +134,7 @@ export const GradesPage: React.FC = () => {
           </div>
           <div className="summary-card">
             <div className="summary-label">Toplam Ders</div>
-            <div className="summary-value">{transcript.courses?.length || 0}</div>
+            <div className="summary-value">{transcript.grades?.length || 0}</div>
           </div>
         </div>
       )}
@@ -145,13 +145,10 @@ export const GradesPage: React.FC = () => {
           <h2>Transkript</h2>
           <div className="transcript-info">
             <div className="info-row">
-              <strong>Öğrenci:</strong> {transcript.studentName || transcript.student?.name}
+              <strong>Öğrenci:</strong> {transcript.student?.firstName} {transcript.student?.lastName}
             </div>
             <div className="info-row">
-              <strong>Öğrenci No:</strong> {transcript.studentNumber || transcript.student?.studentNumber}
-            </div>
-            <div className="info-row">
-              <strong>Bölüm:</strong> {transcript.departmentName}
+              <strong>Öğrenci No:</strong> {transcript.student?.studentNumber}
             </div>
           </div>
           <table className="transcript-table">
@@ -167,19 +164,19 @@ export const GradesPage: React.FC = () => {
               </tr>
             </thead>
             <tbody>
-              {transcript.courses?.map((course: any, index: number) => (
+              {transcript.grades?.map((grade: any, index: number) => (
                 <tr key={index}>
-                  <td>{course.courseCode}</td>
-                  <td>{course.courseName}</td>
-                  <td>{course.credits}</td>
-                  <td>{course.ects}</td>
-                  <td>{course.semester} {course.year}</td>
+                  <td>{grade.courseCode || grade.course?.code}</td>
+                  <td>{grade.courseName || grade.course?.name}</td>
+                  <td>{grade.credits || grade.course?.credits}</td>
+                  <td>{grade.ects || grade.course?.ects}</td>
+                  <td>{grade.semester} {grade.year}</td>
                   <td>
-                    <span className={`grade-badge grade-${course.letterGrade?.toLowerCase()}`}>
-                      {course.letterGrade || '-'}
+                    <span className={`grade-badge grade-${grade.letterGrade?.toLowerCase()}`}>
+                      {grade.letterGrade || '-'}
                     </span>
                   </td>
-                  <td>{course.gradePoint?.toFixed(2) || '-'}</td>
+                  <td>{grade.gradePoint?.toFixed(2) || '-'}</td>
                 </tr>
               ))}
             </tbody>

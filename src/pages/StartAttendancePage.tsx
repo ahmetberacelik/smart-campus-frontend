@@ -230,6 +230,7 @@ export const StartAttendancePage: React.FC = () => {
       return;
     }
 
+    // Saat karşılaştırması için Date objesi kullan
     const startDateTime = new Date(`${date}T${startTime}`);
     const endDateTime = new Date(`${date}T${endTime}`);
 
@@ -238,12 +239,16 @@ export const StartAttendancePage: React.FC = () => {
       return;
     }
 
+    // Timezone sorununu önlemek için saatleri lokal format olarak gönder
+    // toISOString() UTC'ye çevirir ve 3 saat kayma oluşturur
+    // Bunun yerine "YYYY-MM-DDTHH:mm:ss" formatı kullanıyoruz (Z yok = timezone yok)
     const data: CreateAttendanceSessionRequest = {
       sectionId: selectedSectionId,
-      date: date,
-      startTime: startDateTime.toISOString(),
-      endTime: endDateTime.toISOString(),
+      sessionDate: date, // "2025-12-16" formatında
+      startTime: `${date}T${startTime}:00`, // "2025-12-16T01:00:00" - lokal saat
+      endTime: `${date}T${endTime}:00`,     // "2025-12-16T02:00:00" - lokal saat
       geofenceRadius: geofenceRadius,
+      durationMinutes: durationMinutes,
     };
 
     createSessionMutation.mutate(data);
@@ -258,9 +263,9 @@ export const StartAttendancePage: React.FC = () => {
   }
 
   const sectionOptions = sections.map((section: any) => {
-    const course = section.course || {};
-    const courseName = course.name || 'Ders adı bulunamadı';
-    const courseCode = course.code || '';
+    // Backend doğrudan courseCode ve courseName döndürüyor (course.code değil)
+    const courseName = section.courseName || section.course?.name || 'Ders adı bulunamadı';
+    const courseCode = section.courseCode || section.course?.code || '';
     const sectionNumber = section.sectionNumber || '';
     return {
       value: section.id.toString(),

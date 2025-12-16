@@ -28,11 +28,11 @@ export const enrollmentService = {
   },
 
   /**
-   * Dersi bırakma (student)
+   * Dersi bırakma (student) - sectionId ile
    */
-  async dropEnrollment(id: string | number): Promise<ApiResponse<void>> {
+  async dropEnrollment(sectionId: string | number): Promise<ApiResponse<void>> {
     const response = await httpClient.delete<ApiResponse<void>>(
-      API_ENDPOINTS.ENROLLMENTS.DELETE(id.toString())
+      API_ENDPOINTS.ENROLLMENTS.DROP(sectionId.toString())
     );
     return response.data;
   },

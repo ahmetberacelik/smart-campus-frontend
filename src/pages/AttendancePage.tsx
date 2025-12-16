@@ -70,7 +70,7 @@ export const AttendancePage: React.FC = () => {
     ({ sessionId, data }: { sessionId: string; data: CheckInRequest }) =>
       attendanceService.checkIn(sessionId, data),
     {
-      onSuccess: (response) => {
+      onSuccess: () => {
         toast.success('Yoklama başarıyla verildi');
         setSelectedSession(null);
         queryClient.invalidateQueries('my-attendance');
@@ -113,7 +113,7 @@ export const AttendancePage: React.FC = () => {
 
   // Student View
   if (isStudent) {
-    const attendance = attendanceData?.data?.courses || [];
+    const attendance = attendanceData?.data || [];
 
     return (
       <div className="attendance-page">
@@ -276,7 +276,7 @@ export const AttendancePage: React.FC = () => {
                   {session.status === 'OPEN' && (
                     <Button
                       variant="secondary"
-                      size="small"
+                      size="sm"
                       onClick={() => {
                         attendanceService.closeSession(session.id).then(() => {
                           toast.success('Oturum kapatıldı');
@@ -289,7 +289,7 @@ export const AttendancePage: React.FC = () => {
                   )}
                   <Button
                     variant="secondary"
-                    size="small"
+                    size="sm"
                     onClick={() => toast.info('Yoklama raporu özelliği yakında eklenecek')}
                   >
                     Rapor Görüntüle

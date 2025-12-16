@@ -32,7 +32,7 @@ export const CourseDetailPage: React.FC = () => {
     {
       enabled: !!id,
       retry: 1,
-      onError: (err: any) => {
+      onError: () => {
         toast.error('Ders bilgileri yüklenirken bir hata oluştu');
       },
     }
@@ -188,7 +188,7 @@ export const CourseDetailPage: React.FC = () => {
                     <div key={section.id} className="section-item">
                       <div className="section-header">
                         <h4>Bölüm {section.sectionNumber}</h4>
-                        <Badge variant={isFull ? 'danger' : 'primary'}>
+                        <Badge variant={isFull ? 'error' : 'primary'}>
                           {enrolled} / {capacity}
                         </Badge>
                       </div>

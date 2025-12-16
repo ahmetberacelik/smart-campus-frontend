@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from 'react-query';
 import { toast } from 'react-toastify';
@@ -25,7 +25,7 @@ export const GiveAttendancePage: React.FC = () => {
     {
       enabled: !!sessionId,
       retry: 1,
-      onError: (err: any) => {
+      onError: () => {
         toast.error('Yoklama oturumu bilgileri yüklenirken bir hata oluştu');
       },
     }
@@ -91,6 +91,33 @@ export const GiveAttendancePage: React.FC = () => {
     );
   };
 
+  // Haversine formülü ile iki GPS noktası arasındaki mesafeyi hesapla (metre)
+  const calculateHaversineDistance = (
+    lat1: number,
+    lon1: number,
+    lat2: number,
+    lon2: number
+  ): number => {
+    const R = 6371000; // Dünya yarıçapı (metre)
+    const dLat = ((lat2 - lat1) * Math.PI) / 180;
+    const dLon = ((lon2 - lon1) * Math.PI) / 180;
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos((lat1 * Math.PI) / 180) *
+        Math.cos((lat2 * Math.PI) / 180) *
+        Math.sin(dLon / 2) *
+        Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  };
+
+  // Cihaz bilgisini al
+  const getDeviceInfo = (): string => {
+    const userAgent = navigator.userAgent;
+    const platform = navigator.platform || 'unknown';
+    return `${platform} - ${userAgent.substring(0, 100)}`;
+  };
+
   const handleCheckIn = async () => {
     if (!location) {
       toast.error('Lütfen önce konum bilgisi alın');
@@ -101,16 +128,35 @@ export const GiveAttendancePage: React.FC = () => {
       latitude: location.lat,
       longitude: location.lon,
       accuracy: location.accuracy,
+      deviceInfo: getDeviceInfo(),
+      isMockLocation: false, // Gerçek konum API'sinden alındığı için false
     };
 
     await checkInMutation.mutateAsync(checkInData);
   };
 
-  // Calculate distance (simplified - using Haversine would be better but this is for display)
-  const calculateDistance = () => {
+  // Haversine formülü ile mesafe hesapla
+  const calculateDistance = (): string | null => {
     if (!session || !location) return null;
-    // Simplified distance calculation (would need proper Haversine formula)
-    return 'Hesaplanıyor...';
+    
+    const sessionLat = session.latitude;
+    const sessionLon = session.longitude;
+    
+    if (sessionLat === undefined || sessionLon === undefined) {
+      return 'Sınıf konumu bilinmiyor';
+    }
+    
+    const distance = calculateHaversineDistance(
+      location.lat,
+      location.lon,
+      sessionLat,
+      sessionLon
+    );
+    
+    if (distance < 1000) {
+      return `${distance.toFixed(0)} metre`;
+    }
+    return `${(distance / 1000).toFixed(2)} km`;
   };
 
   if (sessionLoading) {
@@ -161,14 +207,14 @@ export const GiveAttendancePage: React.FC = () => {
                 <div className="info-item">
                   <span className="info-label">Tarih:</span>
                   <span className="info-value">
-                    {new Date(session.date || session.startTime).toLocaleDateString('tr-TR')}
+                    {session.date ? new Date(session.date + 'T00:00:00').toLocaleDateString('tr-TR') : '--'}
                   </span>
                 </div>
                 <div className="info-item">
                   <span className="info-label">Saat:</span>
                   <span className="info-value">
-                    {new Date(session.startTime).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })} - 
-                    {new Date(session.endTime).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}
+                    {session.startTime?.substring(0, 5) || '--:--'} - 
+                    {session.endTime?.substring(0, 5) || '--:--'}
                   </span>
                 </div>
                 {session.classroomName && (

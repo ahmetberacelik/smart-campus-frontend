@@ -6,7 +6,7 @@ import { courseService, type CourseListParams } from '@/services/api/course.serv
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { Button } from '@/components/common/Button';
 import { TextInput } from '@/components/common/TextInput';
-import { Select } from '@/components/common/Select';
+// Select component - gelecekte departman filtresi için kullanılabilir
 import { useAuth } from '@/context/AuthContext';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Breadcrumb } from '@/components/ui/Breadcrumb';
@@ -21,7 +21,7 @@ export const CoursesPage: React.FC = () => {
   const [page, setPage] = useState(0);
   const [search, setSearch] = useState('');
   const [searchQuery, setSearchQuery] = useState(''); // Debounced search value
-  const [departmentId, setDepartmentId] = useState<string>('');
+  const [departmentId] = useState<string>('');
   const [selectedCourse, setSelectedCourse] = useState<any>(null);
 
   // Debounce search: Kullanıcı yazmayı bıraktıktan 500ms sonra searchQuery'yi güncelle
@@ -54,7 +54,7 @@ export const CoursesPage: React.FC = () => {
     departmentId || '',
   ], [page, trimmedSearch, departmentId]);
   
-  const { data, isLoading, error } = useQuery(
+  const { data, isLoading, error, refetch } = useQuery(
     queryKey,
     () => {
       console.log('🔍 Query çalışıyor, params:', params);
@@ -193,11 +193,14 @@ export const CoursesPage: React.FC = () => {
           </Card>
         ) : (
           courses.map((course: any) => (
-            <Card
+            <div
               key={course.id}
+              onClick={() => handleCourseClick(course.id)}
+              style={{ cursor: 'pointer' }}
+            >
+            <Card
               variant="default"
               className="course-card"
-              onClick={() => handleCourseClick(course.id)}
             >
               <CardHeader>
                 <div className="course-card-header">
@@ -238,6 +241,7 @@ export const CoursesPage: React.FC = () => {
                 </div>
               </CardContent>
             </Card>
+            </div>
           ))
         )}
       </div>

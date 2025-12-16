@@ -203,7 +203,7 @@ export const MyCoursesPage: React.FC = () => {
                   <div className="enrollment-actions">
                     <Button
                       variant="danger"
-                      size="small"
+                      size="sm"
                       onClick={() => handleDrop(enrollment.id.toString(), enrollment.courseName)}
                       disabled={dropMutation.isLoading}
                     >

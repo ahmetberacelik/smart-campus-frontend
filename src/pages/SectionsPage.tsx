@@ -167,7 +167,7 @@ export const SectionsPage: React.FC = () => {
                 <div className="section-actions">
                   <Button
                     variant="secondary"
-                    size="small"
+                    size="sm"
                     onClick={() => toast.info('Section detayları yakında eklenecek')}
                   >
                     Detaylar

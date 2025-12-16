@@ -61,9 +61,9 @@ export const API_ENDPOINTS = {
   // Enrollments
   ENROLLMENTS: {
     CREATE: '/enrollments',
-    DELETE: (id: string) => `/enrollments/${id}`,
+    DROP: (sectionId: string) => `/enrollments/drop/${sectionId}`, // Backend endpoint: /drop/{sectionId}
     MY_COURSES: '/enrollments/my-enrollments', // Backend endpoint: /my-enrollments
-    STUDENTS: (sectionId: string) => `/enrollments/students/${sectionId}`,
+    STUDENTS: (sectionId: string) => `/enrollments/section/${sectionId}`, // Backend endpoint: /section/{sectionId}
   },
   
   // Grades
@@ -84,6 +84,7 @@ export const API_ENDPOINTS = {
     },
     CHECKIN: (sessionId: string) => `/attendance/sessions/${sessionId}/checkin`,
     MY_ATTENDANCE: '/attendance/my-attendance',
+    ACTIVE_SESSIONS: '/attendance/active-sessions', // Öğrenci için aktif oturumlar
     REPORT: (sectionId: string) => `/attendance/report/${sectionId}`,
     EXCUSE_REQUESTS: {
       CREATE: '/attendance/excuse-requests',
