@@ -16,16 +16,16 @@ export const MyCoursesPage: React.FC = () => {
     'my-courses',
     () => enrollmentService.getMyCourses(),
     {
-      retry: 1,
+      retry: false, // client.ts'deki token refresh mekanizması zaten retry yapıyor
       onError: (err: any) => {
         console.error('My courses fetch error:', err);
+        // client.ts ApiError formatında döndürüyor
         const statusCode = err?.response?.status || err?.status;
-        if (statusCode === 401) {
-          // 401 hatası durumunda token süresi dolmuş olabilir
+        const isAuthError = statusCode === 401 || err?.code === 'UNAUTHORIZED';
+        
+        if (isAuthError) {
+          // Token refresh de başarısız olduysa giriş sayfasına yönlendir
           toast.error('Oturumunuzun süresi dolmuş. Lütfen tekrar giriş yapın.');
-          setTimeout(() => {
-            navigate('/login');
-          }, 2000);
         } else {
           toast.error(err?.message || 'Dersler yüklenirken bir hata oluştu');
         }
@@ -72,7 +72,8 @@ export const MyCoursesPage: React.FC = () => {
     const errorMessage = errorData?.message || 'Dersler yüklenirken bir hata oluştu';
     
     // 401 Unauthorized hatası
-    if (statusCode === 401) {
+    const isAuthError = statusCode === 401 || errorData?.code === 'UNAUTHORIZED';
+    if (isAuthError) {
       return (
         <div className="my-courses-page">
           <div className="error-message">
@@ -83,7 +84,10 @@ export const MyCoursesPage: React.FC = () => {
             </p>
             <Button 
               onClick={() => {
-                localStorage.clear();
+                // Sadece auth ile ilgili verileri temizle
+                localStorage.removeItem('accessToken');
+                localStorage.removeItem('refreshToken');
+                localStorage.removeItem('user');
                 navigate('/login');
               }}
               style={{ marginTop: '1rem' }}
@@ -128,62 +132,79 @@ export const MyCoursesPage: React.FC = () => {
       ) : (
         <div className="enrollments-grid">
           {enrollments.map((enrollment: any) => {
-            const section = enrollment.section || {};
-            const course = section.course || {};
+            // Backend'den düz alanlar olarak geliyor (nested değil)
             const enrollmentDate = enrollment.enrollmentDate
               ? format(new Date(enrollment.enrollmentDate), 'dd MMM yyyy')
               : '';
+            
+            // Status'u Türkçeleştir
+            const getStatusText = (status: string) => {
+              switch (status) {
+                case 'ENROLLED': return 'Kayıtlı';
+                case 'COMPLETED': return 'Tamamlandı';
+                case 'DROPPED': return 'Bırakıldı';
+                case 'FAILED': return 'Başarısız';
+                default: return status;
+              }
+            };
 
             return (
               <div key={enrollment.id} className="enrollment-card">
                 <div className="enrollment-card-header">
                   <div>
-                    <h3 className="course-code">{course.code}</h3>
-                    <h4 className="course-name">{course.name}</h4>
+                    <h3 className="course-code">{enrollment.courseCode}</h3>
+                    <h4 className="course-name">{enrollment.courseName}</h4>
                   </div>
                   <span className={`status-badge status-${enrollment.status?.toLowerCase()}`}>
-                    {enrollment.status === 'ACTIVE' ? 'Aktif' : enrollment.status}
+                    {getStatusText(enrollment.status)}
                   </span>
                 </div>
 
                 <div className="enrollment-details">
                   <div className="detail-item">
                     <span className="detail-label">Bölüm:</span>
-                    <span className="detail-value">{section.sectionNumber}</span>
+                    <span className="detail-value">{enrollment.sectionNumber || '-'}</span>
                   </div>
                   <div className="detail-item">
                     <span className="detail-label">Dönem:</span>
                     <span className="detail-value">
-                      {section.semester} {section.year}
+                      {enrollment.semester && enrollment.year 
+                        ? `${enrollment.semester} ${enrollment.year}`
+                        : enrollment.semester || enrollment.year || '-'}
                     </span>
                   </div>
                   <div className="detail-item">
                     <span className="detail-label">Kayıt Tarihi:</span>
-                    <span className="detail-value">{enrollmentDate}</span>
+                    <span className="detail-value">{enrollmentDate || '-'}</span>
                   </div>
-                  {section.instructor && (
+                  {enrollment.instructorName && (
                     <div className="detail-item">
                       <span className="detail-label">Öğretim Üyesi:</span>
-                      <span className="detail-value">
-                        {section.instructor.name || 
-                         `${section.instructor.firstName} ${section.instructor.lastName}`}
-                      </span>
+                      <span className="detail-value">{enrollment.instructorName}</span>
                     </div>
                   )}
+                  {(enrollment.capacity || enrollment.enrolledCount) && (
                   <div className="detail-item">
                     <span className="detail-label">Kapasite:</span>
                     <span className="detail-value">
-                      {section.enrolledCount || 0} / {section.capacity || 0}
+                        {enrollment.enrolledCount || 0} / {enrollment.capacity || 0}
                     </span>
                   </div>
+                  )}
+                  {enrollment.letterGrade && (
+                    <div className="detail-item">
+                      <span className="detail-label">Harf Notu:</span>
+                      <span className="detail-value">{enrollment.letterGrade}</span>
+                    </div>
+                  )}
                 </div>
 
-                {enrollment.status === 'ACTIVE' && (
+                {enrollment.status === 'ENROLLED' && (
                   <div className="enrollment-actions">
                     <Button
                       variant="danger"
                       size="small"
-                      onClick={() => handleDrop(enrollment.id, course.name)}
+                      onClick={() => handleDrop(enrollment.id.toString(), enrollment.courseName)}
                       disabled={dropMutation.isLoading}
                     >
                       Dersi Bırak

@@ -49,26 +49,54 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const initAuth = async () => {
       try {
         const storedUser = localStorage.getItem('user');
-        if (storedUser) {
-          const parsedUser = JSON.parse(storedUser);
-          // Eğer isim alanı yoksa oluştur
-          setUser({
-            ...parsedUser,
-            name: getDisplayName(parsedUser),
-            profilePictureUrl:
-              parsedUser.profilePicture || parsedUser.profilePictureUrl,
-            phone: parsedUser.phoneNumber || parsedUser.phone,
-          });
-          
-          // Token geçerli mi kontrol et
-          try {
-            await userService.getMe();
-          } catch (error) {
-            // Token geçersizse temizle
+        const accessToken = localStorage.getItem('accessToken');
+        
+        // Token yoksa direkt çık
+        if (!accessToken || !storedUser) {
+          setUser(null);
+          setIsLoading(false);
+          return;
+        }
+        
+        const parsedUser = JSON.parse(storedUser);
+        // Eğer isim alanı yoksa oluştur
+        const normalizedUser = {
+          ...parsedUser,
+          name: getDisplayName(parsedUser),
+          profilePictureUrl:
+            parsedUser.profilePicture || parsedUser.profilePictureUrl,
+          phone: parsedUser.phoneNumber || parsedUser.phone,
+        };
+        setUser(normalizedUser);
+        
+        // Token geçerli mi kontrol et (opsiyonel - arka planda güncelle)
+        try {
+          const response = await userService.getMe();
+          if (response.success && response.data) {
+            // Kullanıcı bilgilerini güncelle
+            const updatedUser = {
+              ...response.data,
+              name: getDisplayName(response.data),
+              profilePictureUrl:
+                response.data.profilePicture || response.data.profilePictureUrl,
+              phone: response.data.phoneNumber || response.data.phone,
+            };
+            setUser(updatedUser);
+            localStorage.setItem('user', JSON.stringify(updatedUser));
+          }
+        } catch (error: any) {
+          // 401 hatası ve token refresh de başarısız olduysa temizle
+          // Ama sadece gerçekten oturum sonlandıysa (refreshToken da geçersizse)
+          const refreshToken = localStorage.getItem('refreshToken');
+          if (!refreshToken) {
+            console.log('No refresh token, clearing session');
             localStorage.removeItem('user');
             localStorage.removeItem('accessToken');
-            localStorage.removeItem('refreshToken');
             setUser(null);
+          } else {
+            // Token refresh mekanizması zaten client.ts'de var
+            // Burada sadece warning log atalım
+            console.warn('Initial auth check failed, token refresh will handle it:', error?.message);
           }
         }
       } catch (error) {

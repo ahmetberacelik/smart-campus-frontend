@@ -38,17 +38,15 @@ export const CourseDetailPage: React.FC = () => {
     }
   );
 
-  // Course sections
+  // Course sections - Backend'den direkt bu course'a ait section'ları çek
   const { data: sectionsData, isLoading: sectionsLoading } = useQuery(
     ['course-sections', id],
-    () => sectionService.getSections({}),
+    () => sectionService.getSectionsByCourse(id!),
     {
       enabled: !!id,
       retry: 1,
-      select: (data) => {
-        // Filter sections for this course
-        const sections = data?.data || [];
-        return sections.filter((section: any) => section.course?.id?.toString() === id);
+      onError: (err: any) => {
+        console.error('Section fetch error:', err);
       },
     }
   );
@@ -180,9 +178,8 @@ export const CourseDetailPage: React.FC = () => {
             ) : (
               <div className="sections-list">
                 {sections.map((section: any) => {
-                  const instructor = section.instructor || {};
-                  const instructorName = instructor.name || 
-                    `${instructor.firstName || ''} ${instructor.lastName || ''}`.trim();
+                  // Backend'den instructorName direkt string olarak geliyor
+                  const instructorName = section.instructorName || 'Atanmamış';
                   const capacity = section.capacity || 0;
                   const enrolled = section.enrolledCount || 0;
                   const isFull = enrolled >= capacity;
@@ -198,7 +195,7 @@ export const CourseDetailPage: React.FC = () => {
                       <div className="section-details">
                         <div className="detail-row">
                           <span className="detail-label">Öğretim Üyesi:</span>
-                          <span className="detail-value">{instructorName || 'Atanmamış'}</span>
+                          <span className="detail-value">{instructorName}</span>
                         </div>
                         <div className="detail-row">
                           <span className="detail-label">Dönem:</span>
@@ -206,10 +203,10 @@ export const CourseDetailPage: React.FC = () => {
                             {section.semester} {section.year}
                           </span>
                         </div>
-                        {section.classroom && (
+                        {section.classroomName && (
                           <div className="detail-row">
                             <span className="detail-label">Sınıf:</span>
-                            <span className="detail-value">{section.classroom.name || section.classroom.code}</span>
+                            <span className="detail-value">{section.classroomName}</span>
                           </div>
                         )}
                       </div>
