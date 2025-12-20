@@ -113,11 +113,11 @@ class ApiClient {
 
           try {
             const newToken = await this.refreshAccessToken();
-            
+
             if (newToken) {
               // Kuyruktaki tüm istekleri yeni token ile işle
               this.processQueue(null, newToken);
-              
+
               if (originalRequest.headers) {
                 originalRequest.headers.Authorization = `Bearer ${newToken}`;
               }
@@ -178,11 +178,11 @@ class ApiClient {
 
   private async refreshAccessToken(): Promise<string | null> {
     const refreshToken = this.getRefreshToken();
-    console.log('🔄 Attempting token refresh...', { 
+    console.log('🔄 Attempting token refresh...', {
       hasRefreshToken: !!refreshToken,
       refreshTokenPreview: refreshToken ? refreshToken.substring(0, 20) + '...' : 'null'
     });
-    
+
     if (!refreshToken) {
       console.warn('❌ No refresh token available');
       return null;
@@ -203,7 +203,7 @@ class ApiClient {
       if (response.data.success && response.data.data) {
         const { accessToken, refreshToken: newRefreshToken } = response.data.data;
         localStorage.setItem('accessToken', accessToken);
-        
+
         // Yeni token'ı decode et ve logla
         const decoded = this.decodeToken(accessToken);
         console.log('✅ Token refreshed successfully:', {
@@ -211,7 +211,7 @@ class ApiClient {
           role: decoded?.role,
           exp: decoded?.exp ? new Date(decoded.exp * 1000).toISOString() : 'N/A'
         });
-        
+
         // Eğer yeni refresh token geliyorsa onu da güncelle
         if (newRefreshToken) {
           localStorage.setItem('refreshToken', newRefreshToken);

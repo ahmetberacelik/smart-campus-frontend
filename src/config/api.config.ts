@@ -6,13 +6,13 @@
 export const API_CONFIG = {
   // Backend URL - Production'da gerçek backend URL'i olacak
   BASE_URL: import.meta.env.VITE_API_URL || 'http://localhost:8080/api/v1',
-  
+
   // Mock API kullanımı - Development'ta true, Production'da false
   USE_MOCK_API: import.meta.env.VITE_USE_MOCK_API === 'true' || false,
-  
+
   // Timeout ayarları
   TIMEOUT: 30000, // 30 saniye
-  
+
   // Retry ayarları
   MAX_RETRIES: 3,
   RETRY_DELAY: 1000,
@@ -31,7 +31,7 @@ export const API_ENDPOINTS = {
     FORGOT_PASSWORD: '/auth/forgot-password',
     RESET_PASSWORD: '/auth/reset-password',
   },
-  
+
   // User Management
   USERS: {
     ME: '/users/me',
@@ -39,7 +39,7 @@ export const API_ENDPOINTS = {
     PROFILE_PICTURE: '/users/me/profile-picture',
     LIST: '/users',
   },
-  
+
   // Courses
   COURSES: {
     LIST: '/courses',
@@ -48,7 +48,7 @@ export const API_ENDPOINTS = {
     UPDATE: (id: string) => `/courses/${id}`,
     DELETE: (id: string) => `/courses/${id}`,
   },
-  
+
   // Sections
   SECTIONS: {
     LIST: '/sections',
@@ -57,15 +57,15 @@ export const API_ENDPOINTS = {
     UPDATE: (id: string) => `/sections/${id}`,
     MY_SECTIONS: '/sections/my-sections',
   },
-  
+
   // Enrollments
   ENROLLMENTS: {
     CREATE: '/enrollments',
-    DROP: (sectionId: string) => `/enrollments/drop/${sectionId}`, // Backend endpoint: /drop/{sectionId}
+    DELETE: (id: string) => `/enrollments/${id}`,
     MY_COURSES: '/enrollments/my-enrollments', // Backend endpoint: /my-enrollments
-    STUDENTS: (sectionId: string) => `/enrollments/section/${sectionId}`, // Backend endpoint: /section/{sectionId}
+    STUDENTS: (sectionId: string) => `/enrollments/students/${sectionId}`,
   },
-  
+
   // Grades
   GRADES: {
     MY_GRADES: '/grades/my-grades',
@@ -73,18 +73,20 @@ export const API_ENDPOINTS = {
     TRANSCRIPT_PDF: '/grades/transcript/pdf',
     CREATE: '/grades',
   },
-  
+
   // Attendance
   ATTENDANCE: {
     SESSIONS: {
       CREATE: '/attendance/sessions',
       DETAIL: (id: string) => `/attendance/sessions/${id}`,
       CLOSE: (id: string) => `/attendance/sessions/${id}/close`,
+      REFRESH_QR: (id: string) => `/attendance/sessions/${id}/refresh-qr`,
       MY_SESSIONS: '/attendance/sessions/my-sessions',
     },
     CHECKIN: (sessionId: string) => `/attendance/sessions/${sessionId}/checkin`,
+    CHECKIN_QR: (sessionId: string) => `/attendance/sessions/${sessionId}/checkin-qr`,
     MY_ATTENDANCE: '/attendance/my-attendance',
-    ACTIVE_SESSIONS: '/attendance/active-sessions', // Öğrenci için aktif oturumlar
+    ACTIVE_SESSIONS: '/attendance/sessions/active-for-student',
     REPORT: (sectionId: string) => `/attendance/report/${sectionId}`,
     EXCUSE_REQUESTS: {
       CREATE: '/attendance/excuse-requests',
@@ -93,7 +95,7 @@ export const API_ENDPOINTS = {
       REJECT: (id: string) => `/attendance/excuse-requests/${id}/reject`,
     },
   },
-  
+
   // Meals
   MEALS: {
     MENUS: {
@@ -110,7 +112,7 @@ export const API_ENDPOINTS = {
       USE: (id: string) => `/meals/reservations/${id}/use`,
     },
   },
-  
+
   // Wallet
   WALLET: {
     BALANCE: '/wallet/balance',
@@ -118,7 +120,7 @@ export const API_ENDPOINTS = {
     TOPUP_WEBHOOK: '/wallet/topup/webhook',
     TRANSACTIONS: '/wallet/transactions',
   },
-  
+
   // Events
   EVENTS: {
     LIST: '/events',
@@ -131,7 +133,7 @@ export const API_ENDPOINTS = {
     CHECKIN: (eventId: string, regId: string) => `/events/${eventId}/registrations/${regId}/checkin`,
     CANCEL_REGISTRATION: (eventId: string, regId: string) => `/events/${eventId}/registrations/${regId}`,
   },
-  
+
   // Scheduling
   SCHEDULING: {
     GENERATE: '/scheduling/generate',
@@ -139,7 +141,7 @@ export const API_ENDPOINTS = {
     MY_SCHEDULE: '/scheduling/my-schedule',
     MY_SCHEDULE_ICAL: '/scheduling/my-schedule/ical',
   },
-  
+
   // Reservations (Classrooms)
   RESERVATIONS: {
     CREATE: '/reservations',
@@ -147,7 +149,7 @@ export const API_ENDPOINTS = {
     APPROVE: (id: string) => `/reservations/${id}/approve`,
     REJECT: (id: string) => `/reservations/${id}/reject`,
   },
-  
+
   // Analytics
   ANALYTICS: {
     DASHBOARD: '/analytics/dashboard',
@@ -157,7 +159,7 @@ export const API_ENDPOINTS = {
     EVENTS: '/analytics/events',
     EXPORT: (type: string) => `/analytics/export/${type}`,
   },
-  
+
   // Notifications
   NOTIFICATIONS: {
     LIST: '/notifications',
@@ -167,14 +169,14 @@ export const API_ENDPOINTS = {
     PREFERENCES: '/notifications/preferences',
     UPDATE_PREFERENCES: '/notifications/preferences',
   },
-  
+
   // IoT Sensors (Bonus)
   SENSORS: {
     LIST: '/sensors',
     DATA: (id: string) => `/sensors/${id}/data`,
     STREAM: (id: string) => `/sensors/${id}/stream`,
   },
-  
+
   // Departments
   DEPARTMENTS: {
     LIST: '/departments',

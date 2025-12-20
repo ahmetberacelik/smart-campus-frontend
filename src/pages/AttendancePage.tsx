@@ -70,7 +70,7 @@ export const AttendancePage: React.FC = () => {
     ({ sessionId, data }: { sessionId: string; data: CheckInRequest }) =>
       attendanceService.checkIn(sessionId, data),
     {
-      onSuccess: () => {
+      onSuccess: (_response) => {
         toast.success('Yoklama başarıyla verildi');
         setSelectedSession(null);
         queryClient.invalidateQueries('my-attendance');
@@ -113,7 +113,7 @@ export const AttendancePage: React.FC = () => {
 
   // Student View
   if (isStudent) {
-    const attendance = attendanceData?.data || [];
+    const attendance = attendanceData?.data?.courses || [];
 
     return (
       <div className="attendance-page">
@@ -125,7 +125,7 @@ export const AttendancePage: React.FC = () => {
         {attendance.length === 0 ? (
           <div className="empty-state">
             <svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM13 17H11V15H13V17ZM13 13H11V7H13V13Z" fill="currentColor"/>
+              <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM13 17H11V15H13V17ZM13 13H11V7H13V13Z" fill="currentColor" />
             </svg>
             <h3>Henüz yoklama kaydınız bulunmuyor</h3>
           </div>
@@ -262,7 +262,7 @@ export const AttendancePage: React.FC = () => {
                   <div className="detail-item">
                     <span className="detail-label">Saat:</span>
                     <span className="detail-value">
-                      {new Date(session.startTime).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })} - 
+                      {new Date(session.startTime).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })} -
                       {new Date(session.endTime).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}
                     </span>
                   </div>

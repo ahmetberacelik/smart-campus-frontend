@@ -11,7 +11,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Modal } from '@/components/ui/Modal';
 import { TextInput } from '@/components/common/TextInput';
-import type { AttendanceSession } from '@/types/api.types';
 import './MyAttendancePage.css';
 
 export const MyAttendancePage: React.FC = () => {
@@ -20,15 +19,17 @@ export const MyAttendancePage: React.FC = () => {
   const [excuseReason, setExcuseReason] = useState('');
   const [selectedSessionId, setSelectedSessionId] = useState<string>('');
 
-  // Aktif yoklama oturumları (öğrencinin kayıtlı olduğu derslerde)
+  // Aktif yoklama oturumları
   const { data: activeSessionsData } = useQuery(
     'active-sessions',
-    () => attendanceService.getActiveSessions(),
+    () => attendanceService.getActiveSessionsForStudent(),
     {
       retry: 1,
-      refetchInterval: 30000, // Her 30 saniyede bir yenile
+      refetchInterval: 30000, // 30 saniyede bir yenile
     }
   );
+
+  const activeSessions = activeSessionsData?.data || [];
 
   const { data: attendanceData, isLoading, error } = useQuery(
     'my-attendance',
@@ -50,9 +51,7 @@ export const MyAttendancePage: React.FC = () => {
     }
   );
 
-  // Backend doğrudan array döndürüyor, courses wrapper yok
-  const attendance = attendanceData?.data || [];
-  const activeSessions = activeSessionsData?.data || [];
+  const attendance = attendanceData?.data?.courses || [];
 
   const handleSubmitExcuse = async () => {
     if (!excuseReason.trim()) {
@@ -85,14 +84,14 @@ export const MyAttendancePage: React.FC = () => {
   if (error) {
     const errorData = error as any;
     const statusCode = errorData?.response?.status || errorData?.status;
-    
+
     if (statusCode === 401) {
       return (
         <div className="my-attendance-page">
           <div className="error-message">
             <h3>Kimlik Doğrulama Gerekli</h3>
             <p>Oturumunuzun süresi dolmuş olabilir. Lütfen tekrar giriş yapın.</p>
-            <Button 
+            <Button
               onClick={() => {
                 localStorage.clear();
                 navigate('/login');
@@ -105,7 +104,7 @@ export const MyAttendancePage: React.FC = () => {
         </div>
       );
     }
-    
+
     return (
       <div className="my-attendance-page">
         <div className="error-message">
@@ -131,47 +130,41 @@ export const MyAttendancePage: React.FC = () => {
 
       {/* Aktif Yoklama Oturumları */}
       {activeSessions.length > 0 && (
-        <div className="active-sessions-section">
-          <h2 className="section-title">🟢 Aktif Yoklama Oturumları</h2>
-          <p className="section-description">Aşağıdaki derslerde yoklama oturumu açık. Yoklama vermek için tıklayın.</p>
-          <div className="active-sessions-grid">
-            {activeSessions.map((session: AttendanceSession) => (
-              <Card key={session.id} className="active-session-card">
-                <CardContent>
-                  <div className="active-session-content">
-                    <div className="session-info">
-                      <h3 className="course-code">{session.courseCode || 'Ders'}</h3>
-                      <h4 className="course-name">{session.courseName || 'Bilinmiyor'}</h4>
-                      <p className="section-number">Bölüm {session.sectionNumber || '?'}</p>
-                      <p className="session-time">
-                        {session.date} • {session.startTime?.substring(0, 5)} - {session.endTime?.substring(0, 5)}
-                      </p>
-                    </div>
-                    <Button
-                      onClick={() => navigate(`/attendance/give/${session.id}`)}
-                      className="give-attendance-btn"
-                    >
-                      📍 Yoklama Ver
-                    </Button>
+        <Card className="active-sessions-card">
+          <CardHeader>
+            <CardTitle>🟢 Aktif Yoklama Oturumları</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="active-sessions-hint">Aşağıdaki dersler için yoklama oturumu açık. Hemen yoklama verebilirsiniz!</p>
+            <div className="active-sessions-grid">
+              {activeSessions.map((session: any) => (
+                <div key={session.id} className="active-session-item">
+                  <div className="active-session-info">
+                    <span className="active-session-course">{session.courseCode} - {session.courseName}</span>
+                    <span className="active-session-time">
+                      {session.date && new Date(session.date).toLocaleDateString('tr-TR')} {' '}
+                      {session.startTime && new Date(`2000-01-01T${session.startTime}`).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}
+                    </span>
                   </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
+                  <Button
+                    size="sm"
+                    onClick={() => navigate(`/attendance/give/${session.id}`)}
+                  >
+                    Yoklama Ver
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
       )}
-
-      {/* Geçmiş Yoklama Durumu */}
-      <h2 className="section-title" style={{ marginTop: activeSessions.length > 0 ? '2rem' : 0 }}>
-        📊 Geçmiş Yoklama Durumu
-      </h2>
 
       {attendance.length === 0 ? (
         <Card className="empty-state-card">
           <CardContent>
             <div className="empty-state">
               <svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM13 17H11V15H13V17ZM13 13H11V7H13V13Z" fill="currentColor"/>
+                <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM13 17H11V15H13V17ZM13 13H11V7H13V13Z" fill="currentColor" />
               </svg>
               <h3>Henüz yoklama kaydınız bulunmuyor</h3>
               <p>Dersleriniz için yoklama oturumları açıldıkça burada görünecektir</p>
@@ -185,10 +178,9 @@ export const MyAttendancePage: React.FC = () => {
             const status = course.status || 'NORMAL';
             const statusClass = status.toLowerCase();
             const totalSessions = course.totalSessions || 0;
-            // Backend: presentCount, excusedCount kullanıyor
-            const attendedSessions = course.presentCount || course.attendedSessions || 0;
-            const excusedAbsences = course.excusedCount || course.excusedAbsences || 0;
-            const absences = course.absentCount || (totalSessions - attendedSessions - excusedAbsences);
+            const attendedSessions = course.attendedSessions || 0;
+            const excusedAbsences = course.excusedAbsences || 0;
+            const absences = totalSessions - attendedSessions - excusedAbsences;
 
             return (
               <Card key={course.sectionId} className="attendance-card">
@@ -281,7 +273,7 @@ export const MyAttendancePage: React.FC = () => {
                   {percentage < 80 && absences > 0 && (
                     <div className="attendance-warning">
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM13 17H11V15H13V17ZM13 13H11V7H13V13Z" fill="currentColor"/>
+                        <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM13 17H11V15H13V17ZM13 13H11V7H13V13Z" fill="currentColor" />
                       </svg>
                       <span>Yoklama oranınız %80'in altında. Lütfen devamsız olduğunuz dersler için mazeret talebinde bulunun.</span>
                     </div>

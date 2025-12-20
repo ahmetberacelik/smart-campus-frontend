@@ -26,9 +26,9 @@ import { MyAttendancePage } from './pages/MyAttendancePage'
 import { StartAttendancePage } from './pages/StartAttendancePage'
 import { GiveAttendancePage } from './pages/GiveAttendancePage'
 import { AttendanceReportPage } from './pages/AttendanceReportPage'
-import { AttendanceSessionPage } from './pages/AttendanceSessionPage'
 import { ExcuseRequestsPage } from './pages/ExcuseRequestsPage'
 import { SectionsPage } from './pages/SectionsPage'
+import { SessionDetailPage } from './pages/SessionDetailPage'
 
 // Query Client setup
 const queryClient = new QueryClient({
@@ -171,7 +171,7 @@ function App() {
               element={
                 <ProtectedRoute>
                   <MainLayout>
-                    <AttendanceSessionPage />
+                    <SessionDetailPage />
                   </MainLayout>
                 </ProtectedRoute>
               }

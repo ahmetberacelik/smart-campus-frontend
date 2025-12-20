@@ -6,7 +6,6 @@ import { courseService, type CourseListParams } from '@/services/api/course.serv
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { Button } from '@/components/common/Button';
 import { TextInput } from '@/components/common/TextInput';
-// Select component - gelecekte departman filtresi için kullanılabilir
 import { useAuth } from '@/context/AuthContext';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Breadcrumb } from '@/components/ui/Breadcrumb';
@@ -36,7 +35,7 @@ export const CoursesPage: React.FC = () => {
 
   // Trimmed search value (query için kullanılacak)
   const trimmedSearch = searchQuery.trim();
-  
+
   const params: CourseListParams = useMemo(() => ({
     page,
     limit: 20,
@@ -53,7 +52,7 @@ export const CoursesPage: React.FC = () => {
     trimmedSearch || '',
     departmentId || '',
   ], [page, trimmedSearch, departmentId]);
-  
+
   const { data, isLoading, error, refetch } = useQuery(
     queryKey,
     () => {
@@ -173,10 +172,10 @@ export const CoursesPage: React.FC = () => {
         />
         <Button type="submit">Ara</Button>
         {search && (
-          <Button variant="secondary" onClick={() => { 
-            setSearch(''); 
-            setSearchQuery(''); 
-            setPage(0); 
+          <Button variant="secondary" onClick={() => {
+            setSearch('');
+            setSearchQuery('');
+            setPage(0);
           }}>
             Temizle
           </Button>
@@ -195,52 +194,50 @@ export const CoursesPage: React.FC = () => {
           courses.map((course: any) => (
             <div
               key={course.id}
-              onClick={() => handleCourseClick(course.id)}
-              style={{ cursor: 'pointer' }}
-            >
-            <Card
-              variant="default"
               className="course-card"
+              style={{ cursor: 'pointer' }}
+              onClick={() => handleCourseClick(course.id)}
             >
-              <CardHeader>
-                <div className="course-card-header">
-                  <CardTitle>{course.code}</CardTitle>
-                  <Badge variant="primary">{course.credits} AKTS</Badge>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <h4 className="course-name">{course.name}</h4>
-                {course.description && (
-                  <p className="course-description">{course.description}</p>
-                )}
-                <div className="course-footer">
-                  <Badge variant="default">{course.ects} ECTS</Badge>
-                  <div style={{ display: 'flex', gap: '8px' }}>
-                    {isStudent && (
-                      <Button
-                        variant="primary"
-                        size="sm"
-                        onClick={(e) => handleEnrollClick(e, course)}
-                      >
-                        Kayıt Ol
-                      </Button>
-                    )}
-                    {isAdmin && (
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          toast.info('Ders düzenleme özelliği yakında eklenecek');
-                        }}
-                      >
-                        Düzenle
-                      </Button>
-                    )}
+              <Card variant="default">
+                <CardHeader>
+                  <div className="course-card-header">
+                    <CardTitle>{course.code}</CardTitle>
+                    <Badge variant="primary">{course.credits} AKTS</Badge>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
+                </CardHeader>
+                <CardContent>
+                  <h4 className="course-name">{course.name}</h4>
+                  {course.description && (
+                    <p className="course-description">{course.description}</p>
+                  )}
+                  <div className="course-footer">
+                    <Badge variant="default">{course.ects} ECTS</Badge>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      {isStudent && (
+                        <Button
+                          variant="primary"
+                          size="sm"
+                          onClick={(e) => handleEnrollClick(e, course)}
+                        >
+                          Kayıt Ol
+                        </Button>
+                      )}
+                      {isAdmin && (
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toast.info('Ders düzenleme özelliği yakında eklenecek');
+                          }}
+                        >
+                          Düzenle
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
           ))
         )}

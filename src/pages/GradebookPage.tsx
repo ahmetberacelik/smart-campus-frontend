@@ -28,7 +28,7 @@ export const GradebookPage: React.FC = () => {
     {
       enabled: !!sectionId,
       retry: 1,
-      onError: () => {
+      onError: (_err: any) => {
         toast.error('Bölüm bilgileri yüklenirken bir hata oluştu');
       },
     }
@@ -41,7 +41,7 @@ export const GradebookPage: React.FC = () => {
     {
       enabled: !!sectionId,
       retry: 1,
-      onError: () => {
+      onError: (_err: any) => {
         toast.error('Öğrenci listesi yüklenirken bir hata oluştu');
       },
     }
@@ -64,7 +64,7 @@ export const GradebookPage: React.FC = () => {
   const calculateLetterGrade = (midterm: number | undefined, final: number | undefined): string => {
     if (midterm === undefined || final === undefined) return '';
     const average = (midterm * 0.4) + (final * 0.6);
-    
+
     if (average >= 90) return 'AA';
     if (average >= 85) return 'BA';
     if (average >= 80) return 'BB';
@@ -77,8 +77,8 @@ export const GradebookPage: React.FC = () => {
   };
 
   const saveGradeMutation = useMutation(
-    ({ enrollmentId, data }: { enrollmentId: string; data: Omit<EnterGradeRequest, 'enrollmentId'> }) =>
-      gradeService.enterGrade({ enrollmentId, ...data }),
+    (data: EnterGradeRequest) =>
+      gradeService.enterGrade(data),
     {
       onSuccess: () => {
         toast.success('Not başarıyla kaydedildi');
@@ -97,13 +97,13 @@ export const GradebookPage: React.FC = () => {
     if (!gradeData) return;
 
     setSaving(enrollmentId);
-    
-    const data: Omit<EnterGradeRequest, 'enrollmentId'> = {};
+
+    const data: EnterGradeRequest = { enrollmentId };
     if (gradeData.midterm !== undefined) data.midtermGrade = gradeData.midterm;
     if (gradeData.final !== undefined) data.finalGrade = gradeData.final;
     if (gradeData.letterGrade) data.letterGrade = gradeData.letterGrade;
 
-    await saveGradeMutation.mutateAsync({ enrollmentId, data });
+    await saveGradeMutation.mutateAsync(data);
   };
 
   const handleBulkSave = async () => {
@@ -180,22 +180,22 @@ export const GradebookPage: React.FC = () => {
                 ) : (
                   students.map((enrollment: any) => {
                     const student = enrollment.student || {};
-                    const studentName = student.name || 
+                    const studentName = student.name ||
                       `${student.firstName || ''} ${student.lastName || ''}`.trim();
                     const studentNumber = student.studentNumber || '-';
-                    
+
                     const gradeData = grades[enrollment.id] || {};
                     const midterm = gradeData.midterm ?? enrollment.midtermGrade;
                     const final = gradeData.final ?? enrollment.finalGrade;
-                    const average = midterm !== undefined && final !== undefined 
-                      ? (midterm * 0.4) + (final * 0.6) 
+                    const average = midterm !== undefined && final !== undefined
+                      ? (midterm * 0.4) + (final * 0.6)
                       : undefined;
                     const calculatedLetter = average !== undefined ? calculateLetterGrade(midterm, final) : '';
                     const letterGrade = gradeData.letterGrade ?? enrollment.letterGrade ?? calculatedLetter;
 
-                    const hasChanges = 
-                      gradeData.midterm !== undefined || 
-                      gradeData.final !== undefined || 
+                    const hasChanges =
+                      gradeData.midterm !== undefined ||
+                      gradeData.final !== undefined ||
                       gradeData.letterGrade !== undefined;
 
                     return (

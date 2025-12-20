@@ -188,30 +188,19 @@ export interface Transcript {
 
 // Attendance Types
 export interface AttendanceSession {
-  id: string | number;
-  sectionId: string | number;
-  // Backend doğrudan bu alanları döndürüyor (nested section yok)
-  courseCode?: string;
-  courseName?: string;
-  sectionNumber?: string;
-  instructorName?: string;
-  classroomName?: string;
-  // Tarih ve saat - Backend LocalDate/LocalTime döndürüyor (örn: "2025-12-16", "19:30:00")
+  id: string;
+  sectionId: string;
+  section: CourseSection;
+  instructorId: string;
   date: string;
   startTime: string;
-  endTime?: string;
+  endTime: string;
   latitude: number;
   longitude: number;
   geofenceRadius: number; // meters
-  qrCode?: string;
-  qrCodeUrl?: string;
-  status: 'ACTIVE' | 'CLOSED' | 'active' | 'closed';
-  // İstatistikler
-  enrolledCount?: number;
-  presentCount?: number;
-  absentCount?: number;
-  attendanceRate?: number;
-  createdAt?: string;
+  qrCode: string;
+  status: 'active' | 'closed';
+  createdAt: string;
 }
 
 export interface AttendanceRecord {

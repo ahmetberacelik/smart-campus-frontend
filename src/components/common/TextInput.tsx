@@ -21,7 +21,7 @@ interface TextInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
 export const TextInput = React.forwardRef<HTMLInputElement | HTMLTextAreaElement, TextInputProps>(
   ({ label, error, helperText, fullWidth = false, leftIcon, rightIcon, className, type = 'text', rows, ...props }, ref) => {
     const isTextarea = type === 'textarea';
-    
+
     return (
       <div className={clsx('text-input-wrapper', { 'full-width': fullWidth })}>
         {label && (

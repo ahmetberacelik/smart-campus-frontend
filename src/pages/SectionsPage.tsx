@@ -48,8 +48,8 @@ export const SectionsPage: React.FC = () => {
     }
 
     return allSections.filter((section: any) => {
-      const courseDepartmentId = section.courseDepartmentId?.toString() || 
-                                  section.course?.departmentId?.toString();
+      const courseDepartmentId = section.courseDepartmentId?.toString() ||
+        section.course?.departmentId?.toString();
       return courseDepartmentId === userDepartmentId;
     });
   }, [allSections, userDepartmentId]);
@@ -122,10 +122,10 @@ export const SectionsPage: React.FC = () => {
             // Backend'den course bilgileri direkt olarak da gelebilir
             const courseCode = section.courseCode || course.code || '';
             const courseName = section.courseName || course.name || '';
-            const instructorName = section.instructorName || 
-                                  instructor.name || 
-                                  `${instructor.firstName || ''} ${instructor.lastName || ''}`.trim() ||
-                                  'Belirtilmemiş';
+            const instructorName = section.instructorName ||
+              instructor.name ||
+              `${instructor.firstName || ''} ${instructor.lastName || ''}`.trim() ||
+              'Belirtilmemiş';
             const courseDepartmentName = section.courseDepartmentName || course.departmentName || '';
 
             return (
@@ -147,9 +147,9 @@ export const SectionsPage: React.FC = () => {
                   <div className="detail-item">
                     <span className="detail-label">Dönem:</span>
                     <span className="detail-value">
-                      {section.semester === 'FALL' ? 'Güz' : 
-                       section.semester === 'SPRING' ? 'Bahar' : 
-                       section.semester === 'SUMMER' ? 'Yaz' : section.semester} {section.year}
+                      {section.semester === 'FALL' ? 'Güz' :
+                        section.semester === 'SPRING' ? 'Bahar' :
+                          section.semester === 'SUMMER' ? 'Yaz' : section.semester} {section.year}
                     </span>
                   </div>
                   <div className="detail-item">

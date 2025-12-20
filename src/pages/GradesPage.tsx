@@ -5,7 +5,6 @@ import { toast } from 'react-toastify';
 import { gradeService } from '@/services/api/grade.service';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { Button } from '@/components/common/Button';
-// format from date-fns - gelecekte tarih formatlaması için kullanılabilir
 import './GradesPage.css';
 
 export const GradesPage: React.FC = () => {
@@ -67,14 +66,14 @@ export const GradesPage: React.FC = () => {
   if (gradesError) {
     const errorData = gradesError as any;
     const statusCode = errorData?.response?.status || errorData?.status;
-    
+
     if (statusCode === 401) {
       return (
         <div className="grades-page">
           <div className="error-message">
             <h3>Kimlik Doğrulama Gerekli</h3>
             <p>Oturumunuzun süresi dolmuş olabilir. Lütfen tekrar giriş yapın.</p>
-            <Button 
+            <Button
               onClick={() => {
                 localStorage.clear();
                 navigate('/login');
@@ -87,7 +86,7 @@ export const GradesPage: React.FC = () => {
         </div>
       );
     }
-    
+
     return (
       <div className="grades-page">
         <div className="error-message">
@@ -99,7 +98,7 @@ export const GradesPage: React.FC = () => {
   }
 
   const grades = gradesData?.data || [];
-  const transcript = transcriptData?.data;
+  const transcript = transcriptData?.data as any;
 
   return (
     <div className="grades-page">
@@ -134,7 +133,7 @@ export const GradesPage: React.FC = () => {
           </div>
           <div className="summary-card">
             <div className="summary-label">Toplam Ders</div>
-            <div className="summary-value">{transcript.grades?.length || 0}</div>
+            <div className="summary-value">{transcript.courses?.length || 0}</div>
           </div>
         </div>
       )}
@@ -145,10 +144,13 @@ export const GradesPage: React.FC = () => {
           <h2>Transkript</h2>
           <div className="transcript-info">
             <div className="info-row">
-              <strong>Öğrenci:</strong> {transcript.student?.firstName} {transcript.student?.lastName}
+              <strong>Öğrenci:</strong> {transcript.studentName || transcript.student?.name}
             </div>
             <div className="info-row">
-              <strong>Öğrenci No:</strong> {transcript.student?.studentNumber}
+              <strong>Öğrenci No:</strong> {transcript.studentNumber || transcript.student?.studentNumber}
+            </div>
+            <div className="info-row">
+              <strong>Bölüm:</strong> {transcript.departmentName}
             </div>
           </div>
           <table className="transcript-table">
@@ -164,19 +166,19 @@ export const GradesPage: React.FC = () => {
               </tr>
             </thead>
             <tbody>
-              {transcript.grades?.map((grade: any, index: number) => (
+              {transcript.courses?.map((course: any, index: number) => (
                 <tr key={index}>
-                  <td>{grade.courseCode || grade.course?.code}</td>
-                  <td>{grade.courseName || grade.course?.name}</td>
-                  <td>{grade.credits || grade.course?.credits}</td>
-                  <td>{grade.ects || grade.course?.ects}</td>
-                  <td>{grade.semester} {grade.year}</td>
+                  <td>{course.courseCode}</td>
+                  <td>{course.courseName}</td>
+                  <td>{course.credits}</td>
+                  <td>{course.ects}</td>
+                  <td>{course.semester} {course.year}</td>
                   <td>
-                    <span className={`grade-badge grade-${grade.letterGrade?.toLowerCase()}`}>
-                      {grade.letterGrade || '-'}
+                    <span className={`grade-badge grade-${course.letterGrade?.toLowerCase()}`}>
+                      {course.letterGrade || '-'}
                     </span>
                   </td>
-                  <td>{grade.gradePoint?.toFixed(2) || '-'}</td>
+                  <td>{course.gradePoint?.toFixed(2) || '-'}</td>
                 </tr>
               ))}
             </tbody>
@@ -190,7 +192,7 @@ export const GradesPage: React.FC = () => {
         {grades.length === 0 ? (
           <div className="empty-state">
             <svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" fill="currentColor"/>
+              <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" fill="currentColor" />
             </svg>
             <h3>Henüz notunuz bulunmuyor</h3>
             <p>Dersleriniz için notlar girildikçe burada görünecektir</p>

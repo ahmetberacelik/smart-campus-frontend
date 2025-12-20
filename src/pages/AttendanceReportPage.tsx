@@ -141,8 +141,8 @@ export const AttendanceReportPage: React.FC = () => {
                     const totalSessions = student.totalSessions || 0;
                     const attendedSessions = student.attendedSessions || 0;
                     const absences = totalSessions - attendedSessions;
-                    const percentage = totalSessions > 0 
-                      ? (attendedSessions / totalSessions) * 100 
+                    const percentage = totalSessions > 0
+                      ? (attendedSessions / totalSessions) * 100
                       : 0;
                     const status = percentage >= 80 ? 'NORMAL' : percentage >= 60 ? 'WARNING' : 'CRITICAL';
                     const isFlagged = student.isSuspicious || false;

@@ -32,7 +32,7 @@ export const CourseDetailPage: React.FC = () => {
     {
       enabled: !!id,
       retry: 1,
-      onError: () => {
+      onError: (_err: any) => {
         toast.error('Ders bilgileri yüklenirken bir hata oluştu');
       },
     }
@@ -45,8 +45,8 @@ export const CourseDetailPage: React.FC = () => {
     {
       enabled: !!id,
       retry: 1,
-      onError: (err: any) => {
-        console.error('Section fetch error:', err);
+      onError: (_err: any) => {
+        console.error('Section fetch error:', _err);
       },
     }
   );

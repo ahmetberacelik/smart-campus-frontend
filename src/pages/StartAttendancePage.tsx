@@ -19,12 +19,12 @@ const getCurrentSemesterAndYear = () => {
   const now = new Date();
   const month = now.getMonth() + 1; // 1-12
   const year = now.getFullYear();
-  
+
   // Türkiye'de akademik yıl: Eylül (9) - Ocak (1) = Fall, Şubat (2) - Haziran (6) = Spring
   // Basit mantık: Eylül-Aralık ve Ocak = Fall, Şubat-Haziran = Spring
   let semester: string;
   let academicYear: number;
-  
+
   if (month >= 9 || month === 1) {
     // Fall (Güz) dönemi
     semester = 'FALL';
@@ -38,7 +38,7 @@ const getCurrentSemesterAndYear = () => {
     semester = 'SPRING';
     academicYear = year;
   }
-  
+
   return { semester, year: academicYear };
 };
 
@@ -55,17 +55,17 @@ export const StartAttendancePage: React.FC = () => {
   // Semester ve year state'leri (manuel seçim için)
   const [selectedSemester, setSelectedSemester] = useState<string>('');
   const [selectedYear, setSelectedYear] = useState<number>(0);
-  
+
   // Mevcut semester ve year bilgisi (varsayılan değerler)
   const defaultSemesterYear = useMemo(() => getCurrentSemesterAndYear(), []);
-  
+
   // Kullanıcı seçim yapmadıysa varsayılan değerleri kullan
   const semester = selectedSemester || defaultSemesterYear.semester;
   const year = selectedYear || defaultSemesterYear.year;
 
   // Kullanıcının bölüm ID'sini al (giriş yaparken seçilen bölüm)
   const userDepartmentId = user?.facultyInfo?.departmentId?.toString() || user?.studentInfo?.departmentId?.toString();
-  
+
   // Database'deki mevcut yılları getir
   const { data: availableYearsData } = useQuery(
     'available-years',
@@ -79,14 +79,14 @@ export const StartAttendancePage: React.FC = () => {
       },
     }
   );
-  
+
   const availableYears = availableYearsData?.data || [];
-  
+
   console.log('User Department ID:', userDepartmentId);
-  console.log('User Info:', { 
-    facultyInfo: user?.facultyInfo, 
+  console.log('User Info:', {
+    facultyInfo: user?.facultyInfo,
     studentInfo: user?.studentInfo,
-    role: user?.role 
+    role: user?.role
   });
   console.log('📅 Database\'de mevcut yıllar:', availableYears);
 
@@ -128,15 +128,15 @@ export const StartAttendancePage: React.FC = () => {
           message: error?.message,
           url: error?.config?.url
         });
-        
+
         // 403 hatası ise özel mesaj
         if (error?.response?.status === 403) {
           toast.error('Bu işlem için yetkiniz yok. Lütfen sistem yöneticisi ile iletişime geçin.');
         } else {
-          const errorMessage = error?.response?.data?.error?.message || 
-                             error?.response?.data?.message || 
-                             error?.message || 
-                             'Ders bölümleri yüklenirken bir hata oluştu';
+          const errorMessage = error?.response?.data?.error?.message ||
+            error?.response?.data?.message ||
+            error?.message ||
+            'Ders bölümleri yüklenirken bir hata oluştu';
           toast.error(errorMessage);
         }
       },
@@ -146,33 +146,33 @@ export const StartAttendancePage: React.FC = () => {
   // Ders bölümlerini belirle: kullanıcının bölümüne ait tüm dersleri göster
   const sections = useMemo(() => {
     const allSections = allSectionsData?.data || [];
-    
+
     console.log('Sections hesaplanıyor...', {
       allSectionsCount: allSections.length,
       allSectionsError,
       userDepartmentId
     });
-    
+
     if (allSectionsError) {
       console.error('❌ Tüm dersler getirilemedi:', allSectionsErrorDetail);
       return [];
     }
-    
+
     if (!userDepartmentId) {
       // Bölüm ID yoksa tümünü göster
       console.log('⚠️ Kullanıcı bölüm ID yok, tüm dersler gösteriliyor:', allSections.length);
       return allSections;
     }
-    
+
     // Kullanıcının bölümüne ait ders bölümlerini filtrele
     // Backend'den courseDepartmentId veya course.departmentId gelebilir
     const departmentSections = allSections.filter((section: any) => {
       // Önce courseDepartmentId'yi kontrol et (backend'den direkt gelebilir)
       // Sonra course.departmentId'yi kontrol et (nested object)
-      const courseDepartmentId = section.courseDepartmentId?.toString() || 
-                                  section.course?.departmentId?.toString();
+      const courseDepartmentId = section.courseDepartmentId?.toString() ||
+        section.course?.departmentId?.toString();
       const matches = courseDepartmentId === userDepartmentId;
-      
+
       // Debug: İlk 5 section'ın detaylarını göster
       if (allSections.indexOf(section) < 5) {
         console.log('🔍 Section detayı:', {
@@ -185,12 +185,12 @@ export const StartAttendancePage: React.FC = () => {
           matches: matches
         });
       }
-      
+
       return matches;
     });
-    
+
     console.log(`✅ Kullanıcının bölümüne (${userDepartmentId}) ait ${departmentSections.length} ders bölümü bulundu. Toplam: ${allSections.length}`);
-    
+
     // Eğer filtreleme sonucu boşsa, tüm section'ların department ID'lerini göster
     if (departmentSections.length === 0 && allSections.length > 0) {
       console.warn('⚠️ Filtreleme sonucu boş! Tüm section\'ların department ID\'leri:');
@@ -200,7 +200,7 @@ export const StartAttendancePage: React.FC = () => {
         console.warn(`  - ${courseName}: departmentId = ${deptId} (userDepartmentId = ${userDepartmentId})`);
       });
     }
-    
+
     return departmentSections;
   }, [allSectionsData, allSectionsError, allSectionsErrorDetail, userDepartmentId]);
 
@@ -230,7 +230,6 @@ export const StartAttendancePage: React.FC = () => {
       return;
     }
 
-    // Saat karşılaştırması için Date objesi kullan
     const startDateTime = new Date(`${date}T${startTime}`);
     const endDateTime = new Date(`${date}T${endTime}`);
 
@@ -239,16 +238,12 @@ export const StartAttendancePage: React.FC = () => {
       return;
     }
 
-    // Timezone sorununu önlemek için saatleri lokal format olarak gönder
-    // toISOString() UTC'ye çevirir ve 3 saat kayma oluşturur
-    // Bunun yerine "YYYY-MM-DDTHH:mm:ss" formatı kullanıyoruz (Z yok = timezone yok)
     const data: CreateAttendanceSessionRequest = {
       sectionId: selectedSectionId,
-      sessionDate: date, // "2025-12-16" formatında
-      startTime: `${date}T${startTime}:00`, // "2025-12-16T01:00:00" - lokal saat
-      endTime: `${date}T${endTime}:00`,     // "2025-12-16T02:00:00" - lokal saat
+      date: date,
+      startTime: startDateTime.toISOString(),
+      endTime: endDateTime.toISOString(),
       geofenceRadius: geofenceRadius,
-      durationMinutes: durationMinutes,
     };
 
     createSessionMutation.mutate(data);
@@ -263,7 +258,7 @@ export const StartAttendancePage: React.FC = () => {
   }
 
   const sectionOptions = sections.map((section: any) => {
-    // Backend doğrudan courseCode ve courseName döndürüyor (course.code değil)
+    // Backend'den course bilgisi hem düz alanlar (courseName, courseCode) hem de nested obje (course) olarak gelebilir
     const courseName = section.courseName || section.course?.name || 'Ders adı bulunamadı';
     const courseCode = section.courseCode || section.course?.code || '';
     const sectionNumber = section.sectionNumber || '';
@@ -346,7 +341,7 @@ export const StartAttendancePage: React.FC = () => {
                 />
                 {!sectionsLoading && sectionOptions.length === 0 && (
                   <small style={{ color: '#d32f2f', marginTop: '4px', display: 'block' }}>
-                    Bu dönem ({semester} {year}) için ders bölümü bulunamadı. 
+                    Bu dönem ({semester} {year}) için ders bölümü bulunamadı.
                     {userDepartmentId && ` (Bölüm ID: ${userDepartmentId})`}
                     <br />
                     <span style={{ fontSize: '0.85em', fontStyle: 'italic' }}>

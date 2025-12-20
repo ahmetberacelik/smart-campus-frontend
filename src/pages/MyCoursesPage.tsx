@@ -22,7 +22,7 @@ export const MyCoursesPage: React.FC = () => {
         // client.ts ApiError formatında döndürüyor
         const statusCode = err?.response?.status || err?.status;
         const isAuthError = statusCode === 401 || err?.code === 'UNAUTHORIZED';
-        
+
         if (isAuthError) {
           // Token refresh de başarısız olduysa giriş sayfasına yönlendir
           toast.error('Oturumunuzun süresi dolmuş. Lütfen tekrar giriş yapın.');
@@ -70,7 +70,7 @@ export const MyCoursesPage: React.FC = () => {
     const errorData = error as any;
     const statusCode = errorData?.response?.status || errorData?.status;
     const errorMessage = errorData?.message || 'Dersler yüklenirken bir hata oluştu';
-    
+
     // 401 Unauthorized hatası
     const isAuthError = statusCode === 401 || errorData?.code === 'UNAUTHORIZED';
     if (isAuthError) {
@@ -82,7 +82,7 @@ export const MyCoursesPage: React.FC = () => {
             <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginTop: '1rem' }}>
               Bu sayfa öğrenci rolüne sahip kullanıcılar için özeldir.
             </p>
-            <Button 
+            <Button
               onClick={() => {
                 // Sadece auth ile ilgili verileri temizle
                 localStorage.removeItem('accessToken');
@@ -98,7 +98,7 @@ export const MyCoursesPage: React.FC = () => {
         </div>
       );
     }
-    
+
     return (
       <div className="my-courses-page">
         <div className="error-message">
@@ -124,7 +124,7 @@ export const MyCoursesPage: React.FC = () => {
       {enrollments.length === 0 ? (
         <div className="empty-state">
           <svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M19 3H5C3.9 3 3 3.9 3 5V19C3 20.1 3.9 21 5 21H19C20.1 21 21 20.1 21 19V5C21 3.9 20.1 3 19 3ZM19 19H5V5H19V19ZM17 12H7V10H17V12ZM15 16H7V14H15V16ZM17 8H7V6H17V8Z" fill="currentColor"/>
+            <path d="M19 3H5C3.9 3 3 3.9 3 5V19C3 20.1 3.9 21 5 21H19C20.1 21 21 20.1 21 19V5C21 3.9 20.1 3 19 3ZM19 19H5V5H19V19ZM17 12H7V10H17V12ZM15 16H7V14H15V16ZM17 8H7V6H17V8Z" fill="currentColor" />
           </svg>
           <h3>Henüz kayıtlı dersiniz yok</h3>
           <p>Dersler sayfasından derslere kayıt olabilirsiniz</p>
@@ -136,7 +136,7 @@ export const MyCoursesPage: React.FC = () => {
             const enrollmentDate = enrollment.enrollmentDate
               ? format(new Date(enrollment.enrollmentDate), 'dd MMM yyyy')
               : '';
-            
+
             // Status'u Türkçeleştir
             const getStatusText = (status: string) => {
               switch (status) {
@@ -168,7 +168,7 @@ export const MyCoursesPage: React.FC = () => {
                   <div className="detail-item">
                     <span className="detail-label">Dönem:</span>
                     <span className="detail-value">
-                      {enrollment.semester && enrollment.year 
+                      {enrollment.semester && enrollment.year
                         ? `${enrollment.semester} ${enrollment.year}`
                         : enrollment.semester || enrollment.year || '-'}
                     </span>
@@ -184,12 +184,12 @@ export const MyCoursesPage: React.FC = () => {
                     </div>
                   )}
                   {(enrollment.capacity || enrollment.enrolledCount) && (
-                  <div className="detail-item">
-                    <span className="detail-label">Kapasite:</span>
-                    <span className="detail-value">
+                    <div className="detail-item">
+                      <span className="detail-label">Kapasite:</span>
+                      <span className="detail-value">
                         {enrollment.enrolledCount || 0} / {enrollment.capacity || 0}
-                    </span>
-                  </div>
+                      </span>
+                    </div>
                   )}
                   {enrollment.letterGrade && (
                     <div className="detail-item">
@@ -202,7 +202,7 @@ export const MyCoursesPage: React.FC = () => {
                 {enrollment.status === 'ENROLLED' && (
                   <div className="enrollment-actions">
                     <Button
-                      variant="danger"
+                      variant="secondary"
                       size="sm"
                       onClick={() => handleDrop(enrollment.id.toString(), enrollment.courseName)}
                       disabled={dropMutation.isLoading}

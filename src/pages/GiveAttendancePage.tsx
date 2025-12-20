@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, useRef } from 'react';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from 'react-query';
 import { toast } from 'react-toastify';
-import { attendanceService, type CheckInRequest } from '@/services/api/attendance.service';
+import { attendanceService, type CheckInRequest, type CheckInQrRequest } from '@/services/api/attendance.service';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { Button } from '@/components/common/Button';
 import { PageHeader } from '@/components/ui/PageHeader';
@@ -10,13 +10,24 @@ import { Breadcrumb } from '@/components/ui/Breadcrumb';
 import { Card, CardContent } from '@/components/ui/Card';
 import './GiveAttendancePage.css';
 
+type AttendanceMethod = 'gps' | 'qr';
+
 export const GiveAttendancePage: React.FC = () => {
   const { sessionId } = useParams<{ sessionId: string }>();
+  const [searchParams] = useSearchParams();
+  const qrFromUrl = searchParams.get('qr');
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [location, setLocation] = useState<{ lat: number; lon: number; accuracy: number } | null>(null);
   const [locationError, setLocationError] = useState<string>('');
   const [isGettingLocation, setIsGettingLocation] = useState(false);
+  const [activeMethod, setActiveMethod] = useState<AttendanceMethod>(qrFromUrl ? 'qr' : 'gps');
+  const [isScanning, setIsScanning] = useState(false);
+  const [scannedQrCode, setScannedQrCode] = useState<string>(qrFromUrl || '');
+  const [autoSubmitting, setAutoSubmitting] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
 
   // Get session details
   const { data: sessionData, isLoading: sessionLoading } = useQuery(
@@ -31,8 +42,9 @@ export const GiveAttendancePage: React.FC = () => {
     }
   );
 
-  const session = sessionData?.data;
+  const session = sessionData?.data as any;
 
+  // GPS ile yoklama mutation
   const checkInMutation = useMutation(
     (data: CheckInRequest) => attendanceService.checkIn(sessionId!, data),
     {
@@ -46,6 +58,97 @@ export const GiveAttendancePage: React.FC = () => {
       },
     }
   );
+
+  // QR ile yoklama mutation
+  const checkInQrMutation = useMutation(
+    (data: CheckInQrRequest) => attendanceService.checkInWithQr(sessionId!, data),
+    {
+      onSuccess: () => {
+        toast.success('Yoklama başarıyla verildi');
+        queryClient.invalidateQueries('my-attendance');
+        stopScanning();
+        navigate('/my-attendance');
+      },
+      onError: (error: any) => {
+        toast.error(error?.message || 'Yoklama verilirken bir hata oluştu');
+      },
+    }
+  );
+
+  // QR Kod URL'den geldiğinde otomatik işlem
+  useEffect(() => {
+    if (qrFromUrl && !location && !isGettingLocation) {
+      // QR URL'den geldiyse otomatik konum al
+      toast.info('QR kod algılandı, konum alınıyor...');
+      getCurrentLocationAuto();
+    }
+  }, [qrFromUrl]);
+
+  // Konum alındığında ve QR varsa otomatik yoklama ver
+  useEffect(() => {
+    if (qrFromUrl && location && !autoSubmitting && scannedQrCode) {
+      setAutoSubmitting(true);
+      toast.info('Konum alındı, yoklama veriliyor...');
+
+      const qrData: CheckInQrRequest = {
+        qrCode: scannedQrCode,
+        latitude: location.lat,
+        longitude: location.lon,
+        accuracy: location.accuracy,
+      };
+
+      checkInQrMutation.mutate(qrData);
+    }
+  }, [location, qrFromUrl, scannedQrCode]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      stopScanning();
+    };
+  }, []);
+
+  // Otomatik konum alma (QR URL için)
+  const getCurrentLocationAuto = () => {
+    if (!navigator.geolocation) {
+      setLocationError('Tarayıcınız konum servisini desteklemiyor.');
+      return;
+    }
+
+    setIsGettingLocation(true);
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setLocation({
+          lat: position.coords.latitude,
+          lon: position.coords.longitude,
+          accuracy: position.coords.accuracy || 0,
+        });
+        setIsGettingLocation(false);
+      },
+      (error) => {
+        let errorMessage = 'Konum alınamadı.';
+        switch (error.code) {
+          case error.PERMISSION_DENIED:
+            errorMessage = 'Konum izni reddedildi. Lütfen konum iznini açın.';
+            break;
+          case error.POSITION_UNAVAILABLE:
+            errorMessage = 'Konum bilgisi alınamıyor.';
+            break;
+          case error.TIMEOUT:
+            errorMessage = 'Konum alma işlemi zaman aşımına uğradı.';
+            break;
+        }
+        setLocationError(errorMessage);
+        setIsGettingLocation(false);
+        toast.error(errorMessage);
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 15000,
+        maximumAge: 0,
+      }
+    );
+  };
 
   const getCurrentLocation = () => {
     setIsGettingLocation(true);
@@ -74,48 +177,21 @@ export const GiveAttendancePage: React.FC = () => {
             errorMessage = 'Konum izni reddedildi. Lütfen tarayıcı ayarlarından konum iznini açın.';
             break;
           case error.POSITION_UNAVAILABLE:
-            errorMessage = 'Konum bilgisi alınamıyor.';
+            errorMessage = 'Konum bilgisi alınamıyor. GPS veya internet bağlantınızı kontrol edin.';
             break;
           case error.TIMEOUT:
-            errorMessage = 'Konum alma işlemi zaman aşımına uğradı.';
+            errorMessage = 'Konum alma işlemi zaman aşımına uğradı. Lütfen tekrar deneyin.';
             break;
         }
         setLocationError(errorMessage);
         setIsGettingLocation(false);
       },
       {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 0,
+        enableHighAccuracy: false, // false = daha hızlı ama daha az hassas
+        timeout: 30000, // 30 saniye
+        maximumAge: 60000, // 1 dakikaya kadar eski konum kabul edilir
       }
     );
-  };
-
-  // Haversine formülü ile iki GPS noktası arasındaki mesafeyi hesapla (metre)
-  const calculateHaversineDistance = (
-    lat1: number,
-    lon1: number,
-    lat2: number,
-    lon2: number
-  ): number => {
-    const R = 6371000; // Dünya yarıçapı (metre)
-    const dLat = ((lat2 - lat1) * Math.PI) / 180;
-    const dLon = ((lon2 - lon1) * Math.PI) / 180;
-    const a =
-      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-      Math.cos((lat1 * Math.PI) / 180) *
-        Math.cos((lat2 * Math.PI) / 180) *
-        Math.sin(dLon / 2) *
-        Math.sin(dLon / 2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return R * c;
-  };
-
-  // Cihaz bilgisini al
-  const getDeviceInfo = (): string => {
-    const userAgent = navigator.userAgent;
-    const platform = navigator.platform || 'unknown';
-    return `${platform} - ${userAgent.substring(0, 100)}`;
   };
 
   const handleCheckIn = async () => {
@@ -128,35 +204,98 @@ export const GiveAttendancePage: React.FC = () => {
       latitude: location.lat,
       longitude: location.lon,
       accuracy: location.accuracy,
-      deviceInfo: getDeviceInfo(),
-      isMockLocation: false, // Gerçek konum API'sinden alındığı için false
     };
 
     await checkInMutation.mutateAsync(checkInData);
   };
 
-  // Haversine formülü ile mesafe hesapla
-  const calculateDistance = (): string | null => {
-    if (!session || !location) return null;
-    
-    const sessionLat = session.latitude;
-    const sessionLon = session.longitude;
-    
-    if (sessionLat === undefined || sessionLon === undefined) {
-      return 'Sınıf konumu bilinmiyor';
+  // QR Tarama fonksiyonları
+  const startScanning = async () => {
+    try {
+      // Önce konum al
+      if (!location) {
+        getCurrentLocation();
+      }
+
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'environment' }
+      });
+
+      streamRef.current = stream;
+
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        videoRef.current.play();
+      }
+
+      setIsScanning(true);
+      scanQrCode();
+    } catch (error) {
+      toast.error('Kamera açılamadı. Lütfen kamera iznini kontrol edin.');
+      console.error('Camera error:', error);
     }
-    
-    const distance = calculateHaversineDistance(
-      location.lat,
-      location.lon,
-      sessionLat,
-      sessionLon
-    );
-    
-    if (distance < 1000) {
-      return `${distance.toFixed(0)} metre`;
+  };
+
+  const stopScanning = () => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop());
+      streamRef.current = null;
     }
-    return `${(distance / 1000).toFixed(2)} km`;
+    setIsScanning(false);
+    setScannedQrCode('');
+  };
+
+  const scanQrCode = () => {
+    if (!videoRef.current || !canvasRef.current || !isScanning) return;
+
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d');
+
+    if (!ctx || video.readyState !== video.HAVE_ENOUGH_DATA) {
+      requestAnimationFrame(scanQrCode);
+      return;
+    }
+
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+    try {
+      // jsQR kütüphanesi olmadan basit Base64 QR kod algılama denemesi
+      // Gerçek uygulamada jsQR veya html5-qrcode kullanılmalı
+      // QR kod algılama için harici kütüphane gerekli
+      // Şimdilik manuel giriş yöntemi ekleyelim
+    } catch (e) {
+      console.error('QR scan error:', e);
+    }
+
+    if (isScanning) {
+      requestAnimationFrame(scanQrCode);
+    }
+  };
+
+  const handleManualQrSubmit = async () => {
+    if (!scannedQrCode.trim()) {
+      toast.error('Lütfen QR kodu girin');
+      return;
+    }
+
+    // Konum al
+    if (!location) {
+      toast.error('Lütfen önce konum bilgisi alın');
+      getCurrentLocation();
+      return;
+    }
+
+    const qrData: CheckInQrRequest = {
+      qrCode: scannedQrCode.trim(),
+      latitude: location.lat,
+      longitude: location.lon,
+      accuracy: location.accuracy,
+    };
+
+    await checkInQrMutation.mutateAsync(qrData);
   };
 
   if (sessionLoading) {
@@ -178,8 +317,6 @@ export const GiveAttendancePage: React.FC = () => {
     );
   }
 
-  const distance = calculateDistance();
-
   return (
     <div className="give-attendance-page">
       <Breadcrumb
@@ -197,24 +334,50 @@ export const GiveAttendancePage: React.FC = () => {
       <div className="give-attendance-container">
         <Card>
           <CardContent>
+            {/* Method Selection Tabs */}
+            <div className="method-tabs">
+              <button
+                className={`method-tab ${activeMethod === 'gps' ? 'active' : ''}`}
+                onClick={() => {
+                  setActiveMethod('gps');
+                  stopScanning();
+                }}
+              >
+                📍 GPS ile Yoklama
+              </button>
+              <button
+                className={`method-tab ${activeMethod === 'qr' ? 'active' : ''}`}
+                onClick={() => setActiveMethod('qr')}
+              >
+                📷 QR ile Yoklama
+              </button>
+            </div>
+
             <div className="session-info">
               <h3>Oturum Bilgileri</h3>
               <div className="info-grid">
                 <div className="info-item">
                   <span className="info-label">Ders:</span>
-                  <span className="info-value">{session.courseCode} - {session.courseName}</span>
+                  <span className="info-value">
+                    {session.courseCode || session.courseName
+                      ? `${session.courseCode || ''} - ${session.courseName || ''}`
+                      : 'Ders bilgisi yükleniyor...'}
+                  </span>
                 </div>
                 <div className="info-item">
                   <span className="info-label">Tarih:</span>
                   <span className="info-value">
-                    {session.date ? new Date(session.date + 'T00:00:00').toLocaleDateString('tr-TR') : '--'}
+                    {session.date
+                      ? new Date(session.date).toLocaleDateString('tr-TR')
+                      : '-'}
                   </span>
                 </div>
                 <div className="info-item">
                   <span className="info-label">Saat:</span>
                   <span className="info-value">
-                    {session.startTime?.substring(0, 5) || '--:--'} - 
-                    {session.endTime?.substring(0, 5) || '--:--'}
+                    {session.startTime && session.endTime
+                      ? `${session.startTime.substring(0, 5)} - ${session.endTime.substring(0, 5)}`
+                      : '-'}
                   </span>
                 </div>
                 {session.classroomName && (
@@ -226,71 +389,150 @@ export const GiveAttendancePage: React.FC = () => {
               </div>
             </div>
 
-            <div className="location-section">
-              <h3>Konum Bilgisi</h3>
-              {!location ? (
-                <div className="location-placeholder">
-                  {locationError ? (
-                    <div className="error-message-text">{locationError}</div>
-                  ) : (
-                    <p>Yoklama vermek için konum bilginize ihtiyacımız var.</p>
-                  )}
+            {/* GPS Method */}
+            {activeMethod === 'gps' && (
+              <div className="location-section">
+                <h3>📍 Konum Bilgisi</h3>
+                {!location ? (
+                  <div className="location-placeholder">
+                    {locationError ? (
+                      <div className="error-message-text">{locationError}</div>
+                    ) : (
+                      <p>Yoklama vermek için konum bilginize ihtiyacımız var.</p>
+                    )}
+                    <Button
+                      onClick={getCurrentLocation}
+                      disabled={isGettingLocation}
+                      fullWidth
+                    >
+                      {isGettingLocation ? (
+                        <>
+                          <LoadingSpinner size="sm" />
+                          Konum Alınıyor...
+                        </>
+                      ) : (
+                        'Konum Bilgisi Al'
+                      )}
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="location-display">
+                    <div className="location-coords">
+                      <div className="coord-item">
+                        <span className="coord-label">Enlem:</span>
+                        <span className="coord-value">{location.lat.toFixed(6)}</span>
+                      </div>
+                      <div className="coord-item">
+                        <span className="coord-label">Boylam:</span>
+                        <span className="coord-value">{location.lon.toFixed(6)}</span>
+                      </div>
+                      <div className="coord-item">
+                        <span className="coord-label">Doğruluk:</span>
+                        <span className="coord-value">±{location.accuracy.toFixed(0)}m</span>
+                      </div>
+                    </div>
+                    <Button
+                      variant="secondary"
+                      onClick={getCurrentLocation}
+                      size="sm"
+                    >
+                      Konumu Yenile
+                    </Button>
+                  </div>
+                )}
+
+                <div className="action-section">
                   <Button
-                    onClick={getCurrentLocation}
-                    disabled={isGettingLocation}
+                    onClick={handleCheckIn}
+                    disabled={!location || checkInMutation.isLoading}
+                    fullWidth
+                    size="lg"
+                  >
+                    {checkInMutation.isLoading ? 'Yoklama Veriliyor...' : 'Yoklama Ver'}
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {/* QR Method */}
+            {activeMethod === 'qr' && (
+              <div className="qr-section">
+                <h3>📷 QR Kod ile Yoklama</h3>
+
+                {/* Konum bilgisi de gerekli */}
+                {!location && (
+                  <div className="qr-location-warning">
+                    <p>⚠️ QR ile yoklama için de konum bilginiz gereklidir.</p>
+                    <Button
+                      onClick={getCurrentLocation}
+                      disabled={isGettingLocation}
+                      variant="secondary"
+                      size="sm"
+                    >
+                      {isGettingLocation ? 'Konum Alınıyor...' : 'Konum Al'}
+                    </Button>
+                  </div>
+                )}
+
+                {location && (
+                  <div className="location-mini">
+                    ✅ Konum: {location.lat.toFixed(4)}, {location.lon.toFixed(4)}
+                  </div>
+                )}
+
+                {/* Kamera ile tarama */}
+                <div className="qr-scanner-section">
+                  {isScanning ? (
+                    <div className="scanner-active">
+                      <video
+                        ref={videoRef}
+                        className="scanner-video"
+                        playsInline
+                        autoPlay
+                        muted
+                      />
+                      <canvas ref={canvasRef} style={{ display: 'none' }} />
+                      <Button
+                        variant="secondary"
+                        onClick={stopScanning}
+                        fullWidth
+                      >
+                        Taramayı Durdur
+                      </Button>
+                    </div>
+                  ) : (
+                    <Button
+                      onClick={startScanning}
+                      fullWidth
+                      disabled={!location}
+                    >
+                      📷 Kamerayı Aç ve Tara
+                    </Button>
+                  )}
+                </div>
+
+                {/* Manuel QR girişi */}
+                <div className="manual-qr-section">
+                  <p className="manual-hint">veya QR kodu manuel olarak girin:</p>
+                  <input
+                    type="text"
+                    className="qr-input"
+                    placeholder="QR kod içeriğini yapıştırın..."
+                    value={scannedQrCode}
+                    onChange={(e) => setScannedQrCode(e.target.value)}
+                  />
+                  <Button
+                    onClick={handleManualQrSubmit}
+                    disabled={!scannedQrCode.trim() || !location || checkInQrMutation.isLoading}
                     fullWidth
                   >
-                    {isGettingLocation ? (
-                      <>
-                        <LoadingSpinner size="sm" />
-                        Konum Alınıyor...
-                      </>
-                    ) : (
-                      'Konum Bilgisi Al'
-                    )}
+                    {checkInQrMutation.isLoading ? 'Yoklama Veriliyor...' : 'QR ile Yoklama Ver'}
                   </Button>
                 </div>
-              ) : (
-                <div className="location-display">
-                  <div className="location-coords">
-                    <div className="coord-item">
-                      <span className="coord-label">Enlem:</span>
-                      <span className="coord-value">{location.lat.toFixed(6)}</span>
-                    </div>
-                    <div className="coord-item">
-                      <span className="coord-label">Boylam:</span>
-                      <span className="coord-value">{location.lon.toFixed(6)}</span>
-                    </div>
-                    <div className="coord-item">
-                      <span className="coord-label">Doğruluk:</span>
-                      <span className="coord-value">±{location.accuracy.toFixed(0)}m</span>
-                    </div>
-                  </div>
-                  {distance && (
-                    <div className="distance-info">
-                      <span>Sınıfa Uzaklık: {distance}</span>
-                    </div>
-                  )}
-                  <Button
-                    variant="secondary"
-                    onClick={getCurrentLocation}
-                    size="sm"
-                  >
-                    Konumu Yenile
-                  </Button>
-                </div>
-              )}
-            </div>
+              </div>
+            )}
 
-            <div className="action-section">
-              <Button
-                onClick={handleCheckIn}
-                disabled={!location || checkInMutation.isLoading}
-                fullWidth
-                size="lg"
-              >
-                {checkInMutation.isLoading ? 'Yoklama Veriliyor...' : 'Yoklama Ver'}
-              </Button>
+            <div className="cancel-section">
               <Button
                 variant="secondary"
                 onClick={() => navigate('/my-attendance')}

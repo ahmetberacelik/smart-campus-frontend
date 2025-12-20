@@ -27,7 +27,7 @@ export const ExcuseRequestsPage: React.FC = () => {
     }),
     {
       retry: 1,
-      onError: () => {
+      onError: (_err: any) => {
         toast.error('Mazeret istekleri yüklenirken bir hata oluştu');
       },
     }
@@ -160,7 +160,7 @@ export const ExcuseRequestsPage: React.FC = () => {
                   </div>
                   <div className="request-actions">
                     <Button
-                      variant="danger"
+                      variant="secondary"
                       size="sm"
                       onClick={() => handleReject(request)}
                     >
@@ -308,7 +308,7 @@ export const ExcuseRequestsPage: React.FC = () => {
                 İptal
               </Button>
               <Button
-                variant="danger"
+                variant="secondary"
                 onClick={confirmReject}
                 disabled={rejectMutation.isLoading}
               >
