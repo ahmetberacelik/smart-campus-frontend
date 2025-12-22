@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useQuery } from 'react-query';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
@@ -11,6 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Modal } from '@/components/ui/Modal';
 import { TextInput } from '@/components/common/TextInput';
+import { AttendanceChart } from '@/components/charts/AttendanceChart';
 import './MyAttendancePage.css';
 
 export const MyAttendancePage: React.FC = () => {
@@ -52,6 +53,36 @@ export const MyAttendancePage: React.FC = () => {
   );
 
   const attendance = attendanceData?.data?.courses || [];
+
+  // Attendance chart verisi - Tüm dersler için birleştirilmiş session verisi
+  const attendanceChartData = useMemo(() => {
+    const sessionMap = new Map<string, { attended: number; total: number }>();
+
+    attendance.forEach((course: any) => {
+      if (course.sessions && Array.isArray(course.sessions)) {
+        course.sessions.forEach((session: any) => {
+          const dateKey = session.date || session.sessionDate;
+          if (dateKey) {
+            const existing = sessionMap.get(dateKey) || { attended: 0, total: 0 };
+            existing.total += 1;
+            if (session.status === 'PRESENT' || session.status === 'ATTENDED') {
+              existing.attended += 1;
+            }
+            sessionMap.set(dateKey, existing);
+          }
+        });
+      }
+    });
+
+    return Array.from(sessionMap.entries())
+      .map(([date, stats]) => ({
+        date,
+        attended: stats.attended,
+        total: stats.total,
+        percentage: stats.total > 0 ? (stats.attended / stats.total) * 100 : 0,
+      }))
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  }, [attendance]);
 
   const handleSubmitExcuse = async () => {
     if (!excuseReason.trim()) {
@@ -127,6 +158,19 @@ export const MyAttendancePage: React.FC = () => {
         title="Yoklama Durumum"
         description="Tüm dersleriniz için yoklama durumunuzu görüntüleyebilir ve mazeret talebinde bulunabilirsiniz"
       />
+
+      {/* Attendance Chart */}
+      {attendanceChartData.length > 0 && (
+        <Card>
+          <CardContent>
+            <AttendanceChart
+              data={attendanceChartData}
+              title="Yoklama Trendi (Tüm Dersler)"
+              height={300}
+            />
+          </CardContent>
+        </Card>
+      )}
 
       {/* Aktif Yoklama Oturumları */}
       {activeSessions.length > 0 && (

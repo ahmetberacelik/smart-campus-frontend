@@ -126,6 +126,121 @@ const navSections: NavSection[] = [
       },
     ],
   },
+  {
+    label: 'Yemek Servisi',
+    items: [
+      {
+        path: '/meals/menu',
+        label: 'Yemek Menüsü',
+        icon: (
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M8.1 13.34L11 16.24L15.9 11.34L19.17 14.61C20.33 13.45 21 11.95 21 10.5C21 7.46 18.54 5 15.5 5C14.05 5 12.55 5.67 11.39 6.83L8.1 10.12V13.34ZM5.63 18.37L9.17 14.83L11 16.66L7.66 20H4V16.34L5.63 18.37ZM4 3H7.66L11 6.34L9.17 8.17L5.63 4.63L4 6.76V3ZM18.37 5.63L14.83 9.17L13 7.34L16.34 4H20V7.66L18.37 5.63Z" fill="currentColor"/>
+          </svg>
+        ),
+        roles: ['student'],
+      },
+      {
+        path: '/meals/reservations',
+        label: 'Rezervasyonlarım',
+        icon: (
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M19 3H5C3.9 3 3 3.9 3 5V19C3 20.1 3.9 21 5 21H19C20.1 21 21 20.1 21 19V5C21 3.9 20.1 3 19 3ZM19 19H5V8H19V19ZM7 10H17V12H7V10ZM7 14H14V16H7V14Z" fill="currentColor"/>
+          </svg>
+        ),
+        roles: ['student'],
+      },
+      {
+        path: '/meals/scan',
+        label: 'QR Kod Tara',
+        icon: (
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M9.5 6.5V9.5H6.5V6.5H9.5ZM11 5H5V11H11V5ZM9.5 14.5V17.5H6.5V14.5H9.5ZM11 13H5V19H11V13ZM17.5 6.5V9.5H14.5V6.5H17.5ZM19 5H13V11H19V5ZM13 13H15V15H13V13ZM15 15H17V17H15V15ZM17 17H19V19H17V17ZM17 13H19V15H17V13ZM19 17H21V19H19V17ZM13 17H15V19H13V17ZM15 19H17V21H15V19ZM6.5 14.5H9.5V17.5H6.5V14.5ZM17.5 14.5H20.5V17.5H17.5V14.5Z" fill="currentColor"/>
+          </svg>
+        ),
+        roles: ['staff', 'admin'],
+      },
+      {
+        path: '/wallet',
+        label: 'Cüzdan',
+        icon: (
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M20 4H4C2.89 4 2.01 4.89 2.01 6L2 18C2 19.11 2.89 20 4 20H20C21.11 20 22 19.11 22 18V6C22 4.89 21.11 4 20 4ZM20 18H4V12H20V18ZM20 8H4V6H20V8Z" fill="currentColor"/>
+          </svg>
+        ),
+        roles: ['student'],
+      },
+    ],
+  },
+  {
+    label: 'Etkinlikler',
+    items: [
+      {
+        path: '/events',
+        label: 'Etkinlikler',
+        icon: (
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M19 4H5C3.89 4 3 4.9 3 6V20C3 21.1 3.89 22 5 22H19C20.1 22 21 21.1 21 20V6C21 4.9 20.1 4 19 4ZM19 20H5V9H19V20ZM7 11H17V13H7V11ZM7 15H12V17H7V15Z" fill="currentColor"/>
+          </svg>
+        ),
+        roles: ['student', 'faculty', 'admin'],
+      },
+      {
+        path: '/my-events',
+        label: 'Etkinliklerim',
+        icon: (
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M19 4H5C3.9 4 3 4.9 3 6V20C3 21.1 3.9 22 5 22H19C20.1 22 21 21.1 21 20V6C21 4.9 20.1 4 19 4ZM19 20H5V9H19V20ZM7 11H17V13H7V11ZM7 15H14V17H7V15Z" fill="currentColor"/>
+          </svg>
+        ),
+        roles: ['student'],
+      },
+      {
+        path: '/events/checkin',
+        label: 'Etkinlik Check-in',
+        icon: (
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M9 16.17L4.83 12L3.41 13.41L9 19L21 7L19.59 5.59L9 16.17Z" fill="currentColor"/>
+          </svg>
+        ),
+        roles: ['faculty', 'admin'],
+      },
+    ],
+  },
+  {
+    label: 'Program & Rezervasyon',
+    items: [
+      {
+        path: '/schedule',
+        label: 'Ders Programım',
+        icon: (
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M19 3H5C3.9 3 3 3.9 3 5V19C3 20.1 3.9 21 5 21H19C20.1 21 21 20.1 21 19V5C21 3.9 20.1 3 19 3ZM19 19H5V8H19V19ZM7 10H12V15H7V10Z" fill="currentColor"/>
+          </svg>
+        ),
+        roles: ['student'],
+      },
+      {
+        path: '/admin/scheduling/generate',
+        label: 'Program Oluştur',
+        icon: (
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M19 13H13V19H11V13H5V11H11V5H13V11H19V13Z" fill="currentColor"/>
+          </svg>
+        ),
+        roles: ['admin'],
+      },
+      {
+        path: '/reservations',
+        label: 'Sınıf Rezervasyonları',
+        icon: (
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 7V3H2V21H22V7H12ZM6 19H4V17H6V19ZM6 15H4V13H6V15ZM6 11H4V9H6V11ZM6 7H4V5H6V7ZM10 19H8V17H10V19ZM10 15H8V13H10V15ZM10 11H8V9H10V11ZM10 7H8V5H10V7ZM20 19H12V17H14V15H12V13H14V11H12V9H20V19ZM18 11H16V13H18V11ZM18 15H16V17H18V15Z" fill="currentColor"/>
+          </svg>
+        ),
+        roles: ['faculty', 'admin'],
+      },
+    ],
+  },
 ];
 
 export const Sidebar: React.FC = () => {

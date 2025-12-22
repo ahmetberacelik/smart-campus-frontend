@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useQuery } from 'react-query';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { gradeService } from '@/services/api/grade.service';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { Button } from '@/components/common/Button';
+import { GradeDistributionChart } from '@/components/charts/GradeDistributionChart';
+import { Card, CardContent } from '@/components/ui/Card';
 import './GradesPage.css';
 
 export const GradesPage: React.FC = () => {
@@ -91,7 +93,7 @@ export const GradesPage: React.FC = () => {
       <div className="grades-page">
         <div className="error-message">
           <h3>Hata Oluştu</h3>
-          <p>{errorData?.message || 'Notlar yüklenirken bir hata oluştu'}</p>
+          <p>{errorData?.response?.data?.message || errorData?.message || 'Notlar yüklenirken bir hata oluştu'}</p>
         </div>
       </div>
     );
@@ -99,6 +101,25 @@ export const GradesPage: React.FC = () => {
 
   const grades = gradesData?.data || [];
   const transcript = transcriptData?.data as any;
+
+  // Grade distribution chart verisi
+  const gradeDistributionData = useMemo(() => {
+    const gradeCounts: Record<string, number> = {};
+    const gradeOrder = ['AA', 'BA', 'BB', 'CB', 'CC', 'DC', 'DD', 'FD', 'FF'];
+
+    grades.forEach((grade: any) => {
+      if (grade.letterGrade) {
+        gradeCounts[grade.letterGrade] = (gradeCounts[grade.letterGrade] || 0) + 1;
+      }
+    });
+
+    return gradeOrder
+      .filter((grade) => gradeCounts[grade] > 0)
+      .map((grade) => ({
+        grade,
+        count: gradeCounts[grade] || 0,
+      }));
+  }, [grades]);
 
   return (
     <div className="grades-page">
@@ -184,6 +205,19 @@ export const GradesPage: React.FC = () => {
             </tbody>
           </table>
         </div>
+      )}
+
+      {/* Grade Distribution Chart */}
+      {gradeDistributionData.length > 0 && (
+        <Card>
+          <CardContent>
+            <GradeDistributionChart
+              data={gradeDistributionData}
+              title="Not Dağılımı"
+              height={300}
+            />
+          </CardContent>
+        </Card>
       )}
 
       {/* Grades List */}

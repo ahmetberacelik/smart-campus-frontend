@@ -29,6 +29,17 @@ import { AttendanceReportPage } from './pages/AttendanceReportPage'
 import { ExcuseRequestsPage } from './pages/ExcuseRequestsPage'
 import { SectionsPage } from './pages/SectionsPage'
 import { SessionDetailPage } from './pages/SessionDetailPage'
+import { MenuPage } from './pages/meals/MenuPage'
+import { MyReservationsPage } from './pages/meals/MyReservationsPage'
+import { QrScannerPage } from './pages/meals/QrScannerPage'
+import { WalletPage } from './pages/WalletPage'
+import { EventsPage } from './pages/events/EventsPage'
+import { EventDetailPage } from './pages/events/EventDetailPage'
+import { MyEventsPage } from './pages/events/MyEventsPage'
+import { EventCheckInPage } from './pages/events/EventCheckInPage'
+import { MySchedulePage } from './pages/schedule/MySchedulePage'
+import { GenerateSchedulePage } from './pages/schedule/GenerateSchedulePage'
+import { ClassroomReservationsPage } from './pages/reservations/ClassroomReservationsPage'
 
 // Query Client setup
 const queryClient = new QueryClient({
@@ -202,6 +213,119 @@ function App() {
                 <ProtectedRoute>
                   <MainLayout>
                     <SectionsPage />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+            {/* Meal Service Pages */}
+            <Route
+              path="/meals/menu"
+              element={
+                <ProtectedRoute>
+                  <MainLayout>
+                    <MenuPage />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/meals/reservations"
+              element={
+                <ProtectedRoute>
+                  <MainLayout>
+                    <MyReservationsPage />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/meals/scan"
+              element={
+                <ProtectedRoute>
+                  <MainLayout>
+                    <QrScannerPage />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/wallet"
+              element={
+                <ProtectedRoute>
+                  <MainLayout>
+                    <WalletPage />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+            {/* Event Management Pages */}
+            <Route
+              path="/events"
+              element={
+                <ProtectedRoute>
+                  <MainLayout>
+                    <EventsPage />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/events/:id"
+              element={
+                <ProtectedRoute>
+                  <MainLayout>
+                    <EventDetailPage />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/my-events"
+              element={
+                <ProtectedRoute>
+                  <MainLayout>
+                    <MyEventsPage />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/events/checkin"
+              element={
+                <ProtectedRoute>
+                  <MainLayout>
+                    <EventCheckInPage />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+            {/* Scheduling Pages */}
+            <Route
+              path="/schedule"
+              element={
+                <ProtectedRoute>
+                  <MainLayout>
+                    <MySchedulePage />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/scheduling/generate"
+              element={
+                <ProtectedRoute>
+                  <MainLayout>
+                    <GenerateSchedulePage />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/reservations"
+              element={
+                <ProtectedRoute>
+                  <MainLayout>
+                    <ClassroomReservationsPage />
                   </MainLayout>
                 </ProtectedRoute>
               }

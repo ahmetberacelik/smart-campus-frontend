@@ -12,6 +12,8 @@ import { PageHeader } from '@/components/ui/PageHeader';
 import { Breadcrumb } from '@/components/ui/Breadcrumb';
 import { Card, CardContent } from '@/components/ui/Card';
 import { Table } from '@/components/ui/Table';
+import { Modal } from '@/components/ui/Modal';
+import { downloadExcel } from '@/utils/export';
 import './GradebookPage.css';
 
 export const GradebookPage: React.FC = () => {
@@ -20,6 +22,8 @@ export const GradebookPage: React.FC = () => {
   const queryClient = useQueryClient();
   const [grades, setGrades] = useState<Record<string, { midterm?: number; final?: number; letterGrade?: string }>>({});
   const [saving, setSaving] = useState<string | null>(null);
+  const [notificationModalOpen, setNotificationModalOpen] = useState(false);
+  const [notificationMessage, setNotificationMessage] = useState('');
 
   // Section details
   const { data: sectionData, isLoading: sectionLoading } = useQuery(
@@ -112,6 +116,56 @@ export const GradebookPage: React.FC = () => {
     }
   };
 
+  const handleExportToExcel = () => {
+    const headers = ['Öğrenci No', 'Ad Soyad', 'Vize', 'Final', 'Ortalama', 'Harf Notu'];
+    const data: any[][] = [];
+
+    students.forEach((enrollment: any) => {
+      const student = enrollment.student || {};
+      const studentName = student.name || `${student.firstName || ''} ${student.lastName || ''}`.trim();
+      const studentNumber = student.studentNumber || '-';
+
+      const gradeData = grades[enrollment.id] || {};
+      const midterm = gradeData.midterm ?? enrollment.midtermGrade ?? '';
+      const final = gradeData.final ?? enrollment.finalGrade ?? '';
+      const average = midterm !== undefined && final !== undefined && midterm !== '' && final !== ''
+        ? (midterm * 0.4) + (final * 0.6)
+        : '';
+      const letterGrade = gradeData.letterGrade ?? enrollment.letterGrade ?? '';
+
+      data.push([
+        studentNumber,
+        studentName,
+        midterm !== '' ? midterm.toString() : '',
+        final !== '' ? final.toString() : '',
+        average !== '' ? average.toFixed(2) : '',
+        letterGrade || '',
+      ]);
+    });
+
+    const course = section.course || {};
+    const filename = `Not_Defteri_${course.code}_${course.name}_Bölüm_${section.sectionNumber}`.replace(/[^a-zA-Z0-9_]/g, '_');
+    downloadExcel(data, filename, headers);
+    toast.success('Excel dosyası indirildi');
+  };
+
+  const handleSendNotifications = () => {
+    // Backend'de notification endpoint'i olmalı
+    // Şimdilik sadece UI gösteriyoruz
+    setNotificationModalOpen(true);
+  };
+
+  const handleConfirmSendNotifications = () => {
+    // TODO: Backend'de notification endpoint'i eklendiğinde bu fonksiyon implement edilecek
+    // Backend endpoint: POST /api/v1/grades/notify (veya benzer bir endpoint)
+    // Örnek payload: { sectionId, enrollmentIds: [], message: notificationMessage }
+    
+    // Şimdilik bilgilendirme gösteriyoruz
+    toast.info('Bildirim gönderme özelliği backend entegrasyonu tamamlandığında aktif olacak');
+    setNotificationModalOpen(false);
+    setNotificationMessage('');
+  };
+
   if (sectionLoading || studentsLoading) {
     return (
       <div className="gradebook-page">
@@ -146,12 +200,28 @@ export const GradebookPage: React.FC = () => {
         title={`Not Defteri - ${course.code} ${course.name}`}
         description={`Bölüm ${section.sectionNumber} - ${section.semester} ${section.year}`}
         actions={
-          <Button
-            onClick={handleBulkSave}
-            disabled={Object.keys(grades).length === 0 || saveGradeMutation.isLoading}
-          >
-            Tümünü Kaydet
-          </Button>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <Button
+              variant="secondary"
+              onClick={handleExportToExcel}
+              disabled={students.length === 0}
+            >
+              Excel'e Aktar
+            </Button>
+            <Button
+              variant="secondary"
+              onClick={handleSendNotifications}
+              disabled={students.length === 0}
+            >
+              Bildirim Gönder
+            </Button>
+            <Button
+              onClick={handleBulkSave}
+              disabled={Object.keys(grades).length === 0 || saveGradeMutation.isLoading}
+            >
+              Tümünü Kaydet
+            </Button>
+          </div>
         }
       />
 
@@ -259,6 +329,44 @@ export const GradebookPage: React.FC = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Notification Modal */}
+      <Modal
+        isOpen={notificationModalOpen}
+        onClose={() => {
+          setNotificationModalOpen(false);
+          setNotificationMessage('');
+        }}
+        title="Öğrencilere Bildirim Gönder"
+        size="md"
+      >
+        <div className="notification-modal-content">
+          <p>Öğrencilere not bilgisi hakkında bildirim göndermek istiyor musunuz?</p>
+          <TextInput
+            type="textarea"
+            placeholder="Bildirim mesajı (opsiyonel)..."
+            value={notificationMessage}
+            onChange={(e) => setNotificationMessage(e.target.value)}
+            rows={4}
+          />
+          <div className="modal-actions" style={{ marginTop: '16px', display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+            <Button
+              variant="secondary"
+              onClick={() => {
+                setNotificationModalOpen(false);
+                setNotificationMessage('');
+              }}
+            >
+              İptal
+            </Button>
+            <Button
+              onClick={handleConfirmSendNotifications}
+            >
+              Gönder
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 };

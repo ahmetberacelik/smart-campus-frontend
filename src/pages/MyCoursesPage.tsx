@@ -5,12 +5,16 @@ import { toast } from 'react-toastify';
 import { enrollmentService } from '@/services/api/enrollment.service';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { Button } from '@/components/common/Button';
+import { ConfirmDialog } from '@/components/common/ConfirmDialog';
+import { Badge } from '@/components/ui/Badge';
 import { format } from 'date-fns';
 import './MyCoursesPage.css';
 
 export const MyCoursesPage: React.FC = () => {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
+  const [dropConfirmOpen, setDropConfirmOpen] = React.useState(false);
+  const [selectedEnrollment, setSelectedEnrollment] = React.useState<{ id: string; name: string } | null>(null);
 
   const { data, isLoading, error } = useQuery(
     'my-courses',
@@ -46,13 +50,17 @@ export const MyCoursesPage: React.FC = () => {
     }
   );
 
-  const handleDrop = async (enrollmentId: string, courseName: string) => {
-    if (!window.confirm(`${courseName} dersini bırakmak istediğinize emin misiniz?`)) {
-      return;
-    }
+  const handleDropClick = (enrollmentId: string, courseName: string) => {
+    setSelectedEnrollment({ id: enrollmentId, name: courseName });
+    setDropConfirmOpen(true);
+  };
 
+  const handleConfirmDrop = async () => {
+    if (!selectedEnrollment) return;
     try {
-      await dropMutation.mutateAsync(enrollmentId);
+      await dropMutation.mutateAsync(selectedEnrollment.id);
+      setDropConfirmOpen(false);
+      setSelectedEnrollment(null);
     } catch (error) {
       // Error handled in mutation
     }
@@ -197,6 +205,22 @@ export const MyCoursesPage: React.FC = () => {
                       <span className="detail-value">{enrollment.letterGrade}</span>
                     </div>
                   )}
+                  {/* Attendance Percentage */}
+                  {(enrollment.attendancePercentage !== undefined && enrollment.attendancePercentage !== null) && (
+                    <div className="detail-item">
+                      <span className="detail-label">Yoklama Oranı:</span>
+                      <span className="detail-value">
+                        {enrollment.attendancePercentage.toFixed(1)}%
+                        {enrollment.attendancePercentage >= 80 ? (
+                          <Badge variant="success" style={{ marginLeft: '8px' }}>Normal</Badge>
+                        ) : enrollment.attendancePercentage >= 60 ? (
+                          <Badge variant="warning" style={{ marginLeft: '8px' }}>Uyarı</Badge>
+                        ) : (
+                          <Badge variant="error" style={{ marginLeft: '8px' }}>Kritik</Badge>
+                        )}
+                      </span>
+                    </div>
+                  )}
                 </div>
 
                 {enrollment.status === 'ENROLLED' && (
@@ -204,7 +228,7 @@ export const MyCoursesPage: React.FC = () => {
                     <Button
                       variant="secondary"
                       size="sm"
-                      onClick={() => handleDrop(enrollment.id.toString(), enrollment.courseName)}
+                      onClick={() => handleDropClick(enrollment.id.toString(), enrollment.courseName || enrollment.courseCode)}
                       disabled={dropMutation.isLoading}
                     >
                       Dersi Bırak
@@ -216,6 +240,22 @@ export const MyCoursesPage: React.FC = () => {
           })}
         </div>
       )}
+
+      {/* Drop Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={dropConfirmOpen}
+        onClose={() => {
+          setDropConfirmOpen(false);
+          setSelectedEnrollment(null);
+        }}
+        onConfirm={handleConfirmDrop}
+        title="Dersi Bırak"
+        message={`${selectedEnrollment?.name || ''} dersini bırakmak istediğinize emin misiniz?`}
+        confirmText="Evet, Bırak"
+        cancelText="İptal"
+        variant="danger"
+        loading={dropMutation.isLoading}
+      />
     </div>
   );
 };

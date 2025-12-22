@@ -11,6 +11,7 @@ import { Breadcrumb } from '@/components/ui/Breadcrumb';
 import { Card, CardContent, CardHeader } from '@/components/ui/Card';
 import { Table } from '@/components/ui/Table';
 import { Badge } from '@/components/ui/Badge';
+import { downloadExcel } from '@/utils/export';
 import './AttendanceReportPage.css';
 
 export const AttendanceReportPage: React.FC = () => {
@@ -47,7 +48,35 @@ export const AttendanceReportPage: React.FC = () => {
   const students = pageData?.content || pageData?.students || [];
 
   const handleExport = () => {
-    toast.info('Excel export özelliği yakında eklenecek');
+    const headers = ['Öğrenci No', 'Ad Soyad', 'Toplam Oturum', 'Katılım', 'Devamsız', 'Yoklama %', 'Durum', 'Uyarı'];
+    const data: any[][] = [];
+
+    students.forEach((student: any) => {
+      const totalSessions = student.totalSessions || 0;
+      const attendedSessions = student.attendedSessions || 0;
+      const absences = totalSessions - attendedSessions;
+      const percentage = totalSessions > 0
+        ? (attendedSessions / totalSessions) * 100
+        : 0;
+      const status = percentage >= 80 ? 'Normal' : percentage >= 60 ? 'Uyarı' : 'Kritik';
+      const isFlagged = student.isSuspicious || false;
+
+      data.push([
+        student.studentNumber || '',
+        student.studentName || '',
+        totalSessions.toString(),
+        attendedSessions.toString(),
+        absences.toString(),
+        percentage.toFixed(1) + '%',
+        status,
+        isFlagged ? 'Şüpheli' : '',
+      ]);
+    });
+
+    const course = section?.course || {};
+    const filename = `Yoklama_Raporu_${course.code}_Bölüm_${section?.sectionNumber || ''}`.replace(/[^a-zA-Z0-9_]/g, '_');
+    downloadExcel(data, filename, headers);
+    toast.success('Excel dosyası indirildi');
   };
 
   if (sectionLoading || reportLoading) {

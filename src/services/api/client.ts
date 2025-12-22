@@ -142,6 +142,30 @@ class ApiClient {
           return Promise.reject(error);
         }
 
+        // Network error kontrolü
+        if (error.code === 'ERR_NETWORK' || error.message === 'Network Error' || !error.response) {
+          const networkError: ApiError = {
+            code: 'NETWORK_ERROR',
+            message: `Backend sunucusuna bağlanılamıyor. Lütfen backend'in çalıştığından emin olun.\n\nBase URL: ${API_CONFIG.BASE_URL}\n\nHata: ${error.message || 'Bağlantı hatası'}`,
+            details: {
+              baseURL: API_CONFIG.BASE_URL,
+              url: originalRequest?.url,
+              method: originalRequest?.method,
+              errorCode: error.code,
+            },
+          };
+          
+          console.error('❌ Network Error:', {
+            baseURL: API_CONFIG.BASE_URL,
+            url: originalRequest?.url,
+            fullURL: originalRequest ? `${API_CONFIG.BASE_URL}${originalRequest.url}` : 'N/A',
+            error: error.message,
+            code: error.code,
+          });
+          
+          return Promise.reject(networkError);
+        }
+
         // Error response'u standart formata çevir
         const backendMessage = error.response?.data?.message || error.response?.data?.error?.message;
         const apiError: ApiError = {

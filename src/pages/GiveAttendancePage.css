@@ -73,6 +73,10 @@
   border-radius: var(--radius-lg);
 }
 
+.location-map-container {
+  margin: 1rem 0;
+}
+
 .location-coords {
   display: grid;
   grid-template-columns: repeat(3, 1fr);

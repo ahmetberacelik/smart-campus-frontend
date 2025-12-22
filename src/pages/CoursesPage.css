@@ -15,11 +15,15 @@
   color: var(--text-primary);
 }
 
+.courses-filters-container {
+  margin-bottom: 2rem;
+}
+
 .courses-filters {
   display: flex;
   gap: 1rem;
-  margin-bottom: 2rem;
   flex-wrap: wrap;
+  align-items: center;
 }
 
 .courses-filters input {

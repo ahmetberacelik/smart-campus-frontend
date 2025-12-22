@@ -1,0 +1,28 @@
+.confirm-dialog-modal .modal-content {
+  text-align: center;
+}
+
+.confirm-dialog-content {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 8px;
+}
+
+.confirm-dialog-message {
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--text-primary, #212121);
+  margin: 0;
+}
+
+.confirm-dialog-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+.confirm-dialog-actions button {
+  min-width: 100px;
+}
+

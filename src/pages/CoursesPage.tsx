@@ -3,9 +3,11 @@ import { useQuery } from 'react-query';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { courseService, type CourseListParams } from '@/services/api/course.service';
+import { departmentService } from '@/services/api/department.service';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { Button } from '@/components/common/Button';
 import { TextInput } from '@/components/common/TextInput';
+import { Select } from '@/components/common/Select';
 import { useAuth } from '@/context/AuthContext';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Breadcrumb } from '@/components/ui/Breadcrumb';
@@ -20,7 +22,7 @@ export const CoursesPage: React.FC = () => {
   const [page, setPage] = useState(0);
   const [search, setSearch] = useState('');
   const [searchQuery, setSearchQuery] = useState(''); // Debounced search value
-  const [departmentId] = useState<string>('');
+  const [departmentId, setDepartmentId] = useState<string>('');
   const [selectedCourse, setSelectedCourse] = useState<any>(null);
 
   // Debounce search: Kullanıcı yazmayı bıraktıktan 500ms sonra searchQuery'yi güncelle
@@ -35,6 +37,27 @@ export const CoursesPage: React.FC = () => {
 
   // Trimmed search value (query için kullanılacak)
   const trimmedSearch = searchQuery.trim();
+
+  // Departments listesi
+  const { data: departmentsData } = useQuery(
+    'departments',
+    () => departmentService.getDepartments(),
+    {
+      retry: 1,
+      onError: (err: any) => {
+        console.error('Departments fetch error:', err);
+      },
+    }
+  );
+
+  const departments = departmentsData?.data || [];
+  const departmentOptions = [
+    { value: '', label: 'Tüm Bölümler' },
+    ...departments.map((dept) => ({
+      value: dept.id.toString(),
+      label: `${dept.name} (${dept.code})`,
+    })),
+  ];
 
   const params: CourseListParams = useMemo(() => ({
     page,
@@ -163,24 +186,36 @@ export const CoursesPage: React.FC = () => {
       />
 
       {/* Search and Filters */}
-      <form onSubmit={handleSearch} className="courses-filters">
-        <TextInput
-          type="text"
-          placeholder="Ders kodu veya adı ile ara..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-        <Button type="submit">Ara</Button>
-        {search && (
-          <Button variant="secondary" onClick={() => {
-            setSearch('');
-            setSearchQuery('');
-            setPage(0);
-          }}>
-            Temizle
-          </Button>
-        )}
-      </form>
+      <div className="courses-filters-container">
+        <form onSubmit={handleSearch} className="courses-filters">
+          <TextInput
+            type="text"
+            placeholder="Ders kodu veya adı ile ara..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+          <Select
+            value={departmentId}
+            onChange={(e) => {
+              setDepartmentId(e.target.value);
+              setPage(0);
+            }}
+            options={departmentOptions}
+            style={{ minWidth: '200px' }}
+          />
+          <Button type="submit">Ara</Button>
+          {(search || departmentId) && (
+            <Button variant="secondary" onClick={() => {
+              setSearch('');
+              setSearchQuery('');
+              setDepartmentId('');
+              setPage(0);
+            }}>
+              Temizle
+            </Button>
+          )}
+        </form>
+      </div>
 
       {/* Course List */}
       <div className="courses-grid">

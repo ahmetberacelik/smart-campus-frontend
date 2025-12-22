@@ -1,0 +1,113 @@
+.my-events-page {
+  width: 100%;
+  padding: 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.events-section {
+  margin-bottom: 32px;
+}
+
+.events-section h2 {
+  font-size: 24px;
+  font-weight: 600;
+  margin-bottom: 16px;
+  color: var(--text-primary, #212121);
+}
+
+.events-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 24px;
+}
+
+.event-registration-card {
+  height: 100%;
+}
+
+.event-registration-card.past {
+  opacity: 0.7;
+}
+
+.event-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.event-date {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary, #212121);
+  margin-bottom: 8px;
+}
+
+.event-location {
+  font-size: 14px;
+  color: var(--text-secondary, #666);
+  margin-bottom: 16px;
+}
+
+.event-qr {
+  margin: 16px 0;
+  display: flex;
+  justify-content: center;
+}
+
+.check-in-status {
+  padding: 12px;
+  background: #e8f5e9;
+  color: #2e7d32;
+  border-radius: 8px;
+  text-align: center;
+  font-weight: 600;
+  margin-top: 16px;
+}
+
+.event-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border-color, #e0e0e0);
+}
+
+.event-actions button {
+  flex: 1;
+}
+
+.empty-state-card {
+  margin-top: 32px;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 48px 24px;
+  color: var(--text-secondary, #666);
+}
+
+.empty-state svg {
+  margin-bottom: 16px;
+  opacity: 0.5;
+}
+
+.empty-state h3 {
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: var(--text-primary, #212121);
+}
+
+.empty-state p {
+  font-size: 14px;
+  color: var(--text-secondary, #666);
+}
+
+@media (max-width: 768px) {
+  .events-grid {
+    grid-template-columns: 1fr;
+  }
+}
+

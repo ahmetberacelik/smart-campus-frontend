@@ -1,0 +1,47 @@
+.location-map-container {
+  width: 100%;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--border-color, #e0e0e0);
+  background-color: #f5f5f5;
+}
+
+.location-map {
+  width: 100%;
+  min-height: 200px;
+}
+
+.distance-indicator {
+  padding: 8px 12px;
+  background-color: #fff;
+  border-bottom: 1px solid var(--border-color, #e0e0e0);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+}
+
+.distance-indicator.within-radius {
+  background-color: #e8f5e9;
+  color: #2e7d32;
+}
+
+.distance-indicator.outside-radius {
+  background-color: #ffebee;
+  color: #c62828;
+}
+
+.distance-label {
+  font-weight: 600;
+}
+
+.distance-value {
+  font-weight: 700;
+  font-size: 16px;
+}
+
+.distance-status {
+  margin-left: auto;
+  font-weight: 500;
+}
+

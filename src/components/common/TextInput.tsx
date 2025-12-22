@@ -45,6 +45,8 @@ export const TextInput = React.forwardRef<HTMLInputElement | HTMLTextAreaElement
                 className
               )}
               {...(props as any)}
+              value={props.value}
+              onChange={props.onChange}
             />
           ) : (
             <input

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from 'react-query';
 import { toast } from 'react-toastify';
@@ -8,6 +8,7 @@ import { Button } from '@/components/common/Button';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Breadcrumb } from '@/components/ui/Breadcrumb';
 import { Card, CardContent } from '@/components/ui/Card';
+import { LocationMap } from '@/components/map/LocationMap';
 import './GiveAttendancePage.css';
 
 type AttendanceMethod = 'gps' | 'qr';
@@ -43,6 +44,22 @@ export const GiveAttendancePage: React.FC = () => {
   );
 
   const session = sessionData?.data as any;
+
+  // Session location (classroom location)
+  const sessionLocation = useMemo<[number, number] | null>(() => {
+    if (session?.latitude && session?.longitude) {
+      return [parseFloat(session.latitude), parseFloat(session.longitude)];
+    }
+    return null;
+  }, [session?.latitude, session?.longitude]);
+
+  // User location for map
+  const userLocationForMap = useMemo<[number, number] | null>(() => {
+    if (location) {
+      return [location.lat, location.lon];
+    }
+    return null;
+  }, [location]);
 
   // GPS ile yoklama mutation
   const checkInMutation = useMutation(
@@ -431,10 +448,24 @@ export const GiveAttendancePage: React.FC = () => {
                         <span className="coord-value">±{location.accuracy.toFixed(0)}m</span>
                       </div>
                     </div>
+                    {sessionLocation && (
+                      <div className="location-map-container">
+                        <LocationMap
+                          center={sessionLocation}
+                          userLocation={userLocationForMap || undefined}
+                          radius={session?.geofenceRadius || 15}
+                          height="250px"
+                          showDistance={true}
+                          targetLabel={session?.classroomName || 'Sınıf Konumu'}
+                          userLabel="Konumunuz"
+                        />
+                      </div>
+                    )}
                     <Button
                       variant="secondary"
                       onClick={getCurrentLocation}
                       size="sm"
+                      style={{ marginTop: '12px' }}
                     >
                       Konumu Yenile
                     </Button>
