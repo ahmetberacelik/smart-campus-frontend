@@ -28,7 +28,14 @@ export const MyReservationsPage: React.FC = () => {
     }
   );
 
-  const reservations = reservationsData?.data || [];
+  // Backend Spring'de Page<ReservationResponse> döndürüyor.
+  // Hem Page yapısını hem de düz array'i destekleyecek şekilde normalize ediyoruz.
+  const pageData = reservationsData?.data;
+  const reservations: any[] = Array.isArray(pageData?.content)
+    ? pageData.content
+    : Array.isArray(pageData)
+      ? pageData
+      : [];
 
   const cancelReservationMutation = useMutation(
     (id: string) => mealService.cancelReservation(id),

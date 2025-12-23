@@ -35,9 +35,43 @@ export const EventsPage: React.FC = () => {
     }
   );
 
+  // Kullanıcının kayıtlı olduğu etkinlikleri de çekip, Events listesinde işaretlemek için kullanıyoruz
+  const { data: myRegistrationsData } = useQuery(
+    'my-event-registrations',
+    () => eventService.getMyEvents(),
+    {
+      retry: 1,
+      staleTime: 60_000,
+    }
+  );
+
   const pageData = eventsData?.data;
-  const events = (pageData?.content || pageData || []) as EventCardData[];
+
+  // Backend Spring'de Page<EventResponse> döndürüyor.
+  // Alan adları frontend arayüzünden biraz farklı olduğu için, burada map'leyip normalize ediyoruz.
+  const rawEvents = (pageData?.content || pageData || []) as any[];
+  const events: EventCardData[] = rawEvents.map((e) => ({
+    id: String(e.id),
+    title: e.title,
+    description: e.description,
+    // Backend'de tarih alanı eventDate olarak tanımlı, fallback olarak date/startDate de kontrol ediliyor.
+    date: e.date || e.eventDate || e.startDate || '',
+    startTime: e.startTime,
+    endTime: e.endTime,
+    location: e.location,
+    category: e.category,
+    capacity: e.capacity,
+    registeredCount: e.registeredCount ?? e.registrationCount,
+    price: e.price,
+    registrationDeadline: e.registrationDeadline,
+    imageUrl: e.imageUrl,
+  }));
   const totalPages = pageData?.totalPages || 0;
+
+  // Kayıtlı olunan etkinlik ID'lerini set olarak tut
+  const registeredEventIds = new Set(
+    (myRegistrationsData?.data || []).map((reg: any) => String(reg.eventId))
+  );
 
   const categories = [
     { value: '', label: 'Tüm Kategoriler' },
@@ -159,6 +193,7 @@ export const EventsPage: React.FC = () => {
                 onViewDetails={handleViewDetails}
                 onRegister={handleRegister}
                 showRegisterButton={true}
+                isRegistered={registeredEventIds.has(event.id)}
               />
             ))}
           </div>

@@ -90,5 +90,24 @@ export const reservationService = {
     const response = await httpClient.get<ApiResponse<any>>(url);
     return response.data;
   },
+
+  /**
+   * Rezervasyon onayla (Admin)
+   */
+  async approveReservation(id: string): Promise<ApiResponse<ClassroomReservation>> {
+    const response = await httpClient.post<ApiResponse<ClassroomReservation>>(
+      API_ENDPOINTS.RESERVATIONS.APPROVE(id)
+    );
+    return response.data;
+  },
+
+  /**
+   * Rezervasyon reddet (Admin)
+   */
+  async rejectReservation(id: string, reason: string): Promise<ApiResponse<ClassroomReservation>> {
+    const url = `${API_ENDPOINTS.RESERVATIONS.REJECT(id)}?reason=${encodeURIComponent(reason)}`;
+    const response = await httpClient.post<ApiResponse<ClassroomReservation>>(url);
+    return response.data;
+  },
 };
 

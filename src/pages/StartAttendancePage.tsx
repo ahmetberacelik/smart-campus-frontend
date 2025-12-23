@@ -65,6 +65,7 @@ export const StartAttendancePage: React.FC = () => {
 
   // Kullanıcının bölüm ID'sini al (giriş yaparken seçilen bölüm)
   const userDepartmentId = user?.facultyInfo?.departmentId?.toString() || user?.studentInfo?.departmentId?.toString();
+  const isFaculty = user?.role?.toLowerCase() === 'faculty' || user?.role === 'FACULTY';
 
   // Database'deki mevcut yılları getir
   const { data: availableYearsData } = useQuery(
@@ -90,47 +91,39 @@ export const StartAttendancePage: React.FC = () => {
   });
   console.log('📅 Database\'de mevcut yıllar:', availableYears);
 
-  // /my-sections endpoint'i 403 veriyor, bu yüzden direkt /sections/semester/list kullanıyoruz
-  // Bu endpoint daha geniş erişime sahip ve tüm section'ları döndürüyor, client-side'da filtreleyeceğiz
-  const shouldSkipMySections = true; // /my-sections endpoint'i yetki sorunu verdiği için atlıyoruz
-
-  // Kullanıcının bölümüne ait tüm ders bölümlerini getir
-  const shouldFetchAllSections = shouldSkipMySections || true; // Her zaman tüm section'ları çek
-
+  // Ders bölümlerini getir:
+  // - Faculty: sadece kendi verdiği dersler (getMySections)
+  // - Diğer roller: seçilen dönem/yıl için tüm section'lar (getSectionsBySemester)
   const { data: allSectionsData, isLoading: allSectionsLoading, isError: allSectionsError, error: allSectionsErrorDetail } = useQuery(
-    ['all-sections', semester, year],
+    ['all-sections', semester, year, isFaculty],
     async () => {
-      console.log('📡 Tüm ders bölümleri getiriliyor, semester:', semester, 'year:', year);
       try {
+        if (isFaculty) {
+          console.log('📡 Öğretim üyesi için kendi ders bölümleri getiriliyor (my-sections)...');
+          const result = await sectionService.getMySections(semester, year);
+          console.log('✅ getMySections sonucu:', result);
+          return result;
+        }
+
+        console.log('📡 Tüm ders bölümleri getiriliyor, semester:', semester, 'year:', year);
         const result = await sectionService.getSectionsBySemester(semester, year);
         console.log('✅ getSectionsBySemester sonucu:', result);
         return result;
       } catch (error: any) {
-        console.error('❌ getSectionsBySemester catch hatası:', error);
+        console.error('❌ Section listesi yüklenirken hata:', error);
         throw error;
       }
     },
     {
-      enabled: shouldFetchAllSections,
-      retry: false, // 403 hatası için retry yapma
+      retry: false,
       onSuccess: (data) => {
-        console.log('✅ Tüm ders bölümleri başarıyla getirildi:', data?.data?.length || 0);
-        if (data?.data && data.data.length === 0) {
-          console.warn('⚠️ Backend\'den ders bölümü döndü ama liste boş - muhtemelen bu dönem için veri yok');
-        }
+        console.log('✅ Ders bölümleri başarıyla getirildi:', data?.data?.length || 0);
       },
       onError: (error: any) => {
         console.error('❌ Ders bölümleri yüklenirken hata:', error);
-        console.error('❌ Hata detayı:', {
-          status: error?.response?.status,
-          statusText: error?.response?.statusText,
-          data: error?.response?.data,
-          message: error?.message,
-          url: error?.config?.url
-        });
+        const status = error?.response?.status;
 
-        // 403 hatası ise özel mesaj
-        if (error?.response?.status === 403) {
+        if (status === 403) {
           toast.error('Bu işlem için yetkiniz yok. Lütfen sistem yöneticisi ile iletişime geçin.');
         } else {
           const errorMessage = error?.response?.data?.error?.message ||
@@ -143,7 +136,9 @@ export const StartAttendancePage: React.FC = () => {
     }
   );
 
-  // Ders bölümlerini belirle: kullanıcının bölümüne ait tüm dersleri göster
+  // Ders bölümlerini belirle:
+  // - Faculty: getMySections zaten filtreli olduğu için ek filtre yok
+  // - Student/Admin: kullanıcının bölümüne ait dersleri göster (departmentId ile)
   const sections = useMemo(() => {
     const allSections = allSectionsData?.data || [];
 
@@ -158,13 +153,19 @@ export const StartAttendancePage: React.FC = () => {
       return [];
     }
 
+    // Faculty: getMySections zaten sadece kendi section'larını döndürdüğü için
+    // ek filtre uygulamadan hepsini gösteriyoruz.
+    if (isFaculty) {
+      return allSections;
+    }
+
     if (!userDepartmentId) {
-      // Bölüm ID yoksa tümünü göster
+      // Bölüm ID yoksa tümünü göster (öğrenci bilgisi eksik olabilir)
       console.log('⚠️ Kullanıcı bölüm ID yok, tüm dersler gösteriliyor:', allSections.length);
       return allSections;
     }
 
-    // Kullanıcının bölümüne ait ders bölümlerini filtrele
+    // Student/Admin: Kullanıcının bölümüne ait ders bölümlerini filtrele
     // Backend'den courseDepartmentId veya course.departmentId gelebilir
     const departmentSections = allSections.filter((section: any) => {
       // Önce courseDepartmentId'yi kontrol et (backend'den direkt gelebilir)

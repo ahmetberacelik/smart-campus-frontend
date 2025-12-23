@@ -37,6 +37,40 @@ export const MenuPage: React.FC = () => {
   const lunchMenu = menus.find((m: any) => m.mealType === 'LUNCH');
   const dinnerMenu = menus.find((m: any) => m.mealType === 'DINNER');
 
+  const showDemoMenus = !lunchMenu && !dinnerMenu;
+
+  const demoLunchMenu = {
+    id: 'demo-lunch',
+    mealType: 'LUNCH',
+    items: [
+      { id: '1', name: 'Mercimek Çorbası', description: 'Kırmızı mercimek çorbası', isVegan: true },
+      { id: '2', name: 'Izgara Tavuk', description: 'Izgara tavuk göğsü, bulgur pilavı ve salata', isVegetarian: false },
+      { id: '3', name: 'Sebzeli Makarna', description: 'Mevsim sebzeli makarna', isVegetarian: true },
+    ],
+    nutritionalInfo: {
+      calories: 850,
+      protein: 45,
+      carbs: 90,
+      fat: 25,
+    },
+  };
+
+  const demoDinnerMenu = {
+    id: 'demo-dinner',
+    mealType: 'DINNER',
+    items: [
+      { id: '4', name: 'Tarhana Çorbası', description: 'Geleneksel tarhana çorbası', isVegetarian: true },
+      { id: '5', name: 'Fırında Köfte', description: 'Patatesli fırın köfte', isVegetarian: false },
+      { id: '6', name: 'Zeytinyağlı Fasulye', description: 'Soğuk servis edilen zeytinyağlı fasulye', isVegan: true },
+    ],
+    nutritionalInfo: {
+      calories: 780,
+      protein: 38,
+      carbs: 80,
+      fat: 22,
+    },
+  };
+
   const createReservationMutation = useMutation(
     (menuId: string) => mealService.createReservation({ menuId }),
     {
@@ -103,11 +137,11 @@ export const MenuPage: React.FC = () => {
             <CardTitle>🍽️ Öğle Yemeği (Lunch)</CardTitle>
           </CardHeader>
           <CardContent>
-            {lunchMenu ? (
+            {(lunchMenu || (showDemoMenus && demoLunchMenu)) ? (
               <>
-                {lunchMenu.items && lunchMenu.items.length > 0 ? (
+                {(lunchMenu || demoLunchMenu).items && (lunchMenu || demoLunchMenu).items.length > 0 ? (
                   <div className="menu-items">
-                    {lunchMenu.items.map((item: any) => (
+                    {(lunchMenu || demoLunchMenu).items.map((item: any) => (
                       <div key={item.id} className="menu-item">
                         <div className="menu-item-header">
                           <h4>{item.name}</h4>
@@ -126,31 +160,31 @@ export const MenuPage: React.FC = () => {
                   <p className="no-menu">Bu tarih için öğle yemeği menüsü bulunamadı</p>
                 )}
 
-                {lunchMenu.nutritionalInfo && (
+                {(lunchMenu || demoLunchMenu).nutritionalInfo && (
                   <div className="nutritional-info">
                     <h4>Beslenme Bilgileri:</h4>
                     <div className="nutrition-grid">
                       <div className="nutrition-item">
                         <span className="nutrition-label">Kalori:</span>
-                        <span className="nutrition-value">{lunchMenu.nutritionalInfo.calories} kcal</span>
+                        <span className="nutrition-value">{(lunchMenu || demoLunchMenu).nutritionalInfo.calories} kcal</span>
                       </div>
                       <div className="nutrition-item">
                         <span className="nutrition-label">Protein:</span>
-                        <span className="nutrition-value">{lunchMenu.nutritionalInfo.protein}g</span>
+                        <span className="nutrition-value">{(lunchMenu || demoLunchMenu).nutritionalInfo.protein}g</span>
                       </div>
                       <div className="nutrition-item">
                         <span className="nutrition-label">Karbonhidrat:</span>
-                        <span className="nutrition-value">{lunchMenu.nutritionalInfo.carbs}g</span>
+                        <span className="nutrition-value">{(lunchMenu || demoLunchMenu).nutritionalInfo.carbs}g</span>
                       </div>
                       <div className="nutrition-item">
                         <span className="nutrition-label">Yağ:</span>
-                        <span className="nutrition-value">{lunchMenu.nutritionalInfo.fat}g</span>
+                        <span className="nutrition-value">{(lunchMenu || demoLunchMenu).nutritionalInfo.fat}g</span>
                       </div>
                     </div>
                   </div>
                 )}
 
-                {isStudent && (
+                {isStudent && lunchMenu && (
                   <Button
                     onClick={() => handleReserve(lunchMenu)}
                     disabled={createReservationMutation.isLoading}
@@ -173,11 +207,11 @@ export const MenuPage: React.FC = () => {
             <CardTitle>🍽️ Akşam Yemeği (Dinner)</CardTitle>
           </CardHeader>
           <CardContent>
-            {dinnerMenu ? (
+            {(dinnerMenu || (showDemoMenus && demoDinnerMenu)) ? (
               <>
-                {dinnerMenu.items && dinnerMenu.items.length > 0 ? (
+                {(dinnerMenu || demoDinnerMenu).items && (dinnerMenu || demoDinnerMenu).items.length > 0 ? (
                   <div className="menu-items">
-                    {dinnerMenu.items.map((item: any) => (
+                    {(dinnerMenu || demoDinnerMenu).items.map((item: any) => (
                       <div key={item.id} className="menu-item">
                         <div className="menu-item-header">
                           <h4>{item.name}</h4>
@@ -196,31 +230,31 @@ export const MenuPage: React.FC = () => {
                   <p className="no-menu">Bu tarih için akşam yemeği menüsü bulunamadı</p>
                 )}
 
-                {dinnerMenu.nutritionalInfo && (
+                {(dinnerMenu || demoDinnerMenu).nutritionalInfo && (
                   <div className="nutritional-info">
                     <h4>Beslenme Bilgileri:</h4>
                     <div className="nutrition-grid">
                       <div className="nutrition-item">
                         <span className="nutrition-label">Kalori:</span>
-                        <span className="nutrition-value">{dinnerMenu.nutritionalInfo.calories} kcal</span>
+                        <span className="nutrition-value">{(dinnerMenu || demoDinnerMenu).nutritionalInfo.calories} kcal</span>
                       </div>
                       <div className="nutrition-item">
                         <span className="nutrition-label">Protein:</span>
-                        <span className="nutrition-value">{dinnerMenu.nutritionalInfo.protein}g</span>
+                        <span className="nutrition-value">{(dinnerMenu || demoDinnerMenu).nutritionalInfo.protein}g</span>
                       </div>
                       <div className="nutrition-item">
                         <span className="nutrition-label">Karbonhidrat:</span>
-                        <span className="nutrition-value">{dinnerMenu.nutritionalInfo.carbs}g</span>
+                        <span className="nutrition-value">{(dinnerMenu || demoDinnerMenu).nutritionalInfo.carbs}g</span>
                       </div>
                       <div className="nutrition-item">
                         <span className="nutrition-label">Yağ:</span>
-                        <span className="nutrition-value">{dinnerMenu.nutritionalInfo.fat}g</span>
+                        <span className="nutrition-value">{(dinnerMenu || demoDinnerMenu).nutritionalInfo.fat}g</span>
                       </div>
                     </div>
                   </div>
                 )}
 
-                {isStudent && (
+                {isStudent && dinnerMenu && (
                   <Button
                     onClick={() => handleReserve(dinnerMenu)}
                     disabled={createReservationMutation.isLoading}

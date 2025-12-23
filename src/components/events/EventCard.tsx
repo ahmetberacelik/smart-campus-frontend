@@ -28,6 +28,7 @@ interface EventCardProps {
   onRegister?: (eventId: string) => void;
   showRegisterButton?: boolean;
   className?: string;
+  isRegistered?: boolean;
 }
 
 /**
@@ -40,11 +41,25 @@ export const EventCard: React.FC<EventCardProps> = ({
   onRegister,
   showRegisterButton = true,
   className = '',
+  isRegistered = false,
 }) => {
-  const eventDate = parseISO(event.date);
-  const isPast = eventDate < new Date();
-  const isRegistrationDeadlinePassed = event.registrationDeadline
-    ? parseISO(event.registrationDeadline) < new Date()
+  // Tarih değerleri backend'den farklı alan adlarıyla gelebilir veya boş olabilir.
+  // Geçersiz tarih geldiğinde tüm sayfanın kırılmaması için korumalı parse yapıyoruz.
+  const safeParseDate = (value?: string) => {
+    if (!value) return null;
+    try {
+      return parseISO(value);
+    } catch {
+      return null;
+    }
+  };
+
+  const eventDate = safeParseDate(event.date);
+  const registrationDeadlineDate = safeParseDate(event.registrationDeadline);
+
+  const isPast = eventDate ? eventDate < new Date() : false;
+  const isRegistrationDeadlinePassed = registrationDeadlineDate
+    ? registrationDeadlineDate < new Date()
     : false;
 
   const remainingSpots = event.capacity && event.registeredCount
@@ -91,11 +106,18 @@ export const EventCard: React.FC<EventCardProps> = ({
       <CardHeader>
         <div className="event-card-header">
           <CardTitle className="event-title">{event.title}</CardTitle>
-          {event.category && (
-            <Badge variant={getCategoryColor(event.category) as any}>
-              {getCategoryLabel(event.category)}
-            </Badge>
-          )}
+          <div className="event-header-badges">
+            {event.category && (
+              <Badge variant={getCategoryColor(event.category) as any}>
+                {getCategoryLabel(event.category)}
+              </Badge>
+            )}
+            {isRegistered && (
+              <Badge variant="success">
+                Kayıtlısın
+              </Badge>
+            )}
+          </div>
         </div>
       </CardHeader>
       <CardContent>
@@ -111,7 +133,9 @@ export const EventCard: React.FC<EventCardProps> = ({
           <div className="event-detail-item">
             <span className="detail-icon">📅</span>
             <span className="detail-text">
-              {format(eventDate, 'd MMMM yyyy EEEE', { locale: tr })}
+              {eventDate
+                ? format(eventDate, 'd MMMM yyyy EEEE', { locale: tr })
+                : 'Tarih bilgisi yok'}
               {event.startTime && ` • ${event.startTime}`}
               {event.endTime && ` - ${event.endTime}`}
             </span>
@@ -144,7 +168,10 @@ export const EventCard: React.FC<EventCardProps> = ({
             <div className="event-detail-item">
               <span className="detail-icon">⏰</span>
               <span className="detail-text">
-                Son kayıt: {format(parseISO(event.registrationDeadline), 'd MMM yyyy', { locale: tr })}
+                Son kayıt:{' '}
+                {registrationDeadlineDate
+                  ? format(registrationDeadlineDate, 'd MMM yyyy', { locale: tr })
+                  : 'Tarih bilgisi yok'}
               </span>
             </div>
           )}
@@ -160,7 +187,7 @@ export const EventCard: React.FC<EventCardProps> = ({
               Detaylar
             </Button>
           )}
-          {showRegisterButton && onRegister && !isPast && !isRegistrationDeadlinePassed && remainingSpots !== 0 && (
+          {showRegisterButton && onRegister && !isPast && !isRegistrationDeadlinePassed && remainingSpots !== 0 && !isRegistered && (
             <Button
               size="sm"
               onClick={() => onRegister(event.id)}
@@ -168,6 +195,11 @@ export const EventCard: React.FC<EventCardProps> = ({
             >
               {remainingSpots === 0 ? 'Dolu' : 'Kayıt Ol'}
             </Button>
+          )}
+          {isRegistered && !isPast && (
+            <span className="event-registered-text">
+              Bu etkinliğe zaten kayıtlısınız.
+            </span>
           )}
         </div>
       </CardContent>

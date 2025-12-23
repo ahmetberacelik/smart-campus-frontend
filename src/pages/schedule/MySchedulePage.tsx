@@ -25,6 +25,40 @@ export const MySchedulePage: React.FC = () => {
 
   const schedule = scheduleData?.data;
 
+  // Demo amaçlı örnek ders programı (backend my-schedule endpoint'i hazır değilken gösterilir)
+  const demoEvents: CalendarEvent[] = [
+    {
+      id: 'demo-1',
+      title: 'CSE101 - Introduction to Computer Science',
+      startTime: '09:00',
+      endTime: '10:30',
+      date: undefined, // WeeklyCalendar mevcut haftaya göre dağıtıyor
+      location: 'Mühendislik Binası 101',
+      type: 'course',
+      color: '#2196F3',
+    },
+    {
+      id: 'demo-2',
+      title: 'MATH101 - Calculus I',
+      startTime: '11:00',
+      endTime: '12:30',
+      date: undefined,
+      location: 'Fen Binası 201',
+      type: 'course',
+      color: '#4CAF50',
+    },
+    {
+      id: 'demo-3',
+      title: 'PHYS101 - Physics I',
+      startTime: '14:00',
+      endTime: '15:30',
+      date: undefined,
+      location: 'Merkez Derslik 3',
+      type: 'course',
+      color: '#FF9800',
+    },
+  ];
+
   // Convert schedule entries to calendar events
   const calendarEvents = useMemo<CalendarEvent[]>(() => {
     if (!schedule?.entries) return [];
@@ -104,17 +138,32 @@ export const MySchedulePage: React.FC = () => {
       />
 
       {!schedule || calendarEvents.length === 0 ? (
-        <Card>
-          <CardContent>
-            <div className="empty-state">
-              <svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M19 4H5C3.89 4 3 4.9 3 6V20C3 21.1 3.89 22 5 22H19C20.1 22 21 21.1 21 20V6C21 4.9 20.1 4 19 4ZM19 20H5V9H19V20Z" fill="currentColor" />
-              </svg>
-              <h3>Henüz ders programınız bulunmuyor</h3>
-              <p>Derslere kayıt olduktan sonra ders programınız burada görünecektir</p>
-            </div>
-          </CardContent>
-        </Card>
+        <>
+          <Card>
+            <CardContent>
+              <div className="empty-state">
+                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M19 4H5C3.89 4 3 4.9 3 6V20C3 21.1 3.89 22 5 22H19C20.1 22 21 21.1 21 20V6C21 4.9 20.1 4 19 4ZM19 20H5V9H19V20Z" fill="currentColor" />
+                </svg>
+                <h3>Henüz ders programınız bulunmuyor</h3>
+                <p>Derslere kayıt olduktan sonra ders programınız burada görünecektir</p>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Demo ders programı */}
+          <Card style={{ marginTop: '24px' }}>
+            <CardContent>
+              <h3 style={{ marginBottom: '16px' }}>Örnek Ders Programı (Demo)</h3>
+              <WeeklyCalendar
+                events={demoEvents}
+                onEventClick={(event) => {
+                  toast.info(`${event.title} (örnek ders)`);
+                }}
+              />
+            </CardContent>
+          </Card>
+        </>
       ) : (
         <Card>
           <CardContent>

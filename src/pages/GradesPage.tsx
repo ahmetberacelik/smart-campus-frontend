@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import { useQuery } from 'react-query';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
@@ -6,6 +6,7 @@ import { gradeService } from '@/services/api/grade.service';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { Button } from '@/components/common/Button';
 import { GradeDistributionChart } from '@/components/charts/GradeDistributionChart';
+import { GPATrendChart } from '@/components/charts/GPATrendChart';
 import { Card, CardContent } from '@/components/ui/Card';
 import './GradesPage.css';
 
@@ -102,24 +103,62 @@ export const GradesPage: React.FC = () => {
   const grades = gradesData?.data || [];
   const transcript = transcriptData?.data as any;
 
-  // Grade distribution chart verisi
-  const gradeDistributionData = useMemo(() => {
-    const gradeCounts: Record<string, number> = {};
-    const gradeOrder = ['AA', 'BA', 'BB', 'CB', 'CC', 'DC', 'DD', 'FD', 'FF'];
+  // Grade distribution chart verisi (hook yerine normal hesaplama, hook sırası hatasını önlemek için)
+  const gradeCounts: Record<string, number> = {};
+  const gradeOrder = ['AA', 'BA', 'BB', 'CB', 'CC', 'DC', 'DD', 'FD', 'FF'];
 
-    grades.forEach((grade: any) => {
-      if (grade.letterGrade) {
-        gradeCounts[grade.letterGrade] = (gradeCounts[grade.letterGrade] || 0) + 1;
+  grades.forEach((grade: any) => {
+    if (grade.letterGrade) {
+      gradeCounts[grade.letterGrade] = (gradeCounts[grade.letterGrade] || 0) + 1;
+    }
+  });
+
+  const gradeDistributionData = gradeOrder
+    .filter((grade) => gradeCounts[grade] > 0)
+    .map((grade) => ({
+      grade,
+      count: gradeCounts[grade] || 0,
+    }));
+
+  // GPA trend chart verisi - dönem bazında ortalama GPA ve kümülatif CGPA hesapla
+  const gpaTrendData = (() => {
+    if (!transcript?.courses || transcript.courses.length === 0) return [];
+
+    type SemesterKey = string;
+    const bySemester: Record<SemesterKey, { total: number; count: number }> = {};
+
+    transcript.courses.forEach((course: any) => {
+      if (course.gradePoint === null || course.gradePoint === undefined) return;
+      const key = `${course.year} ${course.semester}`;
+      if (!bySemester[key]) {
+        bySemester[key] = { total: 0, count: 0 };
       }
+      bySemester[key].total += course.gradePoint;
+      bySemester[key].count += 1;
     });
 
-    return gradeOrder
-      .filter((grade) => gradeCounts[grade] > 0)
-      .map((grade) => ({
-        grade,
-        count: gradeCounts[grade] || 0,
-      }));
-  }, [grades]);
+    const sortedKeys = Object.keys(bySemester).sort();
+    const result: { semester: string; gpa: number; cgpa: number }[] = [];
+    let cumulativeTotal = 0;
+    let cumulativeCount = 0;
+
+    sortedKeys.forEach((key) => {
+      const { total, count } = bySemester[key];
+      if (count === 0) return;
+      const semesterGpa = total / count;
+      cumulativeTotal += total;
+      cumulativeCount += count;
+      const cumulativeGpa = cumulativeTotal / cumulativeCount;
+
+      result.push({
+        semester: key,
+        gpa: semesterGpa,
+        cgpa: cumulativeGpa,
+      });
+    });
+
+    return result;
+  })();
 
   return (
     <div className="grades-page">
@@ -207,30 +246,104 @@ export const GradesPage: React.FC = () => {
         </div>
       )}
 
-      {/* Grade Distribution Chart */}
-      {gradeDistributionData.length > 0 && (
-        <Card>
-          <CardContent>
-            <GradeDistributionChart
-              data={gradeDistributionData}
-              title="Not Dağılımı"
-              height={300}
-            />
-          </CardContent>
-        </Card>
+      {/* GPA Trend Chart + Grade Distribution Chart */}
+      {(gpaTrendData.length > 0 || gradeDistributionData.length > 0) && (
+        <div className="grades-charts-grid">
+          {gpaTrendData.length > 0 && (
+            <Card>
+              <CardContent>
+                <GPATrendChart
+                  data={gpaTrendData}
+                  title="GPA Trendi"
+                  height={300}
+                />
+              </CardContent>
+            </Card>
+          )}
+          {gradeDistributionData.length > 0 && (
+            <Card>
+              <CardContent>
+                <GradeDistributionChart
+                  data={gradeDistributionData}
+                  title="Not Dağılımı"
+                  height={300}
+                />
+              </CardContent>
+            </Card>
+          )}
+        </div>
       )}
 
       {/* Grades List */}
       <div className="grades-section">
         <h2>Ders Notları</h2>
         {grades.length === 0 ? (
-          <div className="empty-state">
-            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" fill="currentColor" />
-            </svg>
-            <h3>Henüz notunuz bulunmuyor</h3>
-            <p>Dersleriniz için notlar girildikçe burada görünecektir</p>
-          </div>
+          <>
+            <div className="empty-state">
+              <svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" fill="currentColor" />
+              </svg>
+              <h3>Henüz notunuz bulunmuyor</h3>
+              <p>Dersleriniz için notlar girildikçe burada görünecektir</p>
+            </div>
+            {/* Demo örnek kartlar */}
+            <div className="grades-grid" style={{ marginTop: '2rem' }}>
+              <div className="grade-card">
+                <div className="grade-card-header">
+                  <div>
+                    <h3 className="course-code">CSE101</h3>
+                    <h4 className="course-name">Introduction to Computer Science</h4>
+                  </div>
+                  <span className="grade-badge-large grade-aa">AA</span>
+                </div>
+                <div className="grade-details">
+                  <div className="grade-item">
+                    <span className="grade-label">Vize:</span>
+                    <span className="grade-value">90.00</span>
+                  </div>
+                  <div className="grade-item">
+                    <span className="grade-label">Final:</span>
+                    <span className="grade-value">95.00</span>
+                  </div>
+                  <div className="grade-item">
+                    <span className="grade-label">Not Puanı:</span>
+                    <span className="grade-value">4.00</span>
+                  </div>
+                  <div className="grade-item">
+                    <span className="grade-label">Dönem:</span>
+                    <span className="grade-value">FALL 2024</span>
+                  </div>
+                </div>
+              </div>
+              <div className="grade-card">
+                <div className="grade-card-header">
+                  <div>
+                    <h3 className="course-code">MATH101</h3>
+                    <h4 className="course-name">Calculus I</h4>
+                  </div>
+                  <span className="grade-badge-large grade-bb">BB</span>
+                </div>
+                <div className="grade-details">
+                  <div className="grade-item">
+                    <span className="grade-label">Vize:</span>
+                    <span className="grade-value">78.00</span>
+                  </div>
+                  <div className="grade-item">
+                    <span className="grade-label">Final:</span>
+                    <span className="grade-value">82.00</span>
+                  </div>
+                  <div className="grade-item">
+                    <span className="grade-label">Not Puanı:</span>
+                    <span className="grade-value">3.00</span>
+                  </div>
+                  <div className="grade-item">
+                    <span className="grade-label">Dönem:</span>
+                    <span className="grade-value">FALL 2024</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </>
         ) : (
           <div className="grades-grid">
             {grades.map((grade: any) => {

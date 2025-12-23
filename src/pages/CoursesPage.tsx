@@ -25,6 +25,10 @@ export const CoursesPage: React.FC = () => {
   const [departmentId, setDepartmentId] = useState<string>('');
   const [selectedCourse, setSelectedCourse] = useState<any>(null);
 
+  const role = user?.role?.toLowerCase();
+  const isStudent = role === 'student';
+  const isAdmin = role === 'admin';
+
   // Debounce search: Kullanıcı yazmayı bıraktıktan 500ms sonra searchQuery'yi güncelle
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -58,6 +62,15 @@ export const CoursesPage: React.FC = () => {
       label: `${dept.name} (${dept.code})`,
     })),
   ];
+
+  // Öğrenci için: kendi bölümünü varsayılan filtre yap ve değiştirmesini engelle
+  useEffect(() => {
+    if (!isStudent) return;
+    const studentDeptId = user?.studentInfo?.departmentId?.toString();
+    if (studentDeptId && !departmentId) {
+      setDepartmentId(studentDeptId);
+    }
+  }, [isStudent, user, departmentId]);
 
   const params: CourseListParams = useMemo(() => ({
     page,
@@ -136,9 +149,6 @@ export const CoursesPage: React.FC = () => {
     navigate(`/courses/${course.id}`);
   };
 
-  const isAdmin = user?.role?.toLowerCase() === 'admin' || user?.role === 'ADMIN';
-  const isStudent = user?.role?.toLowerCase() === 'student' || user?.role === 'STUDENT';
-
   if (isLoading) {
     return (
       <div className="courses-page">
@@ -197,11 +207,13 @@ export const CoursesPage: React.FC = () => {
           <Select
             value={departmentId}
             onChange={(e) => {
+              if (isStudent) return; // öğrenci bölüm filtresini değiştiremesin
               setDepartmentId(e.target.value);
               setPage(0);
             }}
             options={departmentOptions}
             style={{ minWidth: '200px' }}
+            disabled={isStudent}
           />
           <Button type="submit">Ara</Button>
           {(search || departmentId) && (

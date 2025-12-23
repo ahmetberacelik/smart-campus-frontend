@@ -141,6 +141,13 @@
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
+.grades-charts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 24px;
+  margin-bottom: 32px;
+}
+
 .grade-card-header {
   display: flex;
   justify-content: space-between;

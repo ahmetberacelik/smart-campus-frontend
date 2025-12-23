@@ -29,6 +29,7 @@ export const MyEventsPage: React.FC = () => {
     }
   );
 
+  // Backend RegistrationResponse listesi dönüyor
   const registrations = registrationsData?.data || [];
 
   const cancelRegistrationMutation = useMutation(
@@ -46,13 +47,12 @@ export const MyEventsPage: React.FC = () => {
 
   const { upcoming, past } = useMemo(() => {
     const now = new Date();
-    // Backend'den event bilgisi geliyorsa onu kullan, yoksa sadece registration'ı göster
     const upcomingList = registrations.filter((reg: any) => {
-      const eventDate = reg.event?.date ? parseISO(reg.event.date) : null;
+      const eventDate = reg.eventDate ? parseISO(reg.eventDate) : null;
       return eventDate && eventDate >= now && reg.status === 'REGISTERED';
     });
     const pastList = registrations.filter((reg: any) => {
-      const eventDate = reg.event?.date ? parseISO(reg.event.date) : null;
+      const eventDate = reg.eventDate ? parseISO(reg.eventDate) : null;
       return !eventDate || eventDate < now || reg.status !== 'REGISTERED';
     });
     return { upcoming: upcomingList, past: pastList };
@@ -60,7 +60,7 @@ export const MyEventsPage: React.FC = () => {
 
   const handleCancel = (registration: any) => {
     if (window.confirm('Bu etkinlik kaydını iptal etmek istediğinize emin misiniz?')) {
-      const eventId = registration.eventId || registration.event?.id;
+      const eventId = registration.eventId;
       if (eventId) {
         cancelRegistrationMutation.mutate(eventId.toString());
       }
@@ -73,6 +73,8 @@ export const MyEventsPage: React.FC = () => {
         return <Badge variant="success">Kayıtlı</Badge>;
       case 'CHECKED_IN':
         return <Badge variant="primary">Giriş Yapıldı</Badge>;
+      case 'WAITLIST':
+        return <Badge variant="warning">Yedek Liste</Badge>;
       case 'CANCELLED':
         return <Badge variant="error">İptal Edildi</Badge>;
       default:
@@ -107,14 +109,13 @@ export const MyEventsPage: React.FC = () => {
           <h2>Yaklaşan Etkinlikler ({upcoming.length})</h2>
           <div className="events-grid">
             {upcoming.map((registration: any) => {
-              const event = registration.event || {};
-              const eventDate = event.date ? parseISO(event.date) : null;
+              const eventDate = registration.eventDate ? parseISO(registration.eventDate) : null;
 
               return (
                 <Card key={registration.id} className="event-registration-card">
                   <CardHeader>
                     <div className="event-card-header">
-                      <CardTitle>{event.title || 'Etkinlik'}</CardTitle>
+                      <CardTitle>{registration.eventTitle || 'Etkinlik'}</CardTitle>
                       {getStatusBadge(registration.status)}
                     </div>
                   </CardHeader>
@@ -122,11 +123,10 @@ export const MyEventsPage: React.FC = () => {
                     {eventDate && (
                       <div className="event-date">
                         {format(eventDate, 'd MMMM yyyy EEEE', { locale: tr })}
-                        {event.startTime && ` • ${event.startTime}`}
                       </div>
                     )}
-                    {event.location && (
-                      <div className="event-location">📍 {event.location}</div>
+                    {registration.eventLocation && (
+                      <div className="event-location">📍 {registration.eventLocation}</div>
                     )}
 
                     {registration.qrCode && (
@@ -142,11 +142,11 @@ export const MyEventsPage: React.FC = () => {
                     )}
 
                     <div className="event-actions">
-                      {event.id && (
+                      {registration.eventId && (
                         <Button
                           variant="secondary"
                           size="sm"
-                          onClick={() => navigate(`/events/${event.id}`)}
+                          onClick={() => navigate(`/events/${registration.eventId}`)}
                         >
                           Detaylar
                         </Button>
@@ -176,14 +176,13 @@ export const MyEventsPage: React.FC = () => {
           <h2>Geçmiş Etkinlikler ({past.length})</h2>
           <div className="events-grid">
             {past.map((registration: any) => {
-              const event = registration.event || {};
-              const eventDate = event.date ? parseISO(event.date) : null;
+              const eventDate = registration.eventDate ? parseISO(registration.eventDate) : null;
 
               return (
                 <Card key={registration.id} className="event-registration-card past">
                   <CardHeader>
                     <div className="event-card-header">
-                      <CardTitle>{event.title || 'Etkinlik'}</CardTitle>
+                      <CardTitle>{registration.eventTitle || 'Etkinlik'}</CardTitle>
                       {getStatusBadge(registration.status)}
                     </div>
                   </CardHeader>
@@ -193,8 +192,8 @@ export const MyEventsPage: React.FC = () => {
                         {format(eventDate, 'd MMMM yyyy EEEE', { locale: tr })}
                       </div>
                     )}
-                    {event.location && (
-                      <div className="event-location">📍 {event.location}</div>
+                    {registration.eventLocation && (
+                      <div className="event-location">📍 {registration.eventLocation}</div>
                     )}
                     {registration.status === 'CHECKED_IN' && (
                       <div className="check-in-status">✅ Etkinliğe katıldınız</div>

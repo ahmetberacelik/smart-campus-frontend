@@ -13,10 +13,12 @@ import { Breadcrumb } from '@/components/ui/Breadcrumb';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Modal } from '@/components/ui/Modal';
+import { useAuth } from '@/context/AuthContext';
 import './ClassroomReservationsPage.css';
 
 export const ClassroomReservationsPage: React.FC = () => {
   const queryClient = useQueryClient();
+  const { user } = useAuth();
   const [buildingFilter, setBuildingFilter] = useState<string>('');
   const [capacityFilter, setCapacityFilter] = useState<string>('');
   const [dateFilter, setDateFilter] = useState<string>(format(new Date(), 'yyyy-MM-dd'));
@@ -43,7 +45,7 @@ export const ClassroomReservationsPage: React.FC = () => {
   );
 
   const { data: reservationsData, isLoading: reservationsLoading } = useQuery(
-    'my-reservations',
+    'classroom-reservations',
     () => reservationService.getReservations(),
     {
       retry: 1,
@@ -70,11 +72,38 @@ export const ClassroomReservationsPage: React.FC = () => {
         setReservationModalOpen(false);
         setSelectedClassroom(null);
         setReservationPurpose('');
-        queryClient.invalidateQueries('my-reservations');
+        queryClient.invalidateQueries('classroom-reservations');
         queryClient.invalidateQueries(['classrooms']);
       },
       onError: (error: any) => {
         toast.error(error?.message || 'Rezervasyon oluşturulurken bir hata oluştu');
+      },
+    }
+  );
+
+  const approveReservationMutation = useMutation(
+    (id: string) => reservationService.approveReservation(id),
+    {
+      onSuccess: () => {
+        toast.success('Rezervasyon onaylandı');
+        queryClient.invalidateQueries('classroom-reservations');
+      },
+      onError: (error: any) => {
+        toast.error(error?.message || 'Rezervasyon onaylanırken bir hata oluştu');
+      },
+    }
+  );
+
+  const rejectReservationMutation = useMutation(
+    ({ id, reason }: { id: string; reason: string }) =>
+      reservationService.rejectReservation(id, reason),
+    {
+      onSuccess: () => {
+        toast.success('Rezervasyon reddedildi');
+        queryClient.invalidateQueries('classroom-reservations');
+      },
+      onError: (error: any) => {
+        toast.error(error?.message || 'Rezervasyon reddedilirken bir hata oluştu');
       },
     }
   );
@@ -101,6 +130,17 @@ export const ClassroomReservationsPage: React.FC = () => {
     createReservationMutation.mutate();
   };
 
+  const handleApprove = (reservation: any) => {
+    if (!window.confirm('Bu rezervasyonu onaylamak istediğinize emin misiniz?')) return;
+    approveReservationMutation.mutate(reservation.id.toString());
+  };
+
+  const handleReject = (reservation: any) => {
+    const reason = window.prompt('Lütfen reddetme sebebini yazın:');
+    if (!reason || !reason.trim()) return;
+    rejectReservationMutation.mutate({ id: reservation.id.toString(), reason: reason.trim() });
+  };
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'PENDING':
@@ -116,6 +156,9 @@ export const ClassroomReservationsPage: React.FC = () => {
 
   // Unique buildings
   const buildings = Array.from(new Set(classrooms.map((c: any) => c.building)));
+
+  const isAdmin =
+    user?.role?.toLowerCase() === 'admin' || user?.role === 'ADMIN';
 
   if (classroomsLoading) {
     return (
@@ -242,22 +285,58 @@ export const ClassroomReservationsPage: React.FC = () => {
           </CardHeader>
           <CardContent>
             <div className="reservations-list">
-              {reservations.map((reservation: any) => (
-                <div key={reservation.id} className="reservation-item">
-                  <div className="reservation-info">
-                    <div className="reservation-header">
-                      <h4>{reservation.classroom?.name || 'Sınıf'}</h4>
-                      {getStatusBadge(reservation.status)}
+              {reservations.map((reservation: any) => {
+                const dateStr = reservation.date || reservation.reservationDate;
+                const classroomName = reservation.classroomName || reservation.classroom?.name || 'Sınıf';
+
+                return (
+                  <div key={reservation.id} className="reservation-item">
+                    <div className="reservation-info">
+                      <div className="reservation-header">
+                        <h4>{classroomName}</h4>
+                        {getStatusBadge(reservation.status)}
+                      </div>
+                      <div className="reservation-details">
+                        {dateStr && (
+                          <span>
+                            📅 {format(parseISO(dateStr), 'd MMMM yyyy EEEE', { locale: tr })}
+                          </span>
+                        )}
+                        {reservation.startTime && reservation.endTime && (
+                          <span>
+                            🕐 {reservation.startTime} - {reservation.endTime}
+                          </span>
+                        )}
+                        {reservation.purpose && <span>📝 {reservation.purpose}</span>}
+                        {reservation.rejectionReason && (
+                          <span>❗ Reddetme Sebebi: {reservation.rejectionReason}</span>
+                        )}
+                      </div>
                     </div>
-                    <div className="reservation-details">
-                      <span>📅 {format(parseISO(reservation.date), 'd MMMM yyyy EEEE', { locale: tr })}</span>
-                      <span>🕐 {reservation.startTime} - {reservation.endTime}</span>
-                      <span>📍 {reservation.classroom?.building || ''}</span>
-                      {reservation.purpose && <span>📝 {reservation.purpose}</span>}
-                    </div>
+
+                    {isAdmin && reservation.status === 'PENDING' && (
+                      <div className="reservation-actions">
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          onClick={() => handleApprove(reservation)}
+                          disabled={approveReservationMutation.isLoading || rejectReservationMutation.isLoading}
+                        >
+                          Onayla
+                        </Button>
+                        <Button
+                          variant="danger"
+                          size="sm"
+                          onClick={() => handleReject(reservation)}
+                          disabled={approveReservationMutation.isLoading || rejectReservationMutation.isLoading}
+                        >
+                          Reddet
+                        </Button>
+                      </div>
+                    )}
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </CardContent>
         </Card>
