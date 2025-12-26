@@ -59,9 +59,10 @@ export const QrScannerPage: React.FC = () => {
     }
   };
 
-  const isCafeteriaStaff = user?.role?.toLowerCase() === 'staff' || user?.role === 'STAFF';
+  // Check if user has cafeteria access (FACULTY or ADMIN can also use this)
+  const hasAccess = user?.role === 'FACULTY' || user?.role === 'ADMIN';
 
-  if (!isCafeteriaStaff) {
+  if (!hasAccess) {
     return (
       <div className="qr-scanner-page">
         <div className="error-message">

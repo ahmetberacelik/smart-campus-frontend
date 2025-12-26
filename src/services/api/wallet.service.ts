@@ -39,6 +39,12 @@ export interface TransactionListParams extends PaginationParams {
   endDate?: string;
 }
 
+// PaymentFormData for PaymentForm component
+export interface PaymentFormData {
+  amount: number;
+  paymentMethod: string;
+}
+
 export const walletService = {
   /**
    * Cüzdan bakiyesi

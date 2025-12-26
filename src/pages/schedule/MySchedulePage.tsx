@@ -11,13 +11,23 @@ import { WeeklyCalendar } from '@/components/calendar/WeeklyCalendar';
 import type { CalendarEvent } from '@/components/calendar/WeeklyCalendar';
 import './MySchedulePage.css';
 
+// Helper function to get course color based on code
+const getCourseColor = (courseCode: string): string => {
+  const colors = ['#2196F3', '#4CAF50', '#FF9800', '#E91E63', '#9C27B0', '#00BCD4'];
+  let hash = 0;
+  for (let i = 0; i < courseCode.length; i++) {
+    hash = courseCode.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return colors[Math.abs(hash) % colors.length];
+};
+
 export const MySchedulePage: React.FC = () => {
   const { data: scheduleData, isLoading } = useQuery(
     'my-schedule',
     () => scheduleService.getMySchedule(),
     {
       retry: 1,
-      onError: (err: any) => {
+      onError: (_err: any) => {
         toast.error('Ders programı yüklenirken bir hata oluştu');
       },
     }
@@ -65,13 +75,13 @@ export const MySchedulePage: React.FC = () => {
 
     // Map schedule entries to calendar events
     const events: CalendarEvent[] = [];
-    
+
     schedule.entries.forEach((entry: any) => {
       // Find the date for this week's dayOfWeek
       const today = new Date();
       const currentWeekStart = new Date(today);
       currentWeekStart.setDate(today.getDate() - today.getDay() + 1); // Monday
-      
+
       const eventDate = new Date(currentWeekStart);
       eventDate.setDate(currentWeekStart.getDate() + (entry.dayOfWeek - 1));
 
@@ -152,7 +162,7 @@ export const MySchedulePage: React.FC = () => {
           </Card>
 
           {/* Demo ders programı */}
-          <Card style={{ marginTop: '24px' }}>
+          <Card className="demo-schedule-card">
             <CardContent>
               <h3 style={{ marginBottom: '16px' }}>Örnek Ders Programı (Demo)</h3>
               <WeeklyCalendar

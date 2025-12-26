@@ -25,7 +25,7 @@ export const WalletPage: React.FC = () => {
     () => walletService.getBalance(),
     {
       retry: 1,
-      onError: (err: any) => {
+      onError: (_err: any) => {
         toast.error('Bakiye yüklenirken bir hata oluştu');
       },
     }
@@ -36,7 +36,7 @@ export const WalletPage: React.FC = () => {
     () => walletService.getTransactions({ page, limit: 20 }),
     {
       retry: 1,
-      onError: (err: any) => {
+      onError: (_err: any) => {
         toast.error('İşlem geçmişi yüklenirken bir hata oluştu');
       },
     }

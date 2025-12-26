@@ -7,11 +7,12 @@ import React from 'react';
 import clsx from 'clsx';
 import './Badge.css';
 
-interface BadgeProps {
+export interface BadgeProps {
   children: React.ReactNode;
   variant?: 'default' | 'success' | 'warning' | 'error' | 'info' | 'primary';
   size?: 'sm' | 'md' | 'lg';
   className?: string;
+  style?: React.CSSProperties;
 }
 
 export const Badge: React.FC<BadgeProps> = ({
@@ -19,6 +20,7 @@ export const Badge: React.FC<BadgeProps> = ({
   variant = 'default',
   size = 'md',
   className,
+  style,
 }) => {
   return (
     <span
@@ -28,9 +30,11 @@ export const Badge: React.FC<BadgeProps> = ({
         `corporate-badge--${size}`,
         className
       )}
+      style={style}
     >
       {children}
     </span>
   );
 };
+
 

@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from 'react-query';
 import { toast } from 'react-toastify';
 import { format, parseISO } from 'date-fns';
@@ -27,7 +27,7 @@ export const MenuPage: React.FC = () => {
     () => mealService.getMenus({ date: selectedDate }),
     {
       retry: 1,
-      onError: (err: any) => {
+      onError: (_err: any) => {
         toast.error('Menüler yüklenirken bir hata oluştu');
       },
     }
@@ -166,19 +166,19 @@ export const MenuPage: React.FC = () => {
                     <div className="nutrition-grid">
                       <div className="nutrition-item">
                         <span className="nutrition-label">Kalori:</span>
-                        <span className="nutrition-value">{(lunchMenu || demoLunchMenu).nutritionalInfo.calories} kcal</span>
+                        <span className="nutrition-value">{(lunchMenu || demoLunchMenu).nutritionalInfo?.calories} kcal</span>
                       </div>
                       <div className="nutrition-item">
                         <span className="nutrition-label">Protein:</span>
-                        <span className="nutrition-value">{(lunchMenu || demoLunchMenu).nutritionalInfo.protein}g</span>
+                        <span className="nutrition-value">{(lunchMenu || demoLunchMenu).nutritionalInfo?.protein}g</span>
                       </div>
                       <div className="nutrition-item">
                         <span className="nutrition-label">Karbonhidrat:</span>
-                        <span className="nutrition-value">{(lunchMenu || demoLunchMenu).nutritionalInfo.carbs}g</span>
+                        <span className="nutrition-value">{(lunchMenu || demoLunchMenu).nutritionalInfo?.carbs}g</span>
                       </div>
                       <div className="nutrition-item">
                         <span className="nutrition-label">Yağ:</span>
-                        <span className="nutrition-value">{(lunchMenu || demoLunchMenu).nutritionalInfo.fat}g</span>
+                        <span className="nutrition-value">{(lunchMenu || demoLunchMenu).nutritionalInfo?.fat}g</span>
                       </div>
                     </div>
                   </div>
@@ -236,19 +236,19 @@ export const MenuPage: React.FC = () => {
                     <div className="nutrition-grid">
                       <div className="nutrition-item">
                         <span className="nutrition-label">Kalori:</span>
-                        <span className="nutrition-value">{(dinnerMenu || demoDinnerMenu).nutritionalInfo.calories} kcal</span>
+                        <span className="nutrition-value">{(dinnerMenu || demoDinnerMenu).nutritionalInfo?.calories} kcal</span>
                       </div>
                       <div className="nutrition-item">
                         <span className="nutrition-label">Protein:</span>
-                        <span className="nutrition-value">{(dinnerMenu || demoDinnerMenu).nutritionalInfo.protein}g</span>
+                        <span className="nutrition-value">{(dinnerMenu || demoDinnerMenu).nutritionalInfo?.protein}g</span>
                       </div>
                       <div className="nutrition-item">
                         <span className="nutrition-label">Karbonhidrat:</span>
-                        <span className="nutrition-value">{(dinnerMenu || demoDinnerMenu).nutritionalInfo.carbs}g</span>
+                        <span className="nutrition-value">{(dinnerMenu || demoDinnerMenu).nutritionalInfo?.carbs}g</span>
                       </div>
                       <div className="nutrition-item">
                         <span className="nutrition-label">Yağ:</span>
-                        <span className="nutrition-value">{(dinnerMenu || demoDinnerMenu).nutritionalInfo.fat}g</span>
+                        <span className="nutrition-value">{(dinnerMenu || demoDinnerMenu).nutritionalInfo?.fat}g</span>
                       </div>
                     </div>
                   </div>

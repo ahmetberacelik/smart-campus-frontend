@@ -1,7 +1,7 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import { useQuery } from 'react-query';
 import { useNavigate } from 'react-router-dom';
-import { toast } from 'react-toastify';
+// toast removed - not used directly, errors handled elsewhere
 import { eventService } from '@/services/api/event.service';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { Button } from '@/components/common/Button';
@@ -100,7 +100,7 @@ export const EventsPage: React.FC = () => {
   if (eventsError) {
     const errorData = eventsError as any;
     const statusCode = errorData?.response?.status || errorData?.status;
-    
+
     return (
       <div className="events-page">
         <Breadcrumb

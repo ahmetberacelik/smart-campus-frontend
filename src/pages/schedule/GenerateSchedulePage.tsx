@@ -1,6 +1,6 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import { useQuery, useMutation } from 'react-query';
-import { useNavigate } from 'react-router-dom';
+// useNavigate removed - not used
 import { toast } from 'react-toastify';
 import { scheduleService } from '@/services/api/schedule.service';
 import { sectionService } from '@/services/api/section.service';
@@ -38,7 +38,7 @@ const getCurrentSemesterAndYear = () => {
 
 export const GenerateSchedulePage: React.FC = () => {
   const { user } = useAuth();
-  const navigate = useNavigate();
+  // navigate removed - not used
   const [semester, setSemester] = useState<string>(getCurrentSemesterAndYear().semester);
   const [year, setYear] = useState<number>(getCurrentSemesterAndYear().year);
   const [selectedSectionIds, setSelectedSectionIds] = useState<Set<string>>(new Set());
@@ -50,7 +50,7 @@ export const GenerateSchedulePage: React.FC = () => {
     () => sectionService.getSectionsBySemester(semester, year),
     {
       retry: 1,
-      onError: (err: any) => {
+      onError: (_err: any) => {
         toast.error('Ders bölümleri yüklenirken bir hata oluştu');
       },
     }

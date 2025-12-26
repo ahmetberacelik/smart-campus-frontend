@@ -38,30 +38,31 @@ export const ClassroomReservationsPage: React.FC = () => {
     }),
     {
       retry: 1,
-      onError: (err: any) => {
+      onError: (_err: any) => {
         toast.error('Sınıflar yüklenirken bir hata oluştu');
       },
     }
   );
 
-  const { data: reservationsData, isLoading: reservationsLoading } = useQuery(
+  const { data: reservationsData, isLoading: _reservationsLoading } = useQuery(
     'classroom-reservations',
     () => reservationService.getReservations(),
     {
       retry: 1,
-      onError: (err: any) => {
+      onError: (_err: any) => {
         toast.error('Rezervasyonlar yüklenirken bir hata oluştu');
       },
     }
   );
 
-  const classrooms = classroomsData?.data || [];
+  // Backend paginated response döner, .content'ten alıyoruz
+  const classrooms = classroomsData?.data?.content || classroomsData?.data || [];
   const reservations = reservationsData?.data?.content || reservationsData?.data || [];
 
   const createReservationMutation = useMutation(
     () => reservationService.createReservation({
-      classroomId: selectedClassroom.id,
-      date: reservationDate,
+      classroomId: Number(selectedClassroom.id),
+      reservationDate: reservationDate,
       startTime: reservationStartTime,
       endTime: reservationEndTime,
       purpose: reservationPurpose,
@@ -155,7 +156,7 @@ export const ClassroomReservationsPage: React.FC = () => {
   };
 
   // Unique buildings
-  const buildings = Array.from(new Set(classrooms.map((c: any) => c.building)));
+  const buildings: string[] = Array.from(new Set(classrooms.map((c: any) => c.building).filter(Boolean))) as string[];
 
   const isAdmin =
     user?.role?.toLowerCase() === 'admin' || user?.role === 'ADMIN';

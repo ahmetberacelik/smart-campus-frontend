@@ -73,8 +73,8 @@ export const AttendanceReportPage: React.FC = () => {
       ]);
     });
 
-    const course = section?.course || {};
-    const filename = `Yoklama_Raporu_${course.code}_Bölüm_${section?.sectionNumber || ''}`.replace(/[^a-zA-Z0-9_]/g, '_');
+    const courseObj = section?.course as { code?: string } | undefined;
+    const filename = `Yoklama_Raporu_${courseObj?.code || 'N/A'}_Bolum_${section?.sectionNumber || ''}`.replace(/[^a-zA-Z0-9_]/g, '_');
     downloadExcel(data, filename, headers);
     toast.success('Excel dosyası indirildi');
   };

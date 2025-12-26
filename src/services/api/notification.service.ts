@@ -5,7 +5,7 @@
 
 import httpClient from './client';
 import { API_ENDPOINTS } from '@/config/api.config';
-import type { ApiResponse, Notification, NotificationPreferences } from '@/types/api.types';
+import type { ApiResponse, Notification } from '@/types/api.types';
 
 export interface NotificationListResponse {
     content: Notification[];

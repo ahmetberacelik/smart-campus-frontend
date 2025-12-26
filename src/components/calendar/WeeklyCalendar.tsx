@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { format, startOfWeek, addDays, addWeeks, subWeeks, isSameDay, isToday, parseISO } from 'date-fns';
+import { format, startOfWeek, addDays, addWeeks, subWeeks, isToday, parseISO } from 'date-fns';
 import { tr } from 'date-fns/locale';
 import { Button } from '@/components/common/Button';
 import './WeeklyCalendar.css';

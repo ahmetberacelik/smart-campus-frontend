@@ -51,7 +51,7 @@ export const NotificationSettings: React.FC = () => {
     const [hasChanges, setHasChanges] = useState(false);
 
     // Tercihleri getir
-    const { data: preferencesData, isLoading, error } = useQuery(
+    const { isLoading, error } = useQuery(
         'notification-preferences',
         () => notificationService.getPreferences(),
         {

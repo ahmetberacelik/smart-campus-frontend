@@ -446,10 +446,8 @@ export const ProfilePage: React.FC = () => {
               </CardContent>
             </Card>
           </div>
-        </div>
-    </>
-  )
-}
-    </div >
+        </>
+      )}
+    </div>
   );
 };

@@ -14,28 +14,35 @@ export interface Classroom {
   capacity: number;
   floor?: number;
   equipment?: string[];
+  roomNumber?: string;
+  hasProjector?: boolean;
+  hasAirConditioning?: boolean;
 }
 
 export interface ClassroomReservation {
   id: string;
   classroomId: string;
-  classroom: Classroom;
+  classroomName?: string;
+  classroom?: Classroom;
   date: string;
+  reservationDate?: string;
   startTime: string;
   endTime: string;
   purpose: string;
   requesterId: string;
   requesterName: string;
-  status: 'PENDING' | 'APPROVED' | 'REJECTED';
+  status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED';
+  rejectionReason?: string;
   createdAt: string;
 }
 
 export interface CreateReservationRequest {
-  classroomId: string;
-  date: string;
-  startTime: string;
-  endTime: string;
-  purpose: string;
+  classroomId: number;          // Backend: Long classroomId
+  reservationDate: string;      // Backend: LocalDate reservationDate (YYYY-MM-DD format)
+  startTime: string;            // Backend: LocalTime startTime (HH:mm format)
+  endTime: string;              // Backend: LocalTime endTime (HH:mm format)
+  purpose: string;              // Backend: String purpose
+  notes?: string;               // Backend: String notes (optional)
 }
 
 export interface ReservationListParams extends PaginationParams {
@@ -47,24 +54,43 @@ export interface ReservationListParams extends PaginationParams {
 
 export const reservationService = {
   /**
-   * Sınıf listesi
+   * Sınıf listesi (Backend: /api/v1/classrooms)
    */
-  async getClassrooms(params?: ReservationListParams): Promise<ApiResponse<Classroom[]>> {
+  async getClassrooms(params?: ReservationListParams): Promise<ApiResponse<any>> {
     const queryParams = new URLSearchParams();
-    if (params?.building) queryParams.append('building', params.building);
-    if (params?.capacity) queryParams.append('capacity', params.capacity.toString());
-    if (params?.date) queryParams.append('date', params.date);
+    if (params?.page !== undefined) queryParams.append('page', params.page.toString());
+    if (params?.limit !== undefined) queryParams.append('size', params.limit.toString());
 
     const url = queryParams.toString()
-      ? `${API_ENDPOINTS.RESERVATIONS.LIST}?${queryParams.toString()}`
-      : API_ENDPOINTS.RESERVATIONS.LIST;
+      ? `${API_ENDPOINTS.CLASSROOMS.LIST}?${queryParams.toString()}`
+      : API_ENDPOINTS.CLASSROOMS.LIST;
 
-    const response = await httpClient.get<ApiResponse<Classroom[]>>(url);
+    const response = await httpClient.get<ApiResponse<any>>(url);
     return response.data;
   },
 
   /**
-   * Rezervasyon oluşturma
+   * Binalara göre sınıf listesi
+   */
+  async getClassroomsByBuilding(building: string): Promise<ApiResponse<any>> {
+    const response = await httpClient.get<ApiResponse<any>>(
+      API_ENDPOINTS.CLASSROOMS.BY_BUILDING(building)
+    );
+    return response.data;
+  },
+
+  /**
+   * Bina listesi
+   */
+  async getBuildings(): Promise<ApiResponse<string[]>> {
+    const response = await httpClient.get<ApiResponse<string[]>>(
+      API_ENDPOINTS.CLASSROOMS.BUILDINGS
+    );
+    return response.data;
+  },
+
+  /**
+   * Rezervasyon oluşturma (Backend: POST /api/v1/classroom-reservations)
    */
   async createReservation(data: CreateReservationRequest): Promise<ApiResponse<ClassroomReservation>> {
     const response = await httpClient.post<ApiResponse<ClassroomReservation>>(
@@ -75,19 +101,49 @@ export const reservationService = {
   },
 
   /**
-   * Rezervasyon listesi
+   * Benim rezervasyonlarım (Backend: GET /api/v1/classroom-reservations/my)
    */
-  async getReservations(params?: ReservationListParams): Promise<ApiResponse<any>> {
-    const queryParams = new URLSearchParams();
-    if (params?.page !== undefined) queryParams.append('page', params.page.toString());
-    if (params?.limit !== undefined) queryParams.append('size', params.limit.toString());
-    if (params?.status) queryParams.append('status', params.status);
+  async getMyReservations(): Promise<ApiResponse<ClassroomReservation[]>> {
+    const response = await httpClient.get<ApiResponse<ClassroomReservation[]>>(
+      API_ENDPOINTS.RESERVATIONS.LIST
+    );
+    return response.data;
+  },
 
-    const url = queryParams.toString()
-      ? `${API_ENDPOINTS.RESERVATIONS.LIST}?${queryParams.toString()}`
-      : API_ENDPOINTS.RESERVATIONS.LIST;
+  /**
+   * Rezarvasyon listesi (compat alias)
+   */
+  async getReservations(_params?: ReservationListParams): Promise<ApiResponse<any>> {
+    return this.getMyReservations();
+  },
 
-    const response = await httpClient.get<ApiResponse<any>>(url);
+  /**
+   * Onay bekleyen rezervasyonlar (Admin only)
+   */
+  async getPendingReservations(): Promise<ApiResponse<any>> {
+    const response = await httpClient.get<ApiResponse<any>>(
+      API_ENDPOINTS.RESERVATIONS.PENDING
+    );
+    return response.data;
+  },
+
+  /**
+   * Belirli sınıfın rezervasyonları
+   */
+  async getReservationsByClassroom(classroomId: string, date: string): Promise<ApiResponse<ClassroomReservation[]>> {
+    const response = await httpClient.get<ApiResponse<ClassroomReservation[]>>(
+      `${API_ENDPOINTS.RESERVATIONS.BY_CLASSROOM(classroomId)}?date=${date}`
+    );
+    return response.data;
+  },
+
+  /**
+   * Müsaitlik kontrolü
+   */
+  async getAvailableSlots(classroomId: string, date: string): Promise<ApiResponse<ClassroomReservation[]>> {
+    const response = await httpClient.get<ApiResponse<ClassroomReservation[]>>(
+      `${API_ENDPOINTS.RESERVATIONS.AVAILABLE}?classroomId=${classroomId}&date=${date}`
+    );
     return response.data;
   },
 
@@ -110,4 +166,5 @@ export const reservationService = {
     return response.data;
   },
 };
+
 

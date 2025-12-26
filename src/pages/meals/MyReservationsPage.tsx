@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from 'react-query';
 import { toast } from 'react-toastify';
 import { format, parseISO, differenceInHours } from 'date-fns';
@@ -15,7 +15,7 @@ import './MyReservationsPage.css';
 
 export const MyReservationsPage: React.FC = () => {
   const queryClient = useQueryClient();
-  const [selectedQrCode, setSelectedQrCode] = useState<string>('');
+  // selectedQrCode removed - not used
 
   const { data: reservationsData, isLoading, error: reservationsError } = useQuery(
     'my-reservations',
@@ -105,7 +105,7 @@ export const MyReservationsPage: React.FC = () => {
   if (reservationsError) {
     const errorData = reservationsError as any;
     const statusCode = errorData?.response?.status || errorData?.status;
-    
+
     return (
       <div className="my-reservations-page">
         <Breadcrumb

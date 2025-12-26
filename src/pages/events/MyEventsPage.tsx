@@ -23,7 +23,7 @@ export const MyEventsPage: React.FC = () => {
     () => eventService.getMyEvents(),
     {
       retry: 1,
-      onError: (err: any) => {
+      onError: (_err: any) => {
         toast.error('Etkinlik kayıtlarınız yüklenirken bir hata oluştu');
       },
     }

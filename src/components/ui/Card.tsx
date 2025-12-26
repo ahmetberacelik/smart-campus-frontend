@@ -7,11 +7,12 @@ import React from 'react';
 import clsx from 'clsx';
 import './Card.css';
 
-interface CardProps {
+export interface CardProps {
   children: React.ReactNode;
   className?: string;
   variant?: 'default' | 'outlined' | 'elevated';
   padding?: 'none' | 'sm' | 'md' | 'lg';
+  style?: React.CSSProperties;
 }
 
 export const Card: React.FC<CardProps> = ({
@@ -19,6 +20,7 @@ export const Card: React.FC<CardProps> = ({
   className,
   variant = 'default',
   padding = 'md',
+  style,
 }) => {
   return (
     <div
@@ -28,6 +30,7 @@ export const Card: React.FC<CardProps> = ({
         `corporate-card--padding-${padding}`,
         className
       )}
+      style={style}
     >
       {children}
     </div>

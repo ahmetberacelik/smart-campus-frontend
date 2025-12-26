@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { Button } from '@/components/common/Button';
 import { TextInput } from '@/components/common/TextInput';
-import { LoadingSpinner } from '@/components/common/LoadingSpinner';
+// LoadingSpinner removed - not used in this component
 import './QrCodeScanner.css';
 
 interface QrCodeScannerProps {

@@ -41,6 +41,7 @@ import { EventCheckInPage } from './pages/events/EventCheckInPage'
 import { MySchedulePage } from './pages/schedule/MySchedulePage'
 import { GenerateSchedulePage } from './pages/schedule/GenerateSchedulePage'
 import { ClassroomReservationsPage } from './pages/reservations/ClassroomReservationsPage'
+import { AdminAnalyticsPage } from './pages/admin/AdminAnalyticsPage'
 
 // Query Client setup
 const queryClient = new QueryClient({
@@ -337,6 +338,18 @@ function App() {
                 <ProtectedRoute>
                   <MainLayout>
                     <ClassroomReservationsPage />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Admin Analytics */}
+            <Route
+              path="/admin/analytics"
+              element={
+                <ProtectedRoute requiredRole={['admin', 'ADMIN']}>
+                  <MainLayout>
+                    <AdminAnalyticsPage />
                   </MainLayout>
                 </ProtectedRoute>
               }

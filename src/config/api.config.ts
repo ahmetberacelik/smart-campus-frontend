@@ -146,20 +146,23 @@ export const API_ENDPOINTS = {
 
   // Reservations (Classrooms)
   RESERVATIONS: {
-    CREATE: '/reservations',
-    LIST: '/reservations',
-    APPROVE: (id: string) => `/reservations/${id}/approve`,
-    REJECT: (id: string) => `/reservations/${id}/reject`,
+    CREATE: '/classroom-reservations',
+    LIST: '/classroom-reservations/my',  // Backend: /api/v1/classroom-reservations/my
+    AVAILABLE: '/classroom-reservations/available',  // Backend: /api/v1/classroom-reservations/available
+    PENDING: '/classroom-reservations/pending',  // Backend: admin only
+    APPROVE: (id: string) => `/classroom-reservations/${id}/approve`,
+    REJECT: (id: string) => `/classroom-reservations/${id}/reject`,
+    BY_CLASSROOM: (classroomId: string) => `/classroom-reservations/classroom/${classroomId}`,
   },
 
   // Analytics
   ANALYTICS: {
     DASHBOARD: '/analytics/dashboard',
-    ACADEMIC_PERFORMANCE: '/analytics/academic-performance',
+    ACADEMIC_PERFORMANCE: '/analytics/academic',  // Backend: /api/v1/analytics/academic
     ATTENDANCE: '/analytics/attendance',
-    MEAL_USAGE: '/analytics/meal-usage',
+    MEAL_USAGE: '/analytics/meals',  // Backend: /api/v1/analytics/meals
     EVENTS: '/analytics/events',
-    EXPORT: (type: string) => `/analytics/export/${type}`,
+    EXPORT: (type: string) => `/analytics/export/dashboard/${type}`,  // Backend: /api/v1/analytics/export/dashboard/{type}
   },
 
   // Notifications
@@ -184,6 +187,17 @@ export const API_ENDPOINTS = {
     LIST: '/departments',
     DETAIL: (id: string) => `/departments/${id}`,
     BY_CODE: (code: string) => `/departments/code/${code}`,
+  },
+
+  // Classrooms
+  CLASSROOMS: {
+    LIST: '/classrooms',
+    ACTIVE: '/classrooms/active',
+    BUILDINGS: '/classrooms/buildings',
+    BY_BUILDING: (building: string) => `/classrooms/building/${building}`,
+    BY_CAPACITY: (minCapacity: number) => `/classrooms/capacity/${minCapacity}`,
+    SEARCH: '/classrooms/search',
+    DETAIL: (id: string) => `/classrooms/${id}`,
   },
 } as const;
 

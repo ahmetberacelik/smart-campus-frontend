@@ -143,8 +143,8 @@ export const GradebookPage: React.FC = () => {
       ]);
     });
 
-    const course = section.course || {};
-    const filename = `Not_Defteri_${course.code}_${course.name}_Bölüm_${section.sectionNumber}`.replace(/[^a-zA-Z0-9_]/g, '_');
+    const courseInfo = section?.course as { code?: string; name?: string } | undefined;
+    const filename = `Not_Defteri_${courseInfo?.code || 'N/A'}_${courseInfo?.name || 'N/A'}_Bolum_${section?.sectionNumber || ''}`.replace(/[^a-zA-Z0-9_]/g, '_');
     downloadExcel(data, filename, headers);
     toast.success('Excel dosyası indirildi');
   };
@@ -159,7 +159,7 @@ export const GradebookPage: React.FC = () => {
     // TODO: Backend'de notification endpoint'i eklendiğinde bu fonksiyon implement edilecek
     // Backend endpoint: POST /api/v1/grades/notify (veya benzer bir endpoint)
     // Örnek payload: { sectionId, enrollmentIds: [], message: notificationMessage }
-    
+
     // Şimdilik bilgilendirme gösteriyoruz
     toast.info('Bildirim gönderme özelliği backend entegrasyonu tamamlandığında aktif olacak');
     setNotificationModalOpen(false);
