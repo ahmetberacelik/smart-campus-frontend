@@ -15,6 +15,7 @@ import { ForgotPasswordPage } from './pages/auth/ForgotPasswordPage'
 import { ResetPasswordPage } from './pages/auth/ResetPasswordPage'
 import { DashboardPage } from './pages/DashboardPage'
 import { ProfilePage } from './pages/ProfilePage'
+import { NotificationsPage } from './pages/NotificationsPage'
 import { NotFoundPage } from './pages/NotFoundPage'
 import { CoursesPage } from './pages/CoursesPage'
 import { CourseDetailPage } from './pages/CourseDetailPage'
@@ -83,6 +84,16 @@ function App() {
                 <ProtectedRoute>
                   <MainLayout>
                     <ProfilePage />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/notifications"
+              element={
+                <ProtectedRoute>
+                  <MainLayout>
+                    <NotificationsPage />
                   </MainLayout>
                 </ProtectedRoute>
               }

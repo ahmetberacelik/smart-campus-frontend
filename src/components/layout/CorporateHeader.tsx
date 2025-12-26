@@ -6,6 +6,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
+import { NotificationBell } from '@/components/notifications/NotificationBell';
 import './CorporateHeader.css';
 
 export const CorporateHeader: React.FC = () => {
@@ -75,6 +76,9 @@ export const CorporateHeader: React.FC = () => {
               <path d="m21 21-4.35-4.35" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
             </svg>
           </button>
+
+          {/* Notification Bell */}
+          <NotificationBell />
 
           {/* User Menu */}
           <div className="corporate-header__user-menu">

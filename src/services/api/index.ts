@@ -16,6 +16,7 @@ export { walletService } from './wallet.service';
 export { eventService } from './event.service';
 export { scheduleService } from './schedule.service';
 export { reservationService } from './reservation.service';
+export { notificationService } from './notification.service';
 export { apiClient } from './client';
 export { default as httpClient } from './client';
 
