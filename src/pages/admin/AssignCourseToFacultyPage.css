@@ -1,0 +1,372 @@
+.assign-course-page {
+  padding: 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.filters-card {
+  margin-bottom: 2rem;
+}
+
+.filters-row {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 1rem;
+  align-items: end;
+}
+
+.search-input,
+.department-filter {
+  width: 100%;
+}
+
+.faculty-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+}
+
+.faculty-card {
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.faculty-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.faculty-card-header {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.faculty-avatar {
+  flex-shrink: 0;
+}
+
+.faculty-avatar img,
+.faculty-avatar-placeholder {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.faculty-avatar-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.faculty-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.faculty-name {
+  margin: 0 0 0.25rem 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #1f2937;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.faculty-email {
+  margin: 0 0 0.25rem 0;
+  font-size: 0.875rem;
+  color: #6b7280;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.faculty-title {
+  margin: 0.25rem 0;
+  font-size: 0.875rem;
+  color: #4b5563;
+  font-weight: 500;
+}
+
+.faculty-department {
+  margin: 0.25rem 0;
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.faculty-employee-number {
+  margin: 0.25rem 0 0 0;
+  font-size: 0.75rem;
+  color: #9ca3af;
+}
+
+.faculty-card-actions {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e5e7eb;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.assign-button,
+.view-courses-button {
+  width: 100%;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: #6b7280;
+  font-size: 1rem;
+}
+
+.assign-course-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.form-info-message {
+  padding: 1rem;
+  background-color: #dbeafe;
+  border: 1px solid #3b82f6;
+  border-radius: 8px;
+  margin-bottom: 0.5rem;
+}
+
+.form-info-message p {
+  margin: 0;
+  font-size: 0.875rem;
+  color: #1e40af;
+  line-height: 1.5;
+}
+
+.existing-section-warning {
+  padding: 1rem;
+  background-color: #fef3c7;
+  border: 1px solid #f59e0b;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+}
+
+.existing-section-warning > p:first-child {
+  margin: 0 0 0.75rem 0;
+  font-size: 0.875rem;
+  color: #92400e;
+  font-weight: 600;
+}
+
+.existing-section-info {
+  background-color: white;
+  padding: 0.75rem;
+  border-radius: 6px;
+  margin-bottom: 0.75rem;
+}
+
+.existing-section-info p {
+  margin: 0.25rem 0;
+  font-size: 0.875rem;
+  color: #78350f;
+}
+
+.warning-text {
+  margin: 0.75rem 0 0 0 !important;
+  font-size: 0.875rem;
+  color: #92400e;
+  font-style: italic;
+}
+
+.section-number-display {
+  margin-bottom: 1rem;
+}
+
+.section-number-display label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  color: #374151;
+  font-size: 0.875rem;
+}
+
+.section-number-value {
+  padding: 0.75rem;
+  background-color: #f3f4f6;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+.section-number-note {
+  margin: 0.5rem 0 0 0;
+  font-size: 0.75rem;
+  color: #6b7280;
+  font-style: italic;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.form-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+  margin-top: 1rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+/* Responsive */
+/* Hocanın Dersleri Listesi */
+.faculty-sections-list {
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 2px solid #e5e7eb;
+}
+
+.sections-list-title {
+  margin: 0 0 1rem 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.faculty-sections-empty {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  text-align: center;
+  color: #6b7280;
+  font-size: 0.875rem;
+}
+
+.faculty-section-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  margin-bottom: 0.75rem;
+  background-color: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  transition: all 0.2s;
+}
+
+.faculty-section-item:hover {
+  background-color: #f3f4f6;
+  border-color: #d1d5db;
+}
+
+.section-item-info {
+  flex: 1;
+}
+
+.section-course {
+  font-size: 0.95rem;
+  color: #1f2937;
+  margin-bottom: 0.5rem;
+}
+
+.section-details-row {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.section-details-row span {
+  white-space: nowrap;
+}
+
+.section-item-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.section-item-actions .delete-button {
+  color: #dc2626;
+  border-color: #dc2626;
+}
+
+.section-item-actions .delete-button:hover {
+  background-color: #fee2e2;
+  color: #991b1b;
+}
+
+/* Düzenleme Formu */
+.edit-section-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.edit-section-info {
+  padding: 1rem;
+  background-color: #f3f4f6;
+  border-radius: 8px;
+}
+
+.edit-section-info p {
+  margin: 0.5rem 0;
+  font-size: 0.875rem;
+  color: #374151;
+}
+
+@media (max-width: 768px) {
+  .assign-course-page {
+    padding: 1rem;
+  }
+
+  .filters-row {
+    grid-template-columns: 1fr;
+  }
+
+  .faculty-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .form-actions {
+    flex-direction: column-reverse;
+  }
+
+  .form-actions button {
+    width: 100%;
+  }
+
+  .faculty-section-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .section-item-actions {
+    width: 100%;
+  }
+
+  .section-item-actions button {
+    flex: 1;
+  }
+
+  .section-details-row {
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+}
+

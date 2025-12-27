@@ -114,9 +114,18 @@ export const userService = {
     department?: string;
     search?: string;
   }): Promise<ApiResponse<PaginatedResponse<User>>> {
+    // Backend'de page ve size bekleniyor, limit'i size'a çevir
+    const queryParams: Record<string, any> = {};
+    if (params?.page !== undefined) queryParams.page = params.page;
+    if (params?.limit !== undefined) queryParams.size = params.limit;
+    if (params?.role) queryParams.role = params.role;
+    if (params?.department) queryParams.department = params.department;
+    if (params?.search) queryParams.search = params.search;
+    if (params?.sort) queryParams.sortBy = params.sort;
+    
     const response = await apiClient.get<ApiResponse<PaginatedResponse<User>>>(
       API_ENDPOINTS.USERS.LIST,
-      { params }
+      { params: queryParams }
     );
     return response.data;
   },

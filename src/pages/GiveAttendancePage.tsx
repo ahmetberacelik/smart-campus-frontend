@@ -24,6 +24,7 @@ export const GiveAttendancePage: React.FC = () => {
   const [isGettingLocation, setIsGettingLocation] = useState(false);
   const [activeMethod, setActiveMethod] = useState<AttendanceMethod>(qrFromUrl ? 'qr' : 'gps');
   const [isScanning, setIsScanning] = useState(false);
+  const [isStartingCamera, setIsStartingCamera] = useState(false);
   const [scannedQrCode, setScannedQrCode] = useState<string>(qrFromUrl || '');
   const [autoSubmitting, setAutoSubmitting] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -94,29 +95,60 @@ export const GiveAttendancePage: React.FC = () => {
 
   // QR Kod URL'den geldiğinde otomatik işlem
   useEffect(() => {
-    if (qrFromUrl && !location && !isGettingLocation) {
-      // QR URL'den geldiyse otomatik konum al
-      toast.info('QR kod algılandı, konum alınıyor...');
-      getCurrentLocationAuto();
-    }
-  }, [qrFromUrl]);
-
-  // Konum alındığında ve QR varsa otomatik yoklama ver
-  useEffect(() => {
-    if (qrFromUrl && location && !autoSubmitting && scannedQrCode) {
+    if (qrFromUrl && !autoSubmitting && scannedQrCode && sessionLocation) {
       setAutoSubmitting(true);
-      toast.info('Konum alındı, yoklama veriliyor...');
+      toast.info('QR kod algılandı, yoklama veriliyor...');
 
       const qrData: CheckInQrRequest = {
         qrCode: scannedQrCode,
-        latitude: location.lat,
-        longitude: location.lon,
-        accuracy: location.accuracy,
+        latitude: sessionLocation[0],
+        longitude: sessionLocation[1],
+        accuracy: 0,
       };
 
       checkInQrMutation.mutate(qrData);
     }
-  }, [location, qrFromUrl, scannedQrCode]);
+  }, [qrFromUrl, scannedQrCode, sessionLocation]);
+
+  // Video element render edildiğinde stream'i bağla
+  useEffect(() => {
+    if (isScanning && !isStartingCamera && streamRef.current && videoRef.current) {
+      const video = videoRef.current;
+      const stream = streamRef.current;
+      
+      // Stream zaten atanmışsa tekrar atama
+      if (video.srcObject !== stream) {
+        console.log('🔗 Attaching stream to video element via useEffect');
+        video.srcObject = stream;
+        
+        const onLoadedMetadata = () => {
+          console.log('✅ Video metadata loaded via useEffect, dimensions:', video.videoWidth, 'x', video.videoHeight);
+          video.play().catch(err => {
+            console.warn('⚠️ Video play error in useEffect:', err);
+          });
+          // Video yüklendikten sonra taramayı başlat
+          setTimeout(() => {
+            if (isScanning) {
+              scanQrCode();
+            }
+          }, 100);
+        };
+        
+        const onError = (e: Event) => {
+          console.error('❌ Video error in useEffect:', e);
+        };
+        
+        // Video zaten yüklenmişse direkt başlat
+        if (video.readyState >= video.HAVE_METADATA) {
+          onLoadedMetadata();
+        } else {
+          video.addEventListener('loadedmetadata', onLoadedMetadata, { once: true });
+          video.addEventListener('canplay', onLoadedMetadata, { once: true });
+          video.addEventListener('error', onError, { once: true });
+        }
+      }
+    }
+  }, [isScanning, isStartingCamera]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -199,9 +231,12 @@ export const GiveAttendancePage: React.FC = () => {
           case error.TIMEOUT:
             errorMessage = 'Konum alma işlemi zaman aşımına uğradı. Lütfen tekrar deneyin.';
             break;
+          default:
+            errorMessage = 'Konum alınırken bir hata oluştu. Lütfen tekrar deneyin.';
         }
         setLocationError(errorMessage);
         setIsGettingLocation(false);
+        console.error('Geolocation error:', error);
       },
       {
         enableHighAccuracy: false, // false = daha hızlı ama daha az hassas
@@ -229,36 +264,66 @@ export const GiveAttendancePage: React.FC = () => {
   // QR Tarama fonksiyonları
   const startScanning = async () => {
     try {
-      // Önce konum al
-      if (!location) {
-        getCurrentLocation();
-      }
-
+      setIsStartingCamera(true);
+      
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'environment' }
+        video: { 
+          facingMode: 'environment',
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
+        }
       });
 
+      console.log('✅ Stream obtained:', stream);
+      console.log('📹 Active tracks:', stream.getTracks().length);
+      
+      // Stream'i ref'e kaydet
       streamRef.current = stream;
-
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        videoRef.current.play();
-      }
-
+      
+      // Video element render edilsin diye isScanning'i true yap
       setIsScanning(true);
-      scanQrCode();
-    } catch (error) {
-      toast.error('Kamera açılamadı. Lütfen kamera iznini kontrol edin.');
-      console.error('Camera error:', error);
+      setIsStartingCamera(false);
+      
+      // useEffect stream'i video element'e atayacak
+      console.log('⏳ Waiting for video element to render...');
+    } catch (error: any) {
+      setIsStartingCamera(false);
+      setIsScanning(false);
+      const errorMessage = error?.message || 'Kamera açılamadı';
+      console.error('❌ Camera error:', error);
+      
+      // Stream'i temizle
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop());
+        streamRef.current = null;
+      }
+      
+      if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
+        toast.error('Kamera izni reddedildi. Lütfen tarayıcı ayarlarından kamera iznini açın.');
+      } else if (error.name === 'NotFoundError' || error.name === 'DevicesNotFoundError') {
+        toast.error('Kamera bulunamadı. Lütfen bir kamera bağlı olduğundan emin olun.');
+      } else if (error.name === 'NotReadableError' || error.name === 'TrackStartError') {
+        toast.error('Kamera kullanımda olabilir. Lütfen başka bir uygulama tarafından kullanılmadığından emin olun.');
+      } else {
+        toast.error(`Kamera açılamadı: ${errorMessage}`);
+      }
     }
   };
 
   const stopScanning = () => {
+    console.log('🛑 Stopping scanning...');
     if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => track.stop());
+      streamRef.current.getTracks().forEach(track => {
+        track.stop();
+        console.log('✅ Track stopped:', track.kind);
+      });
       streamRef.current = null;
     }
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
+    }
     setIsScanning(false);
+    setIsStartingCamera(false);
     setScannedQrCode('');
   };
 
@@ -298,18 +363,13 @@ export const GiveAttendancePage: React.FC = () => {
       return;
     }
 
-    // Konum al
-    if (!location) {
-      toast.error('Lütfen önce konum bilgisi alın');
-      getCurrentLocation();
-      return;
-    }
-
+    // QR ile yoklamada konum opsiyonel - backend session konumunu kullanacak
     const qrData: CheckInQrRequest = {
       qrCode: scannedQrCode.trim(),
-      latitude: location.lat,
-      longitude: location.lon,
-      accuracy: location.accuracy,
+      // Konum opsiyonel - backend session konumunu kullanır
+      latitude: location?.lat || sessionLocation?.[0] || undefined,
+      longitude: location?.lon || sessionLocation?.[1] || undefined,
+      accuracy: location?.accuracy,
     };
 
     await checkInQrMutation.mutateAsync(qrData);
@@ -413,7 +473,35 @@ export const GiveAttendancePage: React.FC = () => {
                 {!location ? (
                   <div className="location-placeholder">
                     {locationError ? (
-                      <div className="error-message-text">{locationError}</div>
+                      <div className="error-message-text">
+                        <div style={{ marginBottom: '12px' }}>{locationError}</div>
+                        {locationError.includes('izni reddedildi') && (
+                          <div style={{ 
+                            fontSize: '0.875rem', 
+                            color: 'var(--text-secondary)',
+                            marginTop: '12px',
+                            padding: '12px',
+                            backgroundColor: 'var(--bg-secondary)',
+                            borderRadius: '8px',
+                            lineHeight: '1.6'
+                          }}>
+                            <strong>Çözüm Adımları:</strong>
+                            <ol style={{ marginTop: '8px', paddingLeft: '20px' }}>
+                              <li>Tarayıcınızın adres çubuğundaki 🔒 veya 📍 simgesine tıklayın</li>
+                              <li>Konum izinlerini "İzin Ver" olarak değiştirin</li>
+                              <li>Sayfayı yenileyin (F5) veya aşağıdaki butona tıklayın</li>
+                            </ol>
+                            <Button
+                              variant="secondary"
+                              size="sm"
+                              onClick={() => window.location.reload()}
+                              style={{ marginTop: '12px' }}
+                            >
+                              Sayfayı Yenile
+                            </Button>
+                          </div>
+                        )}
+                      </div>
                     ) : (
                       <p>Yoklama vermek için konum bilginize ihtiyacımız var.</p>
                     )}
@@ -489,44 +577,50 @@ export const GiveAttendancePage: React.FC = () => {
             {activeMethod === 'qr' && (
               <div className="qr-section">
                 <h3>📷 QR Kod ile Yoklama</h3>
-
-                {/* Konum bilgisi de gerekli */}
-                {!location && (
-                  <div className="qr-location-warning">
-                    <p>⚠️ QR ile yoklama için de konum bilginiz gereklidir.</p>
-                    <Button
-                      onClick={getCurrentLocation}
-                      disabled={isGettingLocation}
-                      variant="secondary"
-                      size="sm"
-                    >
-                      {isGettingLocation ? 'Konum Alınıyor...' : 'Konum Al'}
-                    </Button>
-                  </div>
-                )}
-
-                {location && (
-                  <div className="location-mini">
-                    ✅ Konum: {location.lat.toFixed(4)}, {location.lon.toFixed(4)}
-                  </div>
-                )}
+                <p style={{ color: 'var(--text-secondary)', marginBottom: 'var(--spacing-lg)' }}>
+                  QR kodu okutarak yoklama verebilirsiniz.
+                </p>
 
                 {/* Kamera ile tarama */}
                 <div className="qr-scanner-section">
-                  {isScanning ? (
+                  {isScanning || isStartingCamera ? (
                     <div className="scanner-active">
-                      <video
-                        ref={videoRef}
-                        className="scanner-video"
-                        playsInline
-                        autoPlay
-                        muted
-                      />
+                      {isStartingCamera ? (
+                        <div style={{ 
+                          width: '100%', 
+                          minHeight: '300px', 
+                          display: 'flex', 
+                          alignItems: 'center', 
+                          justifyContent: 'center',
+                          backgroundColor: '#000',
+                          borderRadius: 'var(--radius-lg)',
+                          flexDirection: 'column',
+                          gap: '12px'
+                        }}>
+                          <LoadingSpinner />
+                          <span style={{ color: '#fff' }}>Kamera açılıyor...</span>
+                        </div>
+                      ) : (
+                        <video
+                          ref={videoRef}
+                          className="scanner-video"
+                          playsInline
+                          autoPlay
+                          muted
+                          style={{ 
+                            display: 'block',
+                            width: '100%',
+                            maxHeight: '400px',
+                            minHeight: '300px'
+                          }}
+                        />
+                      )}
                       <canvas ref={canvasRef} style={{ display: 'none' }} />
                       <Button
                         variant="secondary"
                         onClick={stopScanning}
                         fullWidth
+                        disabled={isStartingCamera}
                       >
                         Taramayı Durdur
                       </Button>
@@ -535,9 +629,16 @@ export const GiveAttendancePage: React.FC = () => {
                     <Button
                       onClick={startScanning}
                       fullWidth
-                      disabled={!location}
+                      disabled={isStartingCamera}
                     >
-                      📷 Kamerayı Aç ve Tara
+                      {isStartingCamera ? (
+                        <>
+                          <LoadingSpinner size="sm" />
+                          Kamera Açılıyor...
+                        </>
+                      ) : (
+                        '📷 Kamerayı Aç ve Tara'
+                      )}
                     </Button>
                   )}
                 </div>
@@ -554,7 +655,7 @@ export const GiveAttendancePage: React.FC = () => {
                   />
                   <Button
                     onClick={handleManualQrSubmit}
-                    disabled={!scannedQrCode.trim() || !location || checkInQrMutation.isLoading}
+                    disabled={!scannedQrCode.trim() || checkInQrMutation.isLoading}
                     fullWidth
                   >
                     {checkInQrMutation.isLoading ? 'Yoklama Veriliyor...' : 'QR ile Yoklama Ver'}

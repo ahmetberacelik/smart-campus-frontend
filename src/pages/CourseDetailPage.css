@@ -12,7 +12,8 @@
 }
 
 .course-info-card,
-.sections-card {
+.sections-card,
+.enroll-card {
   height: fit-content;
 }
 
@@ -188,6 +189,27 @@
   text-align: center;
   padding: var(--spacing-xl);
   color: var(--text-secondary);
+}
+
+.enroll-card .enroll-info {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+}
+
+.enroll-details {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  padding: var(--spacing-lg);
+  background: var(--background-secondary);
+  border-radius: var(--radius-md);
+}
+
+.enroll-action {
+  display: flex;
+  justify-content: center;
+  margin-top: var(--spacing-md);
 }
 
 @media (max-width: 1024px) {

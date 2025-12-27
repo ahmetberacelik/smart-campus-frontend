@@ -42,6 +42,7 @@ import { MySchedulePage } from './pages/schedule/MySchedulePage'
 import { GenerateSchedulePage } from './pages/schedule/GenerateSchedulePage'
 import { ClassroomReservationsPage } from './pages/reservations/ClassroomReservationsPage'
 import { AdminAnalyticsPage } from './pages/admin/AdminAnalyticsPage'
+import { AssignCourseToFacultyPage } from './pages/admin/AssignCourseToFacultyPage'
 
 // Query Client setup
 const queryClient = new QueryClient({
@@ -350,6 +351,18 @@ function App() {
                 <ProtectedRoute requiredRole={['admin', 'ADMIN']}>
                   <MainLayout>
                     <AdminAnalyticsPage />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Admin - Hocalara Ders Atama */}
+            <Route
+              path="/admin/assign-courses"
+              element={
+                <ProtectedRoute requiredRole={['admin', 'ADMIN']}>
+                  <MainLayout>
+                    <AssignCourseToFacultyPage />
                   </MainLayout>
                 </ProtectedRoute>
               }

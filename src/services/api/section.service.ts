@@ -26,12 +26,14 @@ export interface CreateSectionRequest {
 export const sectionService = {
   /**
    * Section listesi (filtering by semester, instructor)
+   * instructorId parametresi User ID olarak gönderilir, backend'de instructorUserId olarak işlenir
    */
   async getSections(params?: SectionListParams): Promise<ApiResponse<CourseSection[]>> {
     const queryParams = new URLSearchParams();
     if (params?.semester) queryParams.append('semester', params.semester);
     if (params?.year) queryParams.append('year', params.year.toString());
-    if (params?.instructorId) queryParams.append('instructorId', params.instructorId.toString());
+    // instructorId User ID olarak gönderiliyor, backend'de instructorUserId olarak işleniyor
+    if (params?.instructorId) queryParams.append('instructorUserId', params.instructorId.toString());
 
     const url = queryParams.toString()
       ? `${API_ENDPOINTS.SECTIONS.LIST}?${queryParams.toString()}`
@@ -56,7 +58,17 @@ export const sectionService = {
    */
   async getSectionsByCourse(courseId: string | number): Promise<ApiResponse<CourseSection[]>> {
     const response = await httpClient.get<ApiResponse<CourseSection[]>>(
-      `/sections/course/${courseId}`
+      `${API_ENDPOINTS.SECTIONS.LIST}/course/${courseId}`
+    );
+    return response.data;
+  },
+
+  /**
+   * Instructor User ID'ye göre section'ları getirir
+   */
+  async getSectionsByInstructorUserId(instructorUserId: string | number): Promise<ApiResponse<CourseSection[]>> {
+    const response = await httpClient.get<ApiResponse<CourseSection[]>>(
+      `${API_ENDPOINTS.SECTIONS.LIST}/instructor/${instructorUserId}`
     );
     return response.data;
   },
@@ -84,33 +96,16 @@ export const sectionService = {
     queryParams.append('semester', semester);
     queryParams.append('year', year.toString());
     
-    const url = `/sections/semester/list?${queryParams.toString()}`;
-    console.log('🔍 getSectionsBySemester çağrılıyor:', url);
-    console.log('🔍 Full URL will be:', `${import.meta.env.VITE_API_URL || 'http://localhost:8080/api/v1'}${url}`);
+    const url = `${API_ENDPOINTS.SECTIONS.LIST}/semester/list?${queryParams.toString()}`;
     
     try {
       const response = await httpClient.get<ApiResponse<CourseSection[]>>(url);
-      
-      console.log('✅ getSectionsBySemester başarılı:', response.data?.data?.length || 0, 'section bulundu');
-      console.log('✅ Response data:', response.data);
-      
       return response.data;
     } catch (error: any) {
-      console.error('❌ getSectionsBySemester hatası:', error);
-      console.error('❌ Error response:', error?.response);
-      console.error('❌ Error status:', error?.response?.status);
-      console.error('❌ Error data:', error?.response?.data);
-      console.error('❌ Request URL:', error?.config?.url);
-      console.error('❌ Request method:', error?.config?.method);
-      
-      // 403 hatası (yetki sorunu) ise boş array dön, diğer hataları fırlat
+      // 403 hatası (yetki sorunu) ise error fırlat
       if (error?.response?.status === 403) {
-        console.warn('⚠️ 403 Forbidden - Yetki hatası');
-        // Error'ı fırlat ki UI'da gösterilebilsin
         throw error;
       }
-      
-      // Diğer hatalar için error fırlat
       throw error;
     }
   },
@@ -127,11 +122,11 @@ export const sectionService = {
   },
 
   /**
-   * Section güncelleme (admin)
+   * Section güncelleme (admin/faculty)
    */
   async updateSection(
     id: string | number,
-    data: CreateSectionRequest
+    data: { instructorId?: number | string; capacity?: number; scheduleJson?: string }
   ): Promise<ApiResponse<CourseSection>> {
     const response = await httpClient.put<ApiResponse<CourseSection>>(
       API_ENDPOINTS.SECTIONS.UPDATE(id.toString()),
@@ -144,7 +139,17 @@ export const sectionService = {
    * Database'de mevcut olan tüm yılları getirir
    */
   async getAvailableYears(): Promise<ApiResponse<number[]>> {
-    const response = await httpClient.get<ApiResponse<number[]>>('/sections/years');
+    const response = await httpClient.get<ApiResponse<number[]>>(`${API_ENDPOINTS.SECTIONS.LIST}/years`);
+    return response.data;
+  },
+
+  /**
+   * Section silme (admin only)
+   */
+  async deleteSection(id: string | number): Promise<ApiResponse<void>> {
+    const response = await httpClient.delete<ApiResponse<void>>(
+      API_ENDPOINTS.SECTIONS.DELETE(id.toString())
+    );
     return response.data;
   },
 };

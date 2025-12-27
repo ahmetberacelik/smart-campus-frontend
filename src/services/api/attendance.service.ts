@@ -23,8 +23,8 @@ export interface CheckInRequest {
 
 export interface CheckInQrRequest {
   qrCode: string;
-  latitude: number;
-  longitude: number;
+  latitude?: number; // Opsiyonel - QR kod zaten güvenli olduğu için
+  longitude?: number; // Opsiyonel
   accuracy?: number;
   deviceInfo?: string;
   isMockLocation?: boolean;

@@ -20,10 +20,10 @@ export const CourseDetailPage: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const [selectedSection, setSelectedSection] = useState<any>(null);
   const [enrollModalOpen, setEnrollModalOpen] = useState(false);
 
   const isStudent = user?.role?.toLowerCase() === 'student' || user?.role === 'STUDENT';
+  const isAdmin = user?.role?.toLowerCase() === 'admin' || user?.role === 'ADMIN';
 
   // Course details
   const { data: courseData, isLoading: courseLoading, error: courseError } = useQuery(
@@ -38,12 +38,12 @@ export const CourseDetailPage: React.FC = () => {
     }
   );
 
-  // Course sections - Backend'den direkt bu course'a ait section'ları çek
+  // Course sections - Sadece admin ve faculty görebilir, öğrenci göremez
   const { data: sectionsData, isLoading: sectionsLoading } = useQuery(
     ['course-sections', id],
     () => sectionService.getSectionsByCourse(id!),
     {
-      enabled: !!id,
+      enabled: !!id && !isStudent, // Öğrenci section'ları görmesin
       retry: 1,
       onError: (_err: any) => {
         console.error('Section fetch error:', _err);
@@ -51,8 +51,35 @@ export const CourseDetailPage: React.FC = () => {
     }
   );
 
+  // Öğrenci için mevcut section'ı bul (kayıt için)
+  const { data: sectionsDataForEnroll } = useQuery(
+    ['course-sections-enroll', id],
+    () => sectionService.getSectionsByCourse(id!),
+    {
+      enabled: !!id && isStudent, // Sadece öğrenci için
+      retry: 1,
+      select: (response) => {
+        // Mevcut dönem ve yıl için section bul
+        const currentYear = new Date().getFullYear();
+        const currentMonth = new Date().getMonth();
+        const currentSemester = currentMonth >= 8 ? 'FALL' : currentMonth >= 1 ? 'SPRING' : 'SUMMER';
+        
+        const sections = response?.data || [];
+        // Önce mevcut dönem için section bul
+        const currentSection = sections.find(
+          (s: any) => s.semester === currentSemester && s.year === currentYear
+        );
+        // Bulamazsa en yakın gelecek dönem için section bul
+        return currentSection || sections.find(
+          (s: any) => s.year >= currentYear
+        ) || sections[0] || null;
+      },
+    }
+  );
+
   const course = courseData?.data;
   const sections = sectionsData?.data || [];
+  const availableSectionForEnroll = sectionsDataForEnroll || null;
 
   const enrollMutation = useMutation(
     (sectionId: string) => enrollmentService.enroll({ sectionId }),
@@ -60,24 +87,30 @@ export const CourseDetailPage: React.FC = () => {
       onSuccess: () => {
         toast.success('Derse başarıyla kayıt oldunuz');
         setEnrollModalOpen(false);
-        setSelectedSection(null);
         queryClient.invalidateQueries('my-courses');
         queryClient.invalidateQueries('course-sections');
+        queryClient.invalidateQueries('course-sections-enroll');
       },
       onError: (error: any) => {
-        toast.error(error?.message || 'Derse kayıt olurken bir hata oluştu');
+        const errorMessage = error?.response?.data?.message || error?.message || 'Derse kayıt olurken bir hata oluştu';
+        toast.error(errorMessage);
       },
     }
   );
 
-  const handleEnrollClick = (section: any) => {
-    setSelectedSection(section);
-    setEnrollModalOpen(true);
+  const handleEnrollClick = () => {
+    if (availableSectionForEnroll) {
+      setEnrollModalOpen(true);
+    } else {
+      toast.error('Bu ders için kayıt olunabilecek bölüm bulunamadı');
+    }
   };
 
   const handleConfirmEnroll = () => {
-    if (selectedSection) {
-      enrollMutation.mutate(selectedSection.id.toString());
+    if (availableSectionForEnroll) {
+      enrollMutation.mutate(availableSectionForEnroll.id.toString());
+    } else {
+      toast.error('Kayıt olunabilecek bölüm bulunamadı');
     }
   };
 
@@ -163,72 +196,127 @@ export const CourseDetailPage: React.FC = () => {
           </CardContent>
         </Card>
 
-        {/* Available Sections */}
-        <Card className="sections-card">
-          <CardHeader>
-            <CardTitle>Mevcut Bölümler</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {sectionsLoading ? (
-              <LoadingSpinner />
-            ) : sections.length === 0 ? (
-              <div className="empty-state">
-                <p>Bu ders için henüz bölüm açılmamış</p>
-              </div>
-            ) : (
-              <div className="sections-list">
-                {sections.map((section: any) => {
-                  // Backend'den instructorName direkt string olarak geliyor
-                  const instructorName = section.instructorName || 'Atanmamış';
-                  const capacity = section.capacity || 0;
-                  const enrolled = section.enrolledCount || 0;
-                  const isFull = enrolled >= capacity;
+        {/* Available Sections - Sadece admin ve faculty görebilir */}
+        {!isStudent && (
+          <Card className="sections-card">
+            <CardHeader>
+              <CardTitle>Mevcut Bölümler</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {sectionsLoading ? (
+                <LoadingSpinner />
+              ) : sections.length === 0 ? (
+                <div className="empty-state">
+                  <p>Bu ders için henüz bölüm açılmamış</p>
+                </div>
+              ) : (
+                <div className="sections-list">
+                  {sections.map((section: any) => {
+                    // Backend'den instructorName direkt string olarak geliyor
+                    const instructorName = section.instructorName || 'Atanmamış';
+                    const capacity = section.capacity || 0;
+                    const enrolled = section.enrolledCount || 0;
+                    const isFull = enrolled >= capacity;
 
-                  return (
-                    <div key={section.id} className="section-item">
-                      <div className="section-header">
-                        <h4>Bölüm {section.sectionNumber}</h4>
-                        <Badge variant={isFull ? 'error' : 'primary'}>
-                          {enrolled} / {capacity}
-                        </Badge>
-                      </div>
-                      <div className="section-details">
-                        <div className="detail-row">
-                          <span className="detail-label">Öğretim Üyesi:</span>
-                          <span className="detail-value">{instructorName}</span>
+                    return (
+                      <div key={section.id} className="section-item">
+                        <div className="section-header">
+                          <h4>Bölüm {section.sectionNumber}</h4>
+                          <Badge variant={isFull ? 'error' : 'primary'}>
+                            {enrolled} / {capacity}
+                          </Badge>
                         </div>
-                        <div className="detail-row">
-                          <span className="detail-label">Dönem:</span>
-                          <span className="detail-value">
-                            {section.semester} {section.year}
-                          </span>
-                        </div>
-                        {section.classroomName && (
+                        <div className="section-details">
                           <div className="detail-row">
-                            <span className="detail-label">Sınıf:</span>
-                            <span className="detail-value">{section.classroomName}</span>
+                            <span className="detail-label">Öğretim Üyesi:</span>
+                            <span className="detail-value">{instructorName}</span>
                           </div>
-                        )}
-                      </div>
-                      {isStudent && (
-                        <div className="section-actions">
-                          <Button
-                            variant={isFull ? 'secondary' : 'primary'}
-                            size="sm"
-                            onClick={() => handleEnrollClick(section)}
-                            disabled={isFull || enrollMutation.isLoading}
-                          >
-                            {isFull ? 'Dolu' : 'Kayıt Ol'}
-                          </Button>
+                          <div className="detail-row">
+                            <span className="detail-label">Dönem:</span>
+                            <span className="detail-value">
+                              {section.semester} {section.year}
+                            </span>
+                          </div>
+                          {section.classroomName && (
+                            <div className="detail-row">
+                              <span className="detail-label">Sınıf:</span>
+                              <span className="detail-value">{section.classroomName}</span>
+                            </div>
+                          )}
                         </div>
-                      )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Öğrenci için kayıt butonu */}
+        {isStudent && (
+          <Card className="enroll-card">
+            <CardHeader>
+              <CardTitle>Derse Kayıt</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {availableSectionForEnroll ? (
+                <div className="enroll-info">
+                  <div className="enroll-details">
+                    <div className="detail-row">
+                      <span className="detail-label">Öğretim Üyesi:</span>
+                      <span className="detail-value">
+                        {availableSectionForEnroll.instructorName || 'Atanmamış'}
+                      </span>
                     </div>
-                  );
-                })}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+                    <div className="detail-row">
+                      <span className="detail-label">Dönem:</span>
+                      <span className="detail-value">
+                        {availableSectionForEnroll.semester} {availableSectionForEnroll.year}
+                      </span>
+                    </div>
+                    {availableSectionForEnroll.classroomName && (
+                      <div className="detail-row">
+                        <span className="detail-label">Sınıf:</span>
+                        <span className="detail-value">
+                          {availableSectionForEnroll.classroomName}
+                        </span>
+                      </div>
+                    )}
+                    <div className="detail-row">
+                      <span className="detail-label">Kapasite:</span>
+                      <span className="detail-value">
+                        {availableSectionForEnroll.enrolledCount || 0} / {availableSectionForEnroll.capacity || 0}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="enroll-action">
+                    <Button
+                      variant="primary"
+                      size="lg"
+                      onClick={handleEnrollClick}
+                      disabled={
+                        (availableSectionForEnroll.enrolledCount || 0) >= (availableSectionForEnroll.capacity || 0) ||
+                        enrollMutation.isLoading
+                      }
+                      isLoading={enrollMutation.isLoading}
+                    >
+                      {enrollMutation.isLoading
+                        ? 'Kayıt Yapılıyor...'
+                        : (availableSectionForEnroll.enrolledCount || 0) >= (availableSectionForEnroll.capacity || 0)
+                        ? 'Ders Dolu'
+                        : 'Derse Kayıt Ol'}
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="empty-state">
+                  <p>Bu ders için kayıt olunabilecek bölüm bulunamadı</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
       </div>
 
       {/* Enrollment Confirmation Modal */}
@@ -236,24 +324,25 @@ export const CourseDetailPage: React.FC = () => {
         isOpen={enrollModalOpen}
         onClose={() => {
           setEnrollModalOpen(false);
-          setSelectedSection(null);
         }}
         title="Derse Kayıt Ol"
         size="md"
       >
-        {selectedSection && (
+        {availableSectionForEnroll && (
           <div className="enroll-modal-content">
             <div className="enroll-info">
               <p><strong>Ders:</strong> {course.code} - {course.name}</p>
-              <p><strong>Bölüm:</strong> {selectedSection.sectionNumber}</p>
-              <p><strong>Dönem:</strong> {selectedSection.semester} {selectedSection.year}</p>
+              <p><strong>Öğretim Üyesi:</strong> {availableSectionForEnroll.instructorName || 'Atanmamış'}</p>
+              <p><strong>Dönem:</strong> {availableSectionForEnroll.semester} {availableSectionForEnroll.year}</p>
+              {availableSectionForEnroll.classroomName && (
+                <p><strong>Sınıf:</strong> {availableSectionForEnroll.classroomName}</p>
+              )}
             </div>
             <div className="enroll-actions">
               <Button
                 variant="secondary"
                 onClick={() => {
                   setEnrollModalOpen(false);
-                  setSelectedSection(null);
                 }}
               >
                 İptal
@@ -261,6 +350,7 @@ export const CourseDetailPage: React.FC = () => {
               <Button
                 onClick={handleConfirmEnroll}
                 disabled={enrollMutation.isLoading}
+                isLoading={enrollMutation.isLoading}
               >
                 {enrollMutation.isLoading ? 'Kayıt Yapılıyor...' : 'Kayıt Ol'}
               </Button>

@@ -57,6 +57,7 @@ export const API_ENDPOINTS = {
     DETAIL: (id: string) => `/sections/${id}`,
     CREATE: '/sections',
     UPDATE: (id: string) => `/sections/${id}`,
+    DELETE: (id: string) => `/sections/${id}`,
     MY_SECTIONS: '/sections/my-sections',
   },
 
