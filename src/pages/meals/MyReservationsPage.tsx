@@ -53,18 +53,27 @@ export const MyReservationsPage: React.FC = () => {
   const { upcoming, past } = useMemo(() => {
     const now = new Date();
     const upcomingList = reservations.filter((res: any) => {
-      const resDate = parseISO(res.date);
+      const dateStr = res.date || res.reservationDate;
+      if (!dateStr) return false;
+      const resDate = parseISO(dateStr);
       return resDate >= now && res.status === 'RESERVED';
     });
     const pastList = reservations.filter((res: any) => {
-      const resDate = parseISO(res.date);
+      const dateStr = res.date || res.reservationDate;
+      if (!dateStr) return false;
+      const resDate = parseISO(dateStr);
       return resDate < now || res.status !== 'RESERVED';
     });
     return { upcoming: upcomingList, past: pastList };
   }, [reservations]);
 
   const handleCancel = (reservation: any) => {
-    const reservationDate = parseISO(reservation.date);
+    const dateStr = reservation.date || reservation.reservationDate;
+    if (!dateStr) {
+      toast.error('Rezervasyon tarihi bulunamadı');
+      return;
+    }
+    const reservationDate = parseISO(dateStr);
     const hoursUntilMeal = differenceInHours(reservationDate, new Date());
 
     if (hoursUntilMeal < 2) {
@@ -154,7 +163,8 @@ export const MyReservationsPage: React.FC = () => {
           <h2>Yaklaşan Rezervasyonlar ({upcoming.length})</h2>
           <div className="reservations-grid">
             {upcoming.map((reservation: any) => {
-              const reservationDate = parseISO(reservation.date);
+              const dateStr = reservation.date || reservation.reservationDate;
+              const reservationDate = dateStr ? parseISO(dateStr) : new Date();
               const hoursUntilMeal = differenceInHours(reservationDate, new Date());
               const canCancel = hoursUntilMeal >= 2;
 
@@ -173,6 +183,48 @@ export const MyReservationsPage: React.FC = () => {
                         <span className="detail-value">{getMealTypeLabel(reservation.mealType)}</span>
                       </div>
                     </div>
+
+                    {/* Menu Items */}
+                    {reservation.menuItemsJson && (() => {
+                      try {
+                        const menuItems = JSON.parse(reservation.menuItemsJson);
+                        if (Array.isArray(menuItems) && menuItems.length > 0) {
+                          return (
+                            <div className="reservation-menu-items" style={{ marginTop: '16px', marginBottom: '16px' }}>
+                              <h4 style={{ fontSize: '14px', fontWeight: 600, marginBottom: '8px', color: 'var(--text-primary, #212121)' }}>Menü:</h4>
+                              <div className="menu-items-list">
+                                {menuItems.map((item: any, index: number) => (
+                                  <div key={index} className="menu-item" style={{ 
+                                    padding: '8px 0', 
+                                    borderBottom: index < menuItems.length - 1 ? '1px solid #e5e7eb' : 'none' 
+                                  }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
+                                      <div style={{ flex: 1 }}>
+                                        <div style={{ fontWeight: 600, fontSize: '14px', color: 'var(--text-primary, #212121)' }}>
+                                          {item.name}
+                                        </div>
+                                        {item.description && (
+                                          <div style={{ fontSize: '12px', color: 'var(--text-secondary, #666)', marginTop: '4px' }}>
+                                            {item.description}
+                                          </div>
+                                        )}
+                                      </div>
+                                      <div style={{ display: 'flex', gap: '4px' }}>
+                                        {item.isVegan && <Badge variant="success" style={{ fontSize: '10px' }}>🌱 Vegan</Badge>}
+                                        {item.isVegetarian && !item.isVegan && <Badge variant="warning" style={{ fontSize: '10px' }}>🥗 Vejetaryen</Badge>}
+                                      </div>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          );
+                        }
+                      } catch (e) {
+                        console.error('Error parsing menuItemsJson:', e);
+                      }
+                      return null;
+                    })()}
 
                     {reservation.qrCode && (
                       <div className="reservation-qr">
@@ -217,7 +269,8 @@ export const MyReservationsPage: React.FC = () => {
           <h2>Geçmiş Rezervasyonlar ({past.length})</h2>
           <div className="reservations-grid">
             {past.map((reservation: any) => {
-              const reservationDate = parseISO(reservation.date);
+              const dateStr = reservation.date || reservation.reservationDate;
+              const reservationDate = dateStr ? parseISO(dateStr) : new Date();
 
               return (
                 <Card key={reservation.id} className="reservation-card past">
@@ -234,6 +287,48 @@ export const MyReservationsPage: React.FC = () => {
                         <span className="detail-value">{getMealTypeLabel(reservation.mealType)}</span>
                       </div>
                     </div>
+
+                    {/* Menu Items */}
+                    {reservation.menuItemsJson && (() => {
+                      try {
+                        const menuItems = JSON.parse(reservation.menuItemsJson);
+                        if (Array.isArray(menuItems) && menuItems.length > 0) {
+                          return (
+                            <div className="reservation-menu-items" style={{ marginTop: '16px' }}>
+                              <h4 style={{ fontSize: '14px', fontWeight: 600, marginBottom: '8px', color: 'var(--text-primary, #212121)' }}>Menü:</h4>
+                              <div className="menu-items-list">
+                                {menuItems.map((item: any, index: number) => (
+                                  <div key={index} className="menu-item" style={{ 
+                                    padding: '8px 0', 
+                                    borderBottom: index < menuItems.length - 1 ? '1px solid #e5e7eb' : 'none' 
+                                  }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
+                                      <div style={{ flex: 1 }}>
+                                        <div style={{ fontWeight: 600, fontSize: '14px', color: 'var(--text-primary, #212121)' }}>
+                                          {item.name}
+                                        </div>
+                                        {item.description && (
+                                          <div style={{ fontSize: '12px', color: 'var(--text-secondary, #666)', marginTop: '4px' }}>
+                                            {item.description}
+                                          </div>
+                                        )}
+                                      </div>
+                                      <div style={{ display: 'flex', gap: '4px' }}>
+                                        {item.isVegan && <Badge variant="success" style={{ fontSize: '10px' }}>🌱 Vegan</Badge>}
+                                        {item.isVegetarian && !item.isVegan && <Badge variant="warning" style={{ fontSize: '10px' }}>🥗 Vejetaryen</Badge>}
+                                      </div>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          );
+                        }
+                      } catch (e) {
+                        console.error('Error parsing menuItemsJson:', e);
+                      }
+                      return null;
+                    })()}
                   </CardContent>
                 </Card>
               );

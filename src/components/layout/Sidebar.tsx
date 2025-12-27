@@ -57,7 +57,7 @@ const navSections: NavSection[] = [
             <path d="M19 3H5C3.9 3 3 3.9 3 5V19C3 20.1 3.9 21 5 21H19C20.1 21 21 20.1 21 19V5C21 3.9 20.1 3 19 3ZM19 19H5V5H19V19ZM17 12H7V10H17V12ZM15 16H7V14H15V16ZM17 8H7V6H17V8Z" fill="currentColor" />
           </svg>
         ),
-        roles: ['student', 'faculty', 'admin'],
+        roles: ['student', 'admin'], // faculty için kaldırıldı
       },
       {
         path: '/my-courses',

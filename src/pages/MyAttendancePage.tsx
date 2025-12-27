@@ -30,7 +30,34 @@ export const MyAttendancePage: React.FC = () => {
     }
   );
 
-  const activeSessions = activeSessionsData?.data || [];
+  // Backend'den gelen oturumları filtrele - süresi geçmiş olanları kaldır
+  const activeSessions = useMemo(() => {
+    const sessions = activeSessionsData?.data || [];
+    const now = new Date();
+    
+    return sessions.filter((session: any) => {
+      // Eğer endTime yoksa, sadece bugün veya gelecekteki oturumları göster
+      if (!session.endTime) {
+        const sessionDate = session.date ? new Date(session.date) : null;
+        if (!sessionDate) return false;
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        sessionDate.setHours(0, 0, 0, 0);
+        return sessionDate >= today;
+      }
+      
+      // Session bitiş zamanını hesapla
+      if (!session.date || !session.endTime) return false;
+      
+      const sessionDate = new Date(session.date);
+      const [hours, minutes] = session.endTime.split(':').map(Number);
+      const sessionEndDateTime = new Date(sessionDate);
+      sessionEndDateTime.setHours(hours, minutes, 0, 0);
+      
+      // Şu anki zaman session bitiş zamanından önce veya eşit olmalı
+      return now <= sessionEndDateTime;
+    });
+  }, [activeSessionsData?.data]);
 
   const { data: attendanceData, isLoading, error } = useQuery(
     'my-attendance',

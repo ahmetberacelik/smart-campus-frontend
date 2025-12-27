@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useQuery } from 'react-query';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { useAuth } from '@/context/AuthContext';
 import { sectionService } from '@/services/api/section.service';
@@ -11,26 +12,33 @@ import './SectionsPage.css';
 
 export const SectionsPage: React.FC = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [semester, setSemester] = useState<string>('FALL'); // Varsayılan olarak FALL seçili
   const [year, setYear] = useState<string>('2024'); // Varsayılan yıl (mevcut yılı otomatik hesaplayabiliriz)
 
-  // Kullanıcının bölüm ID'sini al
-  const userDepartmentId = user?.facultyInfo?.departmentId?.toString() || user?.studentInfo?.departmentId?.toString();
+  // Kullanıcının rolünü kontrol et
+  const isFaculty = user?.role?.toLowerCase() === 'faculty' || user?.role === 'FACULTY';
+  const isAdmin = user?.role?.toLowerCase() === 'admin' || user?.role === 'ADMIN';
 
-  // Eğer semester ve year seçiliyse, /sections/semester/list endpoint'ini kullan
-  // Aksi halde hata verecek çünkü /sections endpoint'i çalışmıyor
+  // Faculty ise sadece kendi derslerini getir, admin ise tüm dersleri getir
   const { data, isLoading, error } = useQuery(
-    ['sections', semester, year],
+    ['sections', semester, year, user?.id, isFaculty],
     () => {
       if (semester && year) {
-        return sectionService.getSectionsBySemester(semester, parseInt(year));
+        if (isFaculty && user?.id) {
+          // Faculty için sadece kendi derslerini getir
+          return sectionService.getMySections(semester, parseInt(year));
+        } else {
+          // Admin için tüm dersleri getir
+          return sectionService.getSectionsBySemester(semester, parseInt(year));
+        }
       } else {
         // Eğer semester/year yoksa boş array dön
         return Promise.resolve({ success: true, data: [] });
       }
     },
     {
-      enabled: !!semester && !!year, // Sadece semester ve year varsa çalış
+      enabled: !!semester && !!year && (!isFaculty || !!user?.id), // Faculty ise user.id de olmalı
       keepPreviousData: true,
       onError: (error: any) => {
         console.error('Sections yüklenirken hata:', error);
@@ -39,20 +47,7 @@ export const SectionsPage: React.FC = () => {
     }
   );
 
-  const allSections = data?.data || [];
-
-  // Kullanıcının bölümüne ait section'ları filtrele
-  const sections = useMemo(() => {
-    if (!userDepartmentId) {
-      return allSections; // Bölüm ID yoksa tümünü göster
-    }
-
-    return allSections.filter((section: any) => {
-      const courseDepartmentId = section.courseDepartmentId?.toString() ||
-        section.course?.departmentId?.toString();
-      return courseDepartmentId === userDepartmentId;
-    });
-  }, [allSections, userDepartmentId]);
+  const sections = data?.data || [];
 
   if (isLoading) {
     return (
@@ -166,11 +161,18 @@ export const SectionsPage: React.FC = () => {
 
                 <div className="section-actions">
                   <Button
+                    variant="primary"
+                    size="sm"
+                    onClick={() => navigate(`/gradebook/${section.id}`)}
+                  >
+                    Not Defteri
+                  </Button>
+                  <Button
                     variant="secondary"
                     size="sm"
-                    onClick={() => toast.info('Section detayları yakında eklenecek')}
+                    onClick={() => navigate(`/attendance/report/${section.id}`)}
                   >
-                    Detaylar
+                    Yoklama Raporu
                   </Button>
                 </div>
               </div>

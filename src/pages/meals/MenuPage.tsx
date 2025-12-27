@@ -34,10 +34,49 @@ export const MenuPage: React.FC = () => {
   );
 
   const menus = menusData?.data || [];
-  const lunchMenu = menus.find((m: any) => m.mealType === 'LUNCH');
-  const dinnerMenu = menus.find((m: any) => m.mealType === 'DINNER');
+  
+  // Parse backend menu response (itemsJson, nutritionJson) to frontend format
+  const parseMenu = (menu: any) => {
+    if (!menu) return null;
+    
+    try {
+      const parsedMenu = { ...menu };
+      
+      // Parse itemsJson if it exists and items doesn't
+      if (menu.itemsJson && !menu.items) {
+        parsedMenu.items = typeof menu.itemsJson === 'string' 
+          ? JSON.parse(menu.itemsJson) 
+          : menu.itemsJson;
+      }
+      
+      // Parse nutritionJson if it exists and nutritionalInfo doesn't
+      if (menu.nutritionJson && !menu.nutritionalInfo) {
+        parsedMenu.nutritionalInfo = typeof menu.nutritionJson === 'string'
+          ? JSON.parse(menu.nutritionJson)
+          : menu.nutritionJson;
+      }
+      
+      return parsedMenu;
+    } catch (e) {
+      console.error('Error parsing menu:', e);
+      return menu;
+    }
+  };
+  
+  const rawLunchMenu = menus.find((m: any) => {
+    const mealType = m.mealType?.toUpperCase() || m.mealType;
+    return mealType === 'LUNCH';
+  });
+  const rawDinnerMenu = menus.find((m: any) => {
+    const mealType = m.mealType?.toUpperCase() || m.mealType;
+    return mealType === 'DINNER';
+  });
+  
+  const lunchMenu = parseMenu(rawLunchMenu);
+  const dinnerMenu = parseMenu(rawDinnerMenu);
 
-  const showDemoMenus = !lunchMenu && !dinnerMenu;
+  // Demo menüler sadece backend'den hiç menü gelmediğinde gösterilir
+  const showDemoMenus = !rawLunchMenu && !rawDinnerMenu;
 
   const demoLunchMenu = {
     id: 'demo-lunch',
@@ -70,6 +109,10 @@ export const MenuPage: React.FC = () => {
       fat: 22,
     },
   };
+  
+  // Aktif menüleri belirle (gerçek veya demo)
+  const activeLunchMenu = lunchMenu || (showDemoMenus ? demoLunchMenu : null);
+  const activeDinnerMenu = dinnerMenu || (showDemoMenus ? demoDinnerMenu : null);
 
   const createReservationMutation = useMutation(
     (menuId: string) => mealService.createReservation({ menuId }),
@@ -137,11 +180,11 @@ export const MenuPage: React.FC = () => {
             <CardTitle>🍽️ Öğle Yemeği (Lunch)</CardTitle>
           </CardHeader>
           <CardContent>
-            {(lunchMenu || (showDemoMenus && demoLunchMenu)) ? (
+            {activeLunchMenu ? (
               <>
-                {(lunchMenu || demoLunchMenu).items && (lunchMenu || demoLunchMenu).items.length > 0 ? (
+                {activeLunchMenu.items && activeLunchMenu.items.length > 0 ? (
                   <div className="menu-items">
-                    {(lunchMenu || demoLunchMenu).items.map((item: any) => (
+                    {activeLunchMenu.items.map((item: any) => (
                       <div key={item.id} className="menu-item">
                         <div className="menu-item-header">
                           <h4>{item.name}</h4>
@@ -160,39 +203,57 @@ export const MenuPage: React.FC = () => {
                   <p className="no-menu">Bu tarih için öğle yemeği menüsü bulunamadı</p>
                 )}
 
-                {(lunchMenu || demoLunchMenu).nutritionalInfo && (
+                {activeLunchMenu?.nutritionalInfo && (
                   <div className="nutritional-info">
                     <h4>Beslenme Bilgileri:</h4>
                     <div className="nutrition-grid">
                       <div className="nutrition-item">
                         <span className="nutrition-label">Kalori:</span>
-                        <span className="nutrition-value">{(lunchMenu || demoLunchMenu).nutritionalInfo?.calories} kcal</span>
+                        <span className="nutrition-value">{activeLunchMenu.nutritionalInfo?.calories} kcal</span>
                       </div>
                       <div className="nutrition-item">
                         <span className="nutrition-label">Protein:</span>
-                        <span className="nutrition-value">{(lunchMenu || demoLunchMenu).nutritionalInfo?.protein}g</span>
+                        <span className="nutrition-value">{activeLunchMenu.nutritionalInfo?.protein}g</span>
                       </div>
                       <div className="nutrition-item">
                         <span className="nutrition-label">Karbonhidrat:</span>
-                        <span className="nutrition-value">{(lunchMenu || demoLunchMenu).nutritionalInfo?.carbs}g</span>
+                        <span className="nutrition-value">{activeLunchMenu.nutritionalInfo?.carbs}g</span>
                       </div>
                       <div className="nutrition-item">
                         <span className="nutrition-label">Yağ:</span>
-                        <span className="nutrition-value">{(lunchMenu || demoLunchMenu).nutritionalInfo?.fat}g</span>
+                        <span className="nutrition-value">{activeLunchMenu.nutritionalInfo?.fat}g</span>
                       </div>
                     </div>
                   </div>
                 )}
 
-                {isStudent && lunchMenu && (
-                  <Button
-                    onClick={() => handleReserve(lunchMenu)}
-                    disabled={createReservationMutation.isLoading}
-                    fullWidth
-                    style={{ marginTop: '16px' }}
-                  >
-                    {createReservationMutation.isLoading ? 'Rezerve Ediliyor...' : 'Rezerve Et'}
-                  </Button>
+                {/* Rezervasyon butonu - backend'den menü geliyorsa göster */}
+                {rawLunchMenu && (
+                  <>
+                    {isStudent ? (
+                      <Button
+                        onClick={() => handleReserve(lunchMenu || rawLunchMenu)}
+                        disabled={createReservationMutation.isLoading}
+                        fullWidth
+                        style={{ marginTop: '16px' }}
+                      >
+                        {createReservationMutation.isLoading ? 'Rezerve Ediliyor...' : 'Rezerve Et'}
+                      </Button>
+                    ) : (
+                      <div style={{ 
+                        marginTop: '16px', 
+                        padding: '12px', 
+                        background: '#e3f2fd', 
+                        border: '1px solid #2196F3', 
+                        borderRadius: '4px', 
+                        color: '#1565c0',
+                        fontSize: '14px',
+                        textAlign: 'center'
+                      }}>
+                        Rezervasyon yapmak için öğrenci hesabı gereklidir.
+                      </div>
+                    )}
+                  </>
                 )}
               </>
             ) : (
@@ -207,11 +268,11 @@ export const MenuPage: React.FC = () => {
             <CardTitle>🍽️ Akşam Yemeği (Dinner)</CardTitle>
           </CardHeader>
           <CardContent>
-            {(dinnerMenu || (showDemoMenus && demoDinnerMenu)) ? (
+            {activeDinnerMenu ? (
               <>
-                {(dinnerMenu || demoDinnerMenu).items && (dinnerMenu || demoDinnerMenu).items.length > 0 ? (
+                {activeDinnerMenu.items && activeDinnerMenu.items.length > 0 ? (
                   <div className="menu-items">
-                    {(dinnerMenu || demoDinnerMenu).items.map((item: any) => (
+                    {activeDinnerMenu.items.map((item: any) => (
                       <div key={item.id} className="menu-item">
                         <div className="menu-item-header">
                           <h4>{item.name}</h4>
@@ -230,39 +291,57 @@ export const MenuPage: React.FC = () => {
                   <p className="no-menu">Bu tarih için akşam yemeği menüsü bulunamadı</p>
                 )}
 
-                {(dinnerMenu || demoDinnerMenu).nutritionalInfo && (
+                {activeDinnerMenu.nutritionalInfo && (
                   <div className="nutritional-info">
                     <h4>Beslenme Bilgileri:</h4>
                     <div className="nutrition-grid">
                       <div className="nutrition-item">
                         <span className="nutrition-label">Kalori:</span>
-                        <span className="nutrition-value">{(dinnerMenu || demoDinnerMenu).nutritionalInfo?.calories} kcal</span>
+                        <span className="nutrition-value">{activeDinnerMenu.nutritionalInfo?.calories} kcal</span>
                       </div>
                       <div className="nutrition-item">
                         <span className="nutrition-label">Protein:</span>
-                        <span className="nutrition-value">{(dinnerMenu || demoDinnerMenu).nutritionalInfo?.protein}g</span>
+                        <span className="nutrition-value">{activeDinnerMenu.nutritionalInfo?.protein}g</span>
                       </div>
                       <div className="nutrition-item">
                         <span className="nutrition-label">Karbonhidrat:</span>
-                        <span className="nutrition-value">{(dinnerMenu || demoDinnerMenu).nutritionalInfo?.carbs}g</span>
+                        <span className="nutrition-value">{activeDinnerMenu.nutritionalInfo?.carbs}g</span>
                       </div>
                       <div className="nutrition-item">
                         <span className="nutrition-label">Yağ:</span>
-                        <span className="nutrition-value">{(dinnerMenu || demoDinnerMenu).nutritionalInfo?.fat}g</span>
+                        <span className="nutrition-value">{activeDinnerMenu.nutritionalInfo?.fat}g</span>
                       </div>
                     </div>
                   </div>
                 )}
 
-                {isStudent && dinnerMenu && (
-                  <Button
-                    onClick={() => handleReserve(dinnerMenu)}
-                    disabled={createReservationMutation.isLoading}
-                    fullWidth
-                    style={{ marginTop: '16px' }}
-                  >
-                    {createReservationMutation.isLoading ? 'Rezerve Ediliyor...' : 'Rezerve Et'}
-                  </Button>
+                {/* Rezervasyon butonu - backend'den menü geliyorsa göster */}
+                {rawDinnerMenu && (
+                  <>
+                    {isStudent ? (
+                      <Button
+                        onClick={() => handleReserve(dinnerMenu || rawDinnerMenu)}
+                        disabled={createReservationMutation.isLoading}
+                        fullWidth
+                        style={{ marginTop: '16px' }}
+                      >
+                        {createReservationMutation.isLoading ? 'Rezerve Ediliyor...' : 'Rezerve Et'}
+                      </Button>
+                    ) : (
+                      <div style={{ 
+                        marginTop: '16px', 
+                        padding: '12px', 
+                        background: '#e3f2fd', 
+                        border: '1px solid #2196F3', 
+                        borderRadius: '4px', 
+                        color: '#1565c0',
+                        fontSize: '14px',
+                        textAlign: 'center'
+                      }}>
+                        Rezervasyon yapmak için öğrenci hesabı gereklidir.
+                      </div>
+                    )}
+                  </>
                 )}
               </>
             ) : (

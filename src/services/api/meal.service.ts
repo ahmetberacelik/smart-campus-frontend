@@ -13,6 +13,7 @@ export interface Menu {
   mealType: 'LUNCH' | 'DINNER';
   items: MenuItem[];
   nutritionalInfo?: NutritionalInfo;
+  isPublished?: boolean;
 }
 
 export interface MenuItem {

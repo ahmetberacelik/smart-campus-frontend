@@ -45,8 +45,16 @@ export const GradebookPage: React.FC = () => {
     {
       enabled: !!sectionId,
       retry: 1,
-      onError: (_err: any) => {
+      onError: (err: any) => {
+        console.error('Öğrenci listesi yüklenirken hata:', err);
+        console.error('SectionId:', sectionId);
+        console.error('Hata detayı:', err?.response?.data || err?.message);
         toast.error('Öğrenci listesi yüklenirken bir hata oluştu');
+      },
+      onSuccess: (data: any) => {
+        console.log('Öğrenci listesi yüklendi:', data);
+        const students = data?.data?.content || data?.data || [];
+        console.log('Toplam öğrenci sayısı:', students.length);
       },
     }
   );
@@ -54,6 +62,10 @@ export const GradebookPage: React.FC = () => {
   const section = sectionData?.data;
   const pageData = studentsData?.data;
   const students = pageData?.content || pageData || [];
+  
+  console.log('GradebookPage - sectionId:', sectionId);
+  console.log('GradebookPage - students:', students);
+  console.log('GradebookPage - students count:', students.length);
 
   const handleGradeChange = (enrollmentId: string, field: 'midterm' | 'final' | 'letterGrade', value: string) => {
     setGrades((prev) => ({
@@ -121,9 +133,10 @@ export const GradebookPage: React.FC = () => {
     const data: any[][] = [];
 
     students.forEach((enrollment: any) => {
-      const student = enrollment.student || {};
-      const studentName = student.name || `${student.firstName || ''} ${student.lastName || ''}`.trim();
-      const studentNumber = student.studentNumber || '-';
+      // Backend'den gelen format: enrollment.studentNumber ve enrollment.studentName direkt olarak var
+      const studentName = enrollment.studentName || enrollment.student?.name || 
+        `${enrollment.student?.firstName || ''} ${enrollment.student?.lastName || ''}`.trim() || '-';
+      const studentNumber = enrollment.studentNumber || enrollment.student?.studentNumber || '-';
 
       const gradeData = grades[enrollment.id] || {};
       const midterm = gradeData.midterm ?? enrollment.midtermGrade ?? '';
@@ -249,10 +262,10 @@ export const GradebookPage: React.FC = () => {
                   </tr>
                 ) : (
                   students.map((enrollment: any) => {
-                    const student = enrollment.student || {};
-                    const studentName = student.name ||
-                      `${student.firstName || ''} ${student.lastName || ''}`.trim();
-                    const studentNumber = student.studentNumber || '-';
+                    // Backend'den gelen format: enrollment.studentNumber ve enrollment.studentName direkt olarak var
+                    const studentName = enrollment.studentName || enrollment.student?.name || 
+                      `${enrollment.student?.firstName || ''} ${enrollment.student?.lastName || ''}`.trim() || '-';
+                    const studentNumber = enrollment.studentNumber || enrollment.student?.studentNumber || '-';
 
                     const gradeData = grades[enrollment.id] || {};
                     const midterm = gradeData.midterm ?? enrollment.midtermGrade;
