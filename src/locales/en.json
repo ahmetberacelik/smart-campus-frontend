@@ -1,0 +1,68 @@
+{
+  "common": {
+    "search": "Search",
+    "profile": "Profile",
+    "logout": "Logout",
+    "menu": "Menu",
+    "theme": {
+      "light": "Light Mode",
+      "dark": "Dark Mode",
+      "switchToLight": "Switch to light mode",
+      "switchToDark": "Switch to dark mode"
+    },
+    "language": {
+      "tr": "Türkçe",
+      "en": "English",
+      "switchLanguage": "Change language"
+    }
+  },
+  "header": {
+    "brandName": "Smart",
+    "brandAccent": "Campus"
+  },
+  "sidebar": {
+    "sections": {
+      "general": "General",
+      "academic": "Academic Management",
+      "attendance": "GPS Attendance",
+      "meals": "Meal Service",
+      "events": "Events",
+      "schedule": "Schedule & Reservations",
+      "management": "Management"
+    },
+    "nav": {
+      "dashboard": "Dashboard",
+      "profile": "Profile",
+      "courses": "Courses",
+      "myCourses": "My Courses",
+      "grades": "My Grades",
+      "sections": "Course Sections",
+      "myAttendance": "My Attendance",
+      "startAttendance": "Start Attendance",
+      "excuseRequests": "Excuse Requests",
+      "mealMenu": "Meal Menu",
+      "myReservations": "My Reservations",
+      "qrScanner": "QR Code Scanner",
+      "wallet": "Wallet",
+      "events": "Events",
+      "myEvents": "My Events",
+      "eventCheckIn": "Event Check-in",
+      "mySchedule": "My Schedule",
+      "generateSchedule": "Generate Schedule",
+      "classroomReservations": "Classroom Reservations",
+      "notifications": "Notifications",
+      "analytics": "Analytics Dashboard",
+      "assignCourses": "Assign Courses to Faculty"
+    },
+    "roles": {
+      "student": "Student",
+      "faculty": "Faculty",
+      "admin": "Administrator",
+      "user": "User"
+    },
+    "profile": {
+      "emailNotVerified": "Email not verified"
+    }
+  }
+}
+

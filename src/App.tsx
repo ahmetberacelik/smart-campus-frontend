@@ -4,6 +4,7 @@ import { ToastContainer } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
 import { AuthProvider } from './context/AuthContext'
 import { ThemeProvider, useTheme } from './context/ThemeContext'
+import { LanguageProvider } from './context/LanguageContext'
 import { ProtectedRoute } from './components/common/ProtectedRoute'
 import { MainLayout } from './components/layout/MainLayout'
 import './App.css'
@@ -398,9 +399,11 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
-        <ThemeProvider>
-          <AppContent />
-        </ThemeProvider>
+        <LanguageProvider>
+          <ThemeProvider>
+            <AppContent />
+          </ThemeProvider>
+        </LanguageProvider>
       </BrowserRouter>
     </QueryClientProvider>
   )

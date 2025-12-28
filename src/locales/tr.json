@@ -1,0 +1,68 @@
+{
+  "common": {
+    "search": "Ara",
+    "profile": "Profil",
+    "logout": "Çıkış Yap",
+    "menu": "Menü",
+    "theme": {
+      "light": "Açık Mod",
+      "dark": "Karanlık Mod",
+      "switchToLight": "Açık moda geç",
+      "switchToDark": "Karanlık moda geç"
+    },
+    "language": {
+      "tr": "Türkçe",
+      "en": "English",
+      "switchLanguage": "Dili değiştir"
+    }
+  },
+  "header": {
+    "brandName": "Akıllı",
+    "brandAccent": "Kampüs"
+  },
+  "sidebar": {
+    "sections": {
+      "general": "Genel",
+      "academic": "Akademik Yönetim",
+      "attendance": "GPS Yoklama",
+      "meals": "Yemek Servisi",
+      "events": "Etkinlikler",
+      "schedule": "Program & Rezervasyon",
+      "management": "Yönetim"
+    },
+    "nav": {
+      "dashboard": "Dashboard",
+      "profile": "Profil",
+      "courses": "Dersler",
+      "myCourses": "Kayıtlı Derslerim",
+      "grades": "Notlarım",
+      "sections": "Ders Bölümleri",
+      "myAttendance": "Yoklama Durumum",
+      "startAttendance": "Yoklama Başlat",
+      "excuseRequests": "Mazeret İstekleri",
+      "mealMenu": "Yemek Menüsü",
+      "myReservations": "Rezervasyonlarım",
+      "qrScanner": "QR Kod Tara",
+      "wallet": "Cüzdan",
+      "events": "Etkinlikler",
+      "myEvents": "Etkinliklerim",
+      "eventCheckIn": "Etkinlik Check-in",
+      "mySchedule": "Ders Programım",
+      "generateSchedule": "Program Oluştur",
+      "classroomReservations": "Sınıf Rezervasyonları",
+      "notifications": "Bildirimler",
+      "analytics": "Analytics Dashboard",
+      "assignCourses": "Hocalara Ders Atama"
+    },
+    "roles": {
+      "student": "Öğrenci",
+      "faculty": "Öğretim Üyesi",
+      "admin": "Yönetici",
+      "user": "Kullanıcı"
+    },
+    "profile": {
+      "emailNotVerified": "E-posta doğrulanmadı"
+    }
+  }
+}
+

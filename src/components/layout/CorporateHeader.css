@@ -169,6 +169,34 @@
   transition: transform var(--transition-base);
 }
 
+.corporate-header__language-toggle {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--radius-md);
+  transition: all var(--transition-fast);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-sm);
+  min-width: 40px;
+}
+
+.corporate-header__language-toggle:hover {
+  background: var(--bg-secondary);
+  color: var(--color-accent);
+}
+
+.corporate-header__language-code {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  letter-spacing: 0.05em;
+}
+
 .corporate-header__user-menu {
   position: relative;
 }

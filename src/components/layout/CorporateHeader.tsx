@@ -7,12 +7,14 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/context/ThemeContext';
+import { useLanguage } from '@/context/LanguageContext';
 import { NotificationBell } from '@/components/notifications/NotificationBell';
 import './CorporateHeader.css';
 
 export const CorporateHeader: React.FC = () => {
   const { user, logout, isAuthenticated } = useAuth();
   const { theme, toggleTheme } = useTheme();
+  const { language, setLanguage, t } = useLanguage();
   const navigate = useNavigate();
   const [isScrolled, setIsScrolled] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
@@ -58,8 +60,8 @@ export const CorporateHeader: React.FC = () => {
             </svg>
           </div>
           <div className="corporate-header__brand-text">
-            <span className="corporate-header__brand-name">Akıllı</span>
-            <span className="corporate-header__brand-accent">Kampüs</span>
+            <span className="corporate-header__brand-name">{t('header.brandName')}</span>
+            <span className="corporate-header__brand-accent">{t('header.brandAccent')}</span>
           </div>
         </Link>
 
@@ -71,7 +73,7 @@ export const CorporateHeader: React.FC = () => {
             onClick={() => {
               // TODO: Open search modal
             }}
-            aria-label="Ara"
+            aria-label={t('common.search')}
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <circle cx="11" cy="11" r="8" stroke="currentColor" strokeWidth="2" />
@@ -86,8 +88,8 @@ export const CorporateHeader: React.FC = () => {
           <button
             className="corporate-header__theme-toggle"
             onClick={toggleTheme}
-            aria-label={theme === 'dark' ? 'Açık moda geç' : 'Karanlık moda geç'}
-            title={theme === 'dark' ? 'Açık moda geç' : 'Karanlık moda geç'}
+            aria-label={theme === 'dark' ? t('common.theme.switchToLight') : t('common.theme.switchToDark')}
+            title={theme === 'dark' ? t('common.theme.switchToLight') : t('common.theme.switchToDark')}
           >
             {theme === 'dark' ? (
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -98,6 +100,18 @@ export const CorporateHeader: React.FC = () => {
                 <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             )}
+          </button>
+
+          {/* Language Toggle Button */}
+          <button
+            className="corporate-header__language-toggle"
+            onClick={() => setLanguage(language === 'tr' ? 'en' : 'tr')}
+            aria-label={t('common.language.switchLanguage')}
+            title={t('common.language.switchLanguage')}
+          >
+            <span className="corporate-header__language-code">
+              {language.toUpperCase()}
+            </span>
           </button>
 
           {/* User Menu */}
@@ -137,13 +151,13 @@ export const CorporateHeader: React.FC = () => {
                   className="corporate-header__user-dropdown-item"
                   onClick={() => setShowUserMenu(false)}
                 >
-                  Profil
+                  {t('common.profile')}
                 </Link>
                 <button
                   className="corporate-header__user-dropdown-item corporate-header__user-dropdown-item--danger"
                   onClick={handleLogout}
                 >
-                  Çıkış Yap
+                  {t('common.logout')}
                 </button>
               </div>
             )}
@@ -153,7 +167,7 @@ export const CorporateHeader: React.FC = () => {
           <button
             className="corporate-header__mobile-toggle"
             onClick={() => setShowMobileMenu(!showMobileMenu)}
-            aria-label="Menu"
+            aria-label={t('common.menu')}
           >
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               {showMobileMenu ? (
