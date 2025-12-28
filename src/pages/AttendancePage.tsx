@@ -223,7 +223,9 @@ export const AttendancePage: React.FC = () => {
 
   // Faculty View
   if (isFaculty) {
-    const sessions = sessionsData?.data || [];
+    // Backend PageResponse döndürüyor, content içinde array var
+    const sessionsContent = (sessionsData?.data as any)?.content || sessionsData?.data || [];
+    const sessions = Array.isArray(sessionsContent) ? sessionsContent : [];
 
     return (
       <div className="attendance-page">
@@ -240,63 +242,97 @@ export const AttendancePage: React.FC = () => {
           </div>
         ) : (
           <div className="sessions-grid">
-            {sessions.map((session: any) => (
-              <div key={session.id} className="session-card">
-                <div className="session-card-header">
-                  <div>
-                    <h3 className="course-code">{session.courseCode}</h3>
-                    <h4 className="course-name">{session.courseName}</h4>
-                  </div>
-                  <span className={`status-badge status-${session.status?.toLowerCase()}`}>
-                    {session.status === 'OPEN' ? 'Açık' : 'Kapalı'}
-                  </span>
-                </div>
+            {sessions.map((session: any) => {
+              // Status kontrolü - backend ACTIVE döndürüyor
+              const isActive = session.status === 'ACTIVE' || session.status === 'Active' || session.status === 'OPEN';
 
-                <div className="session-details">
-                  <div className="detail-item">
-                    <span className="detail-label">Tarih:</span>
-                    <span className="detail-value">
-                      {new Date(session.date).toLocaleDateString('tr-TR')}
+              // Tarih formatı - LocalDate string olarak geliyor (YYYY-MM-DD)
+              const formatDate = (dateStr: string) => {
+                if (!dateStr) return '-';
+                try {
+                  // LocalDate formatı: "2025-12-28"
+                  const parts = dateStr.split('-');
+                  if (parts.length === 3) {
+                    return `${parts[2]}.${parts[1]}.${parts[0]}`;
+                  }
+                  return new Date(dateStr).toLocaleDateString('tr-TR');
+                } catch {
+                  return dateStr;
+                }
+              };
+
+              // Saat formatı - LocalTime string olarak geliyor (HH:mm:ss veya HH:mm)
+              const formatTime = (timeStr: string) => {
+                if (!timeStr) return '-';
+                try {
+                  // LocalTime formatı: "09:00:00" veya "09:00"
+                  const parts = timeStr.split(':');
+                  if (parts.length >= 2) {
+                    return `${parts[0]}:${parts[1]}`;
+                  }
+                  return timeStr;
+                } catch {
+                  return timeStr;
+                }
+              };
+
+              return (
+                <div key={session.id} className="session-card">
+                  <div className="session-card-header">
+                    <div>
+                      <h3 className="course-code">{session.courseCode || 'Ders Kodu'}</h3>
+                      <h4 className="course-name">{session.courseName || 'Ders Adı'}</h4>
+                    </div>
+                    <span className={`status-badge status-${isActive ? 'active' : 'closed'}`}>
+                      {isActive ? 'Açık' : 'Kapalı'}
                     </span>
                   </div>
-                  <div className="detail-item">
-                    <span className="detail-label">Saat:</span>
-                    <span className="detail-value">
-                      {new Date(session.startTime).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })} -
-                      {new Date(session.endTime).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}
-                    </span>
-                  </div>
-                  <div className="detail-item">
-                    <span className="detail-label">Geofence Radius:</span>
-                    <span className="detail-value">{session.geofenceRadius}m</span>
-                  </div>
-                </div>
 
-                <div className="session-actions">
-                  {session.status === 'OPEN' && (
+                  <div className="session-details">
+                    <div className="detail-item">
+                      <span className="detail-label">Tarih:</span>
+                      <span className="detail-value">
+                        {formatDate(session.date)}
+                      </span>
+                    </div>
+                    <div className="detail-item">
+                      <span className="detail-label">Saat:</span>
+                      <span className="detail-value">
+                        {formatTime(session.startTime)} - {formatTime(session.endTime)}
+                      </span>
+                    </div>
+                    <div className="detail-item">
+                      <span className="detail-label">Geofence Radius:</span>
+                      <span className="detail-value">{session.geofenceRadius}m</span>
+                    </div>
+                  </div>
+
+                  <div className="session-actions">
+                    {isActive && (
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => {
+                          attendanceService.closeSession(session.id).then(() => {
+                            toast.success('Oturum kapatıldı');
+                            queryClient.invalidateQueries('my-sessions');
+                          });
+                        }}
+                      >
+                        Oturumu Kapat
+                      </Button>
+                    )}
                     <Button
                       variant="secondary"
                       size="sm"
-                      onClick={() => {
-                        attendanceService.closeSession(session.id).then(() => {
-                          toast.success('Oturum kapatıldı');
-                          queryClient.invalidateQueries('my-sessions');
-                        });
-                      }}
+                      onClick={() => toast.info('Yoklama raporu özelliği yakında eklenecek')}
                     >
-                      Oturumu Kapat
+                      Rapor Görüntüle
                     </Button>
-                  )}
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    onClick={() => toast.info('Yoklama raporu özelliği yakında eklenecek')}
-                  >
-                    Rapor Görüntüle
-                  </Button>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>

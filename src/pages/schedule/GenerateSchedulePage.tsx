@@ -1,16 +1,15 @@
 import React, { useState } from 'react';
-import { useQuery, useMutation } from 'react-query';
-// useNavigate removed - not used
+import { useQuery, useMutation, useQueryClient } from 'react-query';
 import { toast } from 'react-toastify';
-import { scheduleService } from '@/services/api/schedule.service';
+import { scheduleService, CreateScheduleRequest, ScheduleResponse } from '@/services/api/schedule.service';
 import { sectionService } from '@/services/api/section.service';
+import { classroomService, Classroom } from '@/services/api/classroom.service';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { Button } from '@/components/common/Button';
 import { Select } from '@/components/common/Select';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Breadcrumb } from '@/components/ui/Breadcrumb';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
-import { Badge } from '@/components/ui/Badge';
 import { useAuth } from '@/context/AuthContext';
 import './GenerateSchedulePage.css';
 
@@ -36,79 +35,172 @@ const getCurrentSemesterAndYear = () => {
   return { semester, year: academicYear };
 };
 
+const DAYS_OF_WEEK = [
+  { value: 'MONDAY', label: 'Pazartesi' },
+  { value: 'TUESDAY', label: 'Salı' },
+  { value: 'WEDNESDAY', label: 'Çarşamba' },
+  { value: 'THURSDAY', label: 'Perşembe' },
+  { value: 'FRIDAY', label: 'Cuma' },
+  { value: 'SATURDAY', label: 'Cumartesi' },
+];
+
+const TIME_SLOTS = [
+  '08:00', '08:30', '09:00', '09:30', '10:00', '10:30',
+  '11:00', '11:30', '12:00', '12:30', '13:00', '13:30',
+  '14:00', '14:30', '15:00', '15:30', '16:00', '16:30',
+  '17:00', '17:30', '18:00', '18:30', '19:00', '19:30', '20:00'
+];
+
 export const GenerateSchedulePage: React.FC = () => {
   const { user } = useAuth();
-  // navigate removed - not used
+  const queryClient = useQueryClient();
+
   const [semester, setSemester] = useState<string>(getCurrentSemesterAndYear().semester);
   const [year, setYear] = useState<number>(getCurrentSemesterAndYear().year);
-  const [selectedSectionIds, setSelectedSectionIds] = useState<Set<string>>(new Set());
-  const [generatedSchedules, setGeneratedSchedules] = useState<any[]>([]);
-  const [selectedScheduleId, setSelectedScheduleId] = useState<string>('');
 
+  // Seçilen ders bölümü
+  const [selectedSection, setSelectedSection] = useState<any>(null);
+
+  // Form state
+  const [formData, setFormData] = useState({
+    dayOfWeek: 'MONDAY',
+    startTime: '09:00',
+    endTime: '10:30',
+    classroomId: 0,
+  });
+
+  // Düzenleme modu
+  const [editingSchedule, setEditingSchedule] = useState<ScheduleResponse | null>(null);
+
+  // Ders bölümlerini getir
   const { data: sectionsData, isLoading: sectionsLoading } = useQuery(
     ['sections-for-schedule', semester, year],
     () => sectionService.getSectionsBySemester(semester, year),
-    {
-      retry: 1,
-      onError: (_err: any) => {
-        toast.error('Ders bölümleri yüklenirken bir hata oluştu');
-      },
-    }
+    { retry: 1 }
+  );
+
+  // Derslikleri getir (min capacity 1 ile hepsini al)
+  const { data: classroomsData, isLoading: classroomsLoading } = useQuery(
+    'classrooms',
+    () => classroomService.getClassroomsByCapacity(1),
+    { retry: 1 }
+  );
+
+  // Mevcut programları getir
+  const { data: schedulesData, isLoading: schedulesLoading } = useQuery(
+    'all-schedules',
+    () => scheduleService.getAllSchedules(),
+    { retry: 1 }
   );
 
   const sections = sectionsData?.data || [];
+  // classroomsData.data doğrudan array olmalı (getClassroomsByCapacity)
+  const classrooms: Classroom[] = Array.isArray(classroomsData?.data) ? classroomsData.data : [];
+  // schedulesData.data doğrudan array olmalı
+  const schedules: ScheduleResponse[] = Array.isArray(schedulesData?.data) ? schedulesData.data : [];
 
-  const generateScheduleMutation = useMutation(
-    () => scheduleService.generateSchedule({
-      semester,
-      year,
-      sectionIds: Array.from(selectedSectionIds),
-    }),
+  // Program oluştur mutation
+  const createScheduleMutation = useMutation(
+    (data: CreateScheduleRequest) => scheduleService.createSchedule(data),
     {
-      onSuccess: (response) => {
-        setGeneratedSchedules(response.data || []);
-        toast.success(`${response.data?.length || 0} alternatif program oluşturuldu`);
+      onSuccess: () => {
+        toast.success('Program başarıyla oluşturuldu');
+        queryClient.invalidateQueries('all-schedules');
+        setSelectedSection(null);
+        setFormData({ dayOfWeek: 'MONDAY', startTime: '09:00', endTime: '10:30', classroomId: 0 });
       },
       onError: (error: any) => {
-        toast.error(error?.message || 'Program oluşturulurken bir hata oluştu');
+        toast.error(error?.response?.data?.message || 'Program oluşturulurken hata oluştu');
       },
     }
   );
 
-  const handleSectionToggle = (sectionId: string) => {
-    setSelectedSectionIds(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(sectionId)) {
-        newSet.delete(sectionId);
-      } else {
-        newSet.add(sectionId);
-      }
-      return newSet;
+  // Program güncelle mutation
+  const updateScheduleMutation = useMutation(
+    ({ id, data }: { id: number; data: CreateScheduleRequest }) =>
+      scheduleService.updateSchedule(id, data),
+    {
+      onSuccess: () => {
+        toast.success('Program başarıyla güncellendi');
+        queryClient.invalidateQueries('all-schedules');
+        setEditingSchedule(null);
+        setSelectedSection(null);
+      },
+      onError: (error: any) => {
+        toast.error(error?.response?.data?.message || 'Program güncellenirken hata oluştu');
+      },
+    }
+  );
+
+  // Program sil mutation
+  const deleteScheduleMutation = useMutation(
+    (id: number) => scheduleService.deleteSchedule(id),
+    {
+      onSuccess: () => {
+        toast.success('Program silindi');
+        queryClient.invalidateQueries('all-schedules');
+      },
+      onError: (error: any) => {
+        toast.error(error?.response?.data?.message || 'Program silinirken hata oluştu');
+      },
+    }
+  );
+
+  const handleSectionSelect = (section: any) => {
+    setSelectedSection(section);
+    setEditingSchedule(null);
+    setFormData({ dayOfWeek: 'MONDAY', startTime: '09:00', endTime: '10:30', classroomId: 0 });
+  };
+
+  const handleEditSchedule = (schedule: ScheduleResponse) => {
+    setEditingSchedule(schedule);
+    setSelectedSection(sections.find((s: any) => s.id === schedule.sectionId) || null);
+    setFormData({
+      dayOfWeek: schedule.dayOfWeek,
+      startTime: schedule.startTime.substring(0, 5), // HH:mm:ss -> HH:mm
+      endTime: schedule.endTime.substring(0, 5),
+      classroomId: schedule.classroomId,
     });
   };
 
-  const handleSelectAll = () => {
-    if (selectedSectionIds.size === sections.length) {
-      setSelectedSectionIds(new Set());
+  const handleSubmit = async () => {
+    if (!selectedSection) {
+      toast.error('Lütfen bir ders bölümü seçin');
+      return;
+    }
+    if (!formData.classroomId) {
+      toast.error('Lütfen bir derslik seçin');
+      return;
+    }
+
+    const requestData: CreateScheduleRequest = {
+      sectionId: selectedSection.id,
+      dayOfWeek: formData.dayOfWeek,
+      startTime: formData.startTime,
+      endTime: formData.endTime,
+      classroomId: formData.classroomId,
+    };
+
+    if (editingSchedule) {
+      updateScheduleMutation.mutate({ id: editingSchedule.id, data: requestData });
     } else {
-      setSelectedSectionIds(new Set(sections.map((s: any) => s.id.toString())));
+      createScheduleMutation.mutate(requestData);
     }
   };
 
-  const handleGenerate = () => {
-    if (selectedSectionIds.size === 0) {
-      toast.error('Lütfen en az bir ders bölümü seçin');
-      return;
+  const handleDelete = (scheduleId: number) => {
+    if (window.confirm('Bu programı silmek istediğinize emin misiniz?')) {
+      deleteScheduleMutation.mutate(scheduleId);
     }
-    generateScheduleMutation.mutate();
   };
 
-  const handleSaveSchedule = () => {
-    if (!selectedScheduleId) {
-      toast.error('Lütfen bir program seçin');
-      return;
-    }
-    toast.info('Program kaydetme özelliği backend ile entegre edilecek');
+  const getDayLabel = (day: string) => {
+    return DAYS_OF_WEEK.find(d => d.value === day)?.label || day;
+  };
+
+  const getClassroomName = (classroomId: number) => {
+    const classroom = classrooms.find(c => c.id === classroomId);
+    return classroom ? `${classroom.building} ${classroom.roomNumber}` : '-';
   };
 
   const isAdmin = user?.role?.toLowerCase() === 'admin' || user?.role === 'ADMIN';
@@ -133,154 +225,248 @@ export const GenerateSchedulePage: React.FC = () => {
         ]}
       />
       <PageHeader
-        title="Program Oluştur"
-        description="Ders bölümleri için otomatik program oluşturun"
+        title="Ders Programı Yönetimi"
+        description="Ders bölümleri için manuel program atayın"
       />
 
-      <div className="generate-schedule-container">
-        {/* Semester/Year Selection */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Dönem Seçimi</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="form-group">
-              <label>Dönem:</label>
-              <Select
-                value={semester}
-                onChange={(e) => setSemester(e.target.value)}
-                options={[
-                  { value: 'FALL', label: 'Güz (FALL)' },
-                  { value: 'SPRING', label: 'Bahar (SPRING)' },
-                  { value: 'SUMMER', label: 'Yaz (SUMMER)' },
-                ]}
-              />
-            </div>
-            <div className="form-group">
-              <label>Yıl:</label>
-              <input
-                type="number"
-                value={year}
-                onChange={(e) => setYear(parseInt(e.target.value) || new Date().getFullYear())}
-                className="year-input"
-                min="2020"
-                max="2030"
-              />
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Section Selection */}
-        <Card>
-          <CardHeader>
-            <div className="section-header-actions">
-              <CardTitle>Ders Bölümleri Seç ({selectedSectionIds.size} seçili)</CardTitle>
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={handleSelectAll}
-              >
-                {selectedSectionIds.size === sections.length ? 'Tümünü Kaldır' : 'Tümünü Seç'}
-              </Button>
-            </div>
-          </CardHeader>
-          <CardContent>
-            {sectionsLoading ? (
-              <LoadingSpinner />
-            ) : sections.length === 0 ? (
-              <p className="no-sections">Bu dönem için ders bölümü bulunamadı</p>
-            ) : (
-              <div className="sections-list">
-                {sections.map((section: any) => {
-                  const course = section.course || {};
-                  const isSelected = selectedSectionIds.has(section.id.toString());
-
-                  return (
-                    <div
-                      key={section.id}
-                      className={`section-item ${isSelected ? 'selected' : ''}`}
-                      onClick={() => handleSectionToggle(section.id.toString())}
-                    >
-                      <input
-                        type="checkbox"
-                        checked={isSelected}
-                        onChange={() => handleSectionToggle(section.id.toString())}
-                        onClick={(e) => e.stopPropagation()}
-                      />
-                      <div className="section-info">
-                        <div className="section-title">
-                          {course.code} - {course.name} (Bölüm {section.sectionNumber})
-                        </div>
-                        <div className="section-details">
-                          <span>Öğretim Üyesi: {section.instructorName || '-'}</span>
-                          <span>Kapasite: {section.capacity || '-'}</span>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Generate Button */}
-        <div className="generate-actions">
-          <Button
-            onClick={handleGenerate}
-            disabled={selectedSectionIds.size === 0 || generateScheduleMutation.isLoading}
-            size="lg"
-            fullWidth
-          >
-            {generateScheduleMutation.isLoading ? 'Program Oluşturuluyor...' : 'Program Oluştur'}
-          </Button>
-        </div>
-
-        {/* Generated Schedules */}
-        {generatedSchedules.length > 0 && (
+      <div className="schedule-management-grid">
+        {/* Sol Panel: Dönem Seçimi ve Bölüm Listesi */}
+        <div className="left-panel">
+          {/* Dönem Seçimi */}
           <Card>
             <CardHeader>
-              <CardTitle>Oluşturulan Program Alternatifleri</CardTitle>
+              <CardTitle>Dönem Seçimi</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="schedules-list">
-                {generatedSchedules.map((schedule: any, index: number) => (
-                  <div
-                    key={schedule.id}
-                    className={`schedule-item ${selectedScheduleId === schedule.id ? 'selected' : ''}`}
-                    onClick={() => setSelectedScheduleId(schedule.id)}
-                  >
-                    <div className="schedule-header">
-                      <h4>Alternatif {index + 1}</h4>
-                      <div className="schedule-badges">
-                        <Badge variant={schedule.conflicts === 0 ? 'success' : 'warning'}>
-                          {schedule.conflicts} Çakışma
-                        </Badge>
-                        <Badge variant="primary">Skor: {schedule.score?.toFixed(2) || '-'}</Badge>
-                      </div>
-                    </div>
-                    <div className="schedule-details">
-                      <p>Toplam {schedule.entries?.length || 0} ders programlandı</p>
-                    </div>
-                  </div>
-                ))}
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Dönem:</label>
+                  <Select
+                    value={semester}
+                    onChange={(e) => setSemester(e.target.value)}
+                    options={[
+                      { value: 'FALL', label: 'Güz' },
+                      { value: 'SPRING', label: 'Bahar' },
+                      { value: 'SUMMER', label: 'Yaz' },
+                    ]}
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Yıl:</label>
+                  <input
+                    type="number"
+                    value={year}
+                    onChange={(e) => setYear(parseInt(e.target.value) || new Date().getFullYear())}
+                    className="year-input"
+                    min="2020"
+                    max="2030"
+                  />
+                </div>
               </div>
+            </CardContent>
+          </Card>
 
-              {selectedScheduleId && (
-                <div className="save-actions">
-                  <Button
-                    onClick={handleSaveSchedule}
-                    size="lg"
-                  >
-                    Seçili Programı Kaydet
-                  </Button>
+          {/* Ders Bölümleri Listesi */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Ders Bölümleri ({sections.length})</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {sectionsLoading ? (
+                <LoadingSpinner />
+              ) : sections.length === 0 ? (
+                <p className="no-data">Bu dönem için ders bölümü bulunamadı</p>
+              ) : (
+                <div className="sections-list">
+                  {sections.map((section: any) => {
+                    const isSelected = selectedSection?.id === section.id;
+                    const hasSchedule = schedules.some(s => s.sectionId === section.id);
+
+                    return (
+                      <div
+                        key={section.id}
+                        className={`section-item ${isSelected ? 'selected' : ''} ${hasSchedule ? 'has-schedule' : ''}`}
+                        onClick={() => handleSectionSelect(section)}
+                      >
+                        <div className="section-main">
+                          <span className="course-code">{section.courseCode || section.course?.code}</span>
+                          <span className="course-name">{section.courseName || section.course?.name}</span>
+                        </div>
+                        <div className="section-meta">
+                          <span>Bölüm {section.sectionNumber}</span>
+                          <span>{section.instructorName || '-'}</span>
+                          {hasSchedule && <span className="badge-scheduled">✓</span>}
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </CardContent>
           </Card>
-        )}
+        </div>
+
+        {/* Sağ Panel: Form ve Mevcut Programlar */}
+        <div className="right-panel">
+          {/* Program Atama Formu */}
+          <Card>
+            <CardHeader>
+              <CardTitle>
+                {editingSchedule ? 'Programı Düzenle' : 'Program Ata'}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {selectedSection ? (
+                <div className="schedule-form">
+                  <div className="selected-section-info">
+                    <strong>{selectedSection.courseCode || selectedSection.course?.code}</strong>
+                    {' - '}
+                    {selectedSection.courseName || selectedSection.course?.name}
+                    {' (Bölüm '}
+                    {selectedSection.sectionNumber}
+                    {')'}
+                  </div>
+
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label>Gün:</label>
+                      <Select
+                        value={formData.dayOfWeek}
+                        onChange={(e) => setFormData({ ...formData, dayOfWeek: e.target.value })}
+                        options={DAYS_OF_WEEK}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label>Başlangıç:</label>
+                      <Select
+                        value={formData.startTime}
+                        onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
+                        options={TIME_SLOTS.map(t => ({ value: t, label: t }))}
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label>Bitiş:</label>
+                      <Select
+                        value={formData.endTime}
+                        onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
+                        options={TIME_SLOTS.map(t => ({ value: t, label: t }))}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="form-row">
+                    <div className="form-group full-width">
+                      <label>Derslik:</label>
+                      {classroomsLoading ? (
+                        <LoadingSpinner />
+                      ) : (
+                        <Select
+                          value={formData.classroomId.toString()}
+                          onChange={(e) => setFormData({ ...formData, classroomId: parseInt(e.target.value) })}
+                          options={[
+                            { value: '0', label: 'Seçiniz...' },
+                            ...classrooms.map(c => ({
+                              value: c.id.toString(),
+                              label: `${c.building} ${c.roomNumber} (${c.capacity} kişi)`
+                            }))
+                          ]}
+                        />
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="form-actions">
+                    <Button
+                      onClick={handleSubmit}
+                      disabled={createScheduleMutation.isLoading || updateScheduleMutation.isLoading}
+                    >
+                      {createScheduleMutation.isLoading || updateScheduleMutation.isLoading
+                        ? 'Kaydediliyor...'
+                        : editingSchedule ? 'Güncelle' : 'Program Ata'}
+                    </Button>
+                    {editingSchedule && (
+                      <Button
+                        variant="secondary"
+                        onClick={() => {
+                          setEditingSchedule(null);
+                          setSelectedSection(null);
+                        }}
+                      >
+                        İptal
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <p className="no-selection">Sol listeden bir ders bölümü seçin</p>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Mevcut Programlar Tablosu */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Mevcut Programlar ({schedules.length})</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {schedulesLoading ? (
+                <LoadingSpinner />
+              ) : schedules.length === 0 ? (
+                <p className="no-data">Henüz oluşturulmuş program yok</p>
+              ) : (
+                <div className="schedules-table-container">
+                  <table className="schedules-table">
+                    <thead>
+                      <tr>
+                        <th>Ders</th>
+                        <th>Gün</th>
+                        <th>Saat</th>
+                        <th>Derslik</th>
+                        <th>İşlem</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {schedules.map((schedule) => (
+                        <tr key={schedule.id}>
+                          <td>
+                            <strong>{schedule.courseCode}</strong>
+                            <br />
+                            <small>{schedule.courseName}</small>
+                          </td>
+                          <td>{getDayLabel(schedule.dayOfWeek)}</td>
+                          <td>{schedule.startTime.substring(0, 5)} - {schedule.endTime.substring(0, 5)}</td>
+                          <td>{schedule.classroomName || getClassroomName(schedule.classroomId)}</td>
+                          <td>
+                            <div className="action-buttons">
+                              <button
+                                className="edit-btn"
+                                onClick={() => handleEditSchedule(schedule)}
+                                title="Düzenle"
+                              >
+                                ✏️
+                              </button>
+                              <button
+                                className="delete-btn"
+                                onClick={() => handleDelete(schedule.id)}
+                                title="Sil"
+                              >
+                                🗑️
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );
 };
-

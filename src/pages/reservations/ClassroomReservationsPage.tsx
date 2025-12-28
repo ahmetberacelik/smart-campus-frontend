@@ -238,13 +238,17 @@ export const ClassroomReservationsPage: React.FC = () => {
               {classrooms.map((classroom: any) => (
                 <Card key={classroom.id} className="classroom-card">
                   <CardHeader>
-                    <CardTitle>{classroom.name}</CardTitle>
+                    <CardTitle>{classroom.roomNumber || classroom.room_number || classroom.name} - {classroom.building}</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="classroom-details">
                       <div className="detail-item">
                         <span className="detail-label">Bina:</span>
                         <span className="detail-value">{classroom.building}</span>
+                      </div>
+                      <div className="detail-item">
+                        <span className="detail-label">Oda No:</span>
+                        <span className="detail-value">{classroom.roomNumber || classroom.room_number || '-'}</span>
                       </div>
                       <div className="detail-item">
                         <span className="detail-label">Kapasite:</span>
@@ -357,7 +361,7 @@ export const ClassroomReservationsPage: React.FC = () => {
         {selectedClassroom && (
           <div className="reservation-modal-content">
             <div className="reservation-info">
-              <p><strong>Sınıf:</strong> {selectedClassroom.name}</p>
+              <p><strong>Oda No:</strong> {selectedClassroom.roomNumber || selectedClassroom.room_number || selectedClassroom.name}</p>
               <p><strong>Bina:</strong> {selectedClassroom.building}</p>
               <p><strong>Kapasite:</strong> {selectedClassroom.capacity} kişi</p>
             </div>

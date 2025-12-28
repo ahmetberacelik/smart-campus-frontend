@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import { useQuery } from 'react-query';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
@@ -18,7 +18,6 @@ export const SectionsPage: React.FC = () => {
 
   // Kullanıcının rolünü kontrol et
   const isFaculty = user?.role?.toLowerCase() === 'faculty' || user?.role === 'FACULTY';
-  const isAdmin = user?.role?.toLowerCase() === 'admin' || user?.role === 'ADMIN';
 
   // Faculty ise sadece kendi derslerini getir, admin ise tüm dersleri getir
   const { data, isLoading, error } = useQuery(

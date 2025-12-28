@@ -31,7 +31,7 @@ interface ServiceCard {
 export const DashboardPage: React.FC = () => {
   const { user, isLoading: authLoading } = useAuth();
   const navigate = useNavigate();
-  
+
   // Loading state kontrolü
   if (authLoading) {
     return <LoadingSpinner fullScreen />;
@@ -68,7 +68,7 @@ export const DashboardPage: React.FC = () => {
   // Faculty queries
   const currentYear = new Date().getFullYear();
   const currentSemester = new Date().getMonth() < 6 ? 'SPRING' : 'FALL';
-  
+
   const { data: mySectionsData } = useQuery(
     ['dashboard-my-sections', currentSemester, currentYear],
     () => sectionService.getMySections(currentSemester, currentYear),
@@ -93,8 +93,10 @@ export const DashboardPage: React.FC = () => {
   const activeSessionsCount = Array.isArray(activeSessionsData?.data) ? activeSessionsData.data.length : 0;
   const coursesCount = Array.isArray(myCoursesData?.data) ? myCoursesData.data.length : 0;
   const sectionsCount = Array.isArray(mySectionsData?.data) ? mySectionsData.data.length : 0;
-  const activeSessionsCountFaculty = Array.isArray(mySessionsData?.data) 
-    ? mySessionsData.data.filter((s: any) => s.status === 'ACTIVE' || s.status === 'Active').length
+  // Backend PageResponse döndürüyor, content içinde array var
+  const mySessionsContent = (mySessionsData?.data as any)?.content || mySessionsData?.data || [];
+  const activeSessionsCountFaculty = Array.isArray(mySessionsContent)
+    ? mySessionsContent.filter((s: any) => s.status === 'ACTIVE' || s.status === 'Active').length
     : 0;
 
   // Service cards based on role
@@ -284,7 +286,7 @@ export const DashboardPage: React.FC = () => {
     return cards;
   }, [isStudent, isFaculty, isAdmin, coursesCount, activeSessionsCount, sectionsCount, activeSessionsCountFaculty]);
 
-  const userName = user?.name || (user?.firstName && user?.lastName 
+  const userName = user?.name || (user?.firstName && user?.lastName
     ? [user.firstName, user.lastName].filter(Boolean).join(' ').trim()
     : user?.firstName || user?.lastName || 'Kullanıcı');
 
@@ -294,8 +296,8 @@ export const DashboardPage: React.FC = () => {
     if (Array.isArray(menu.items)) return menu.items;
     if (menu.itemsJson) {
       try {
-        return typeof menu.itemsJson === 'string' 
-          ? JSON.parse(menu.itemsJson) 
+        return typeof menu.itemsJson === 'string'
+          ? JSON.parse(menu.itemsJson)
           : menu.itemsJson;
       } catch (e) {
         console.error('Error parsing menu items:', e);
@@ -309,7 +311,7 @@ export const DashboardPage: React.FC = () => {
   const todayMenu = Array.isArray(menuData?.data) ? menuData.data : [];
   const lunchMenu = todayMenu.find((m: any) => m.mealType === 'LUNCH');
   const dinnerMenu = todayMenu.find((m: any) => m.mealType === 'DINNER');
-  
+
   const lunchItems = useMemo(() => parseMenuItems(lunchMenu), [lunchMenu, parseMenuItems]);
   const dinnerItems = useMemo(() => parseMenuItems(dinnerMenu), [dinnerMenu, parseMenuItems]);
 
@@ -335,8 +337,8 @@ export const DashboardPage: React.FC = () => {
                     <div className="dashboard-service-icon-wrapper">
                       <div className="dashboard-service-icon">{service.icon}</div>
                       {service.badge && service.badge > 0 && (
-                        <Badge 
-                          variant="error" 
+                        <Badge
+                          variant="error"
                           className="dashboard-service-badge"
                         >
                           {service.badge}

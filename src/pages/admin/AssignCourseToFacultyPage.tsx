@@ -3,7 +3,7 @@
  * Admin girişi yapıldığında sistemdeki hocaları görüntüler ve onlara ders atar
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from 'react-query';
 import { userService } from '@/services/api/user.service';
 import { courseService } from '@/services/api/course.service';
@@ -11,20 +11,28 @@ import { sectionService } from '@/services/api/section.service';
 import { departmentService } from '@/services/api/department.service';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Breadcrumb } from '@/components/ui/Breadcrumb';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
+import { Card, CardContent } from '@/components/ui/Card';
 import { Button } from '@/components/common/Button';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { Modal } from '@/components/ui/Modal';
 import { TextInput } from '@/components/common/TextInput';
 import { Select } from '@/components/common/Select';
 import { toast } from 'react-toastify';
-import type { User, Course, Department } from '@/types/api.types';
+import type { User, Course } from '@/types/api.types';
 import type { CreateSectionRequest } from '@/services/api/section.service';
 import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 import './AssignCourseToFacultyPage.css';
 
-// Ders Düzenleme Modal İçeriği
-const EditSectionModalContent: React.FC<{
+// Department tipi
+interface Department {
+  id: string | number;
+  name: string;
+  code?: string;
+}
+
+// Ders Düzenleme Modal İçeriği - unused, yorum satırı
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const _EditSectionModalContent: React.FC<{
   section: any;
   faculty: User;
   onClose: () => void;
@@ -42,7 +50,7 @@ const EditSectionModalContent: React.FC<{
   );
 
   const facultySections = facultySectionsData?.data || [];
-  
+
   // Bu hocaya atanmış derslerin course ID'lerini topla (unique)
   const assignedCourseIds = new Set(
     facultySections.map((s: any) => s.courseId || s.course?.id).filter(Boolean)
@@ -56,9 +64,9 @@ const EditSectionModalContent: React.FC<{
   );
 
   const allCourses = allCoursesData?.data?.content || [];
-  
+
   // Sadece bu hocaya atanmış dersleri filtrele
-  const assignedCourses = allCourses.filter((course: Course) => 
+  const assignedCourses = allCourses.filter((course: Course) =>
     assignedCourseIds.has(course.id.toString())
   );
 
@@ -148,16 +156,16 @@ const EditSectionForm: React.FC<{
   );
 
   const facultySections = facultySectionsData?.data || [];
-  
+
   // Section'lardan direkt course bilgilerini çıkar (backend'den courseCode ve courseName geliyor)
   // Eğer course objesi varsa onu kullan, yoksa courseCode ve courseName'den course oluştur
   const assignedCoursesMap = new Map<string | number, { id: string | number; code: string; name: string }>();
-  
+
   facultySections.forEach((s: any) => {
     const courseId = s.courseId || s.course?.id;
     const courseCode = s.courseCode || s.course?.code;
     const courseName = s.courseName || s.course?.name;
-    
+
     if (courseId && courseCode && courseName) {
       // Hem string hem number key olarak ekle
       assignedCoursesMap.set(courseId.toString(), { id: courseId, code: courseCode, name: courseName });
@@ -166,7 +174,7 @@ const EditSectionForm: React.FC<{
   });
 
   // Map'ten array'e çevir (unique courses)
-  const assignedCourses = Array.from(assignedCoursesMap.values()).filter((course, index, self) => 
+  const assignedCourses = Array.from(assignedCoursesMap.values()).filter((course, index, self) =>
     index === self.findIndex(c => c.id.toString() === course.id.toString())
   );
 
@@ -263,7 +271,7 @@ const FacultySectionsList: React.FC<{
   // Client-side filtreleme yapıyoruz
   // Backend'den gelen section'larda instructorId Faculty ID olarak geliyor
   // User ID'den Faculty ID'yi bulmak için tüm hocaları getirip eşleştirme yapıyoruz
-  
+
   // Tüm hocaları getir (Faculty ID'yi bulmak için)
   const { data: allFacultyData } = useQuery(
     ['all-faculty-for-filtering', facultyId],
@@ -271,42 +279,42 @@ const FacultySectionsList: React.FC<{
     { retry: 1 }
   );
 
-  const allFaculty = allFacultyData?.data?.content || [];
-  const currentFaculty = allFaculty.find((f: User) => f.id.toString() === facultyId.toString());
-  
+  const allFaculty = (allFacultyData?.data as any)?.content || allFacultyData?.data || [];
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const _currentFaculty = allFaculty.find((f: User) => f.id.toString() === facultyId.toString());
+
   // Backend'den Faculty ID'yi almak için backend API'sini kullanmamız gerekiyor
   // Ama şimdilik User ID'yi Faculty ID olarak kullanıyoruz (yanlış olabilir)
   // Backend'de getSectionsByInstructorUserId metodu User ID'den Faculty ID'yi buluyor
   // O yüzden backend'den gelen section'larda instructorId Faculty ID olarak geliyor
   // Frontend'de User ID'den Faculty ID'yi bulmak için backend'den Faculty bilgisini almak gerekiyor
-  
+
   // Şimdilik backend filtrelemesinin çalışmasını bekliyoruz
   // Eğer backend filtreleme çalışmıyorsa, client-side filtreleme yapacağız
   // Ama User ID'den Faculty ID'yi bulmak için backend'den Faculty bilgisini almak gerekiyor
-  
-  const { data: sectionsData, isLoading, error } = useQuery(
+
+  const { data: sectionsData, isLoading, error: _sectionError } = useQuery(
     ['faculty-sections', facultyId],
     async () => {
       console.log('🔍 FacultySectionsList: Fetching sections for facultyId (User ID):', facultyId);
-      
+
       // Backend'e instructorUserId parametresi gönderiliyor
       // Backend filtreleme çalışmıyor gibi görünüyor, o yüzden direkt endpoint kullanıyoruz
       const response = await sectionService.getSectionsByInstructorUserId(facultyId);
-      
+
       // Backend'den gelen section'lar zaten filtrelenmiş olmalı
       const filteredSections = response?.data || [];
-      
+
       console.log('✅ Backend\'den gelen filtrelenmiş section sayısı:', filteredSections.length);
-      
-      console.log('✅ FacultySectionsList: All sections:', allSections.length, 'Filtered sections:', filteredSections.length);
+
       if (filteredSections.length > 0) {
         console.log('🔍 FacultySectionsList: First section:', {
           id: filteredSections[0].id,
-          courseCode: filteredSections[0].courseCode,
+          courseCode: filteredSections[0].courseCode || filteredSections[0].course?.code,
           instructorId: filteredSections[0].instructorId,
         });
       }
-      
+
       return { ...response, data: filteredSections };
     },
     {
@@ -416,7 +424,7 @@ export const AssignCourseToFacultyPage: React.FC = () => {
   // Backend'den gelen response formatı: ApiResponse<PageResponse<UserResponse>>
   // PageResponse içinde: { content: User[], page, size, totalElements, totalPages }
   // Frontend'de beklenen format: { data: User[], pagination: {...} }
-  const facultyList = facultyData?.data?.content || facultyData?.data?.data || [];
+  const facultyList = (facultyData?.data as any)?.content || facultyData?.data?.data || [];
 
   // Silme mutation
   const deleteSectionMutation = useMutation(
@@ -466,7 +474,7 @@ export const AssignCourseToFacultyPage: React.FC = () => {
   const { data: coursesData, isLoading: coursesLoading } = useQuery(
     ['courses', formData.courseId ? null : 'all'],
     () => courseService.getCourses({ limit: 1000 }),
-    { 
+    {
       retry: 1,
       enabled: isModalOpen, // Sadece modal açıkken yükle
     }
@@ -502,7 +510,7 @@ export const AssignCourseToFacultyPage: React.FC = () => {
       },
       onError: (error: any) => {
         let errorMessage = 'Ders atanırken bir hata oluştu';
-        
+
         if (error?.response?.status === 404) {
           // 404 Not Found - Instructor bulunamadı
           const backendMessage = error?.response?.data?.message || '';
@@ -531,7 +539,7 @@ export const AssignCourseToFacultyPage: React.FC = () => {
         } else if (error?.message) {
           errorMessage = error.message;
         }
-        
+
         toast.error(errorMessage, { autoClose: 5000 });
       },
     }
@@ -569,7 +577,7 @@ export const AssignCourseToFacultyPage: React.FC = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!formData.courseId || !formData.semester || !formData.year) {
       toast.error('Lütfen ders, dönem ve yıl bilgilerini seçin');
       return;
@@ -589,20 +597,20 @@ export const AssignCourseToFacultyPage: React.FC = () => {
   // Bölüme göre filtreleme
   const filteredFaculty = departmentFilter
     ? facultyList.filter((faculty: User) => {
-        const deptId = faculty.facultyInfo?.departmentId || faculty.departmentId;
-        return deptId?.toString() === departmentFilter;
-      })
+      const deptId = faculty.facultyInfo?.departmentId || (faculty as any).departmentId;
+      return deptId?.toString() === departmentFilter;
+    })
     : facultyList;
 
   // Arama terimine göre filtreleme
   const searchedFaculty = searchTerm
     ? filteredFaculty.filter((faculty: User) => {
-        const name = faculty.name || 
-          [faculty.firstName, faculty.lastName].filter(Boolean).join(' ') ||
-          faculty.email;
-        return name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-               faculty.email?.toLowerCase().includes(searchTerm.toLowerCase());
-      })
+      const name = faculty.name ||
+        [faculty.firstName, faculty.lastName].filter(Boolean).join(' ') ||
+        faculty.email;
+      return name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        faculty.email?.toLowerCase().includes(searchTerm.toLowerCase());
+    })
     : filteredFaculty;
 
   if (facultyLoading) {
@@ -662,12 +670,12 @@ export const AssignCourseToFacultyPage: React.FC = () => {
           </Card>
         ) : (
           searchedFaculty.map((faculty: User) => {
-            const facultyName = faculty.name || 
+            const facultyName = faculty.name ||
               [faculty.firstName, faculty.lastName].filter(Boolean).join(' ') ||
               faculty.email ||
               'İsimsiz';
             const department = departments.find(
-              (d: Department) => d.id.toString() === (faculty.facultyInfo?.departmentId || faculty.departmentId)?.toString()
+              (d: Department) => d.id.toString() === (faculty.facultyInfo?.departmentId || (faculty as any).departmentId)?.toString()
             );
 
             return (
@@ -721,7 +729,7 @@ export const AssignCourseToFacultyPage: React.FC = () => {
                       {expandedFaculty === faculty.id ? '📖 Dersleri Gizle' : '📖 Dersleri Görüntüle'}
                     </Button>
                   </div>
-                  
+
                   {/* Hocanın Atanmış Dersleri */}
                   {expandedFaculty === faculty.id && (
                     <FacultySectionsList
@@ -753,7 +761,7 @@ export const AssignCourseToFacultyPage: React.FC = () => {
           setSelectedFaculty(null);
         }}
         title={`Ders Ata - ${selectedFaculty?.name || [selectedFaculty?.firstName, selectedFaculty?.lastName].filter(Boolean).join(' ') || selectedFaculty?.email}`}
-        size="large"
+        size="lg"
       >
         <form onSubmit={handleSubmit} className="assign-course-form">
           {coursesLoading ? (
@@ -900,7 +908,7 @@ export const AssignCourseToFacultyPage: React.FC = () => {
         confirmText="Kaldır"
         cancelText="İptal"
         variant="danger"
-        isLoading={deleteSectionMutation.isLoading}
+        loading={deleteSectionMutation.isLoading}
       />
     </div>
   );

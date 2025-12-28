@@ -141,6 +141,11 @@ export interface CourseSection {
   year: number;
   instructorId: string;
   instructor: Faculty;
+  // Backend'den gelen ek alanlar
+  instructorName?: string;
+  classroomName?: string;
+  courseCode?: string;
+  courseName?: string;
   capacity: number;
   enrolledCount: number;
   schedule: ScheduleSlot[];
@@ -331,12 +336,12 @@ export interface EventRegistration {
 }
 
 // Notification Types
-export type NotificationCategory = 
-  | 'academic' 
-  | 'attendance' 
-  | 'meal' 
-  | 'event' 
-  | 'payment' 
+export type NotificationCategory =
+  | 'academic'
+  | 'attendance'
+  | 'meal'
+  | 'event'
+  | 'payment'
   | 'system';
 
 export interface Notification {

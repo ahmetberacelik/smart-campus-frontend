@@ -90,11 +90,33 @@ export const SessionDetailPage: React.FC = () => {
 
     // Kalan süre hesaplama
     useEffect(() => {
-        if (session?.endTime) {
+        if (session?.endTime && session?.date) {
             const updateRemainingTime = () => {
                 const now = new Date();
-                const end = new Date(session.endTime);
-                const diff = end.getTime() - now.getTime();
+
+                // Backend LocalDate (YYYY-MM-DD) ve LocalTime (HH:mm:ss) formatında dönüyor
+                // Bunları birleştirip Date objesi oluşturmalıyız
+                let endDateTime: Date;
+
+                // endTime sadece saat mi yoksa tam tarih mi kontrol et
+                if (typeof session.endTime === 'string' && session.endTime.includes(':') && !session.endTime.includes('T')) {
+                    // LocalTime formatı: "HH:mm:ss" veya "HH:mm"
+                    // LocalDate formatı: "YYYY-MM-DD"
+                    const dateStr = session.date || new Date().toISOString().split('T')[0];
+                    const timeStr = session.endTime;
+                    endDateTime = new Date(`${dateStr}T${timeStr}`);
+                } else {
+                    // Zaten ISO formatında veya timestamp
+                    endDateTime = new Date(session.endTime);
+                }
+
+                // Geçerli bir tarih mi kontrol et
+                if (isNaN(endDateTime.getTime())) {
+                    setTimeRemaining('--');
+                    return;
+                }
+
+                const diff = endDateTime.getTime() - now.getTime();
 
                 if (diff <= 0) {
                     setTimeRemaining('Süre doldu');
@@ -118,8 +140,10 @@ export const SessionDetailPage: React.FC = () => {
             updateRemainingTime();
             const timer = setInterval(updateRemainingTime, 1000);
             return () => clearInterval(timer);
+        } else {
+            setTimeRemaining('--');
         }
-    }, [session?.endTime]);
+    }, [session?.endTime, session?.date]);
 
     const handleManualRefresh = () => {
         refreshQrMutation.mutate();
@@ -202,16 +226,37 @@ export const SessionDetailPage: React.FC = () => {
                     <CardContent>
                         <div className="info-content">
                             <div className="info-date">
-                                {new Date(session.date || session.startTime).toLocaleDateString('tr-TR', {
-                                    weekday: 'long',
-                                    year: 'numeric',
-                                    month: 'long',
-                                    day: 'numeric'
-                                })}
+                                {(() => {
+                                    // Backend LocalDate formatında dönüyor: "YYYY-MM-DD"
+                                    const dateStr = session.date;
+                                    if (!dateStr) return '-';
+                                    try {
+                                        const date = new Date(dateStr + 'T00:00:00');
+                                        if (isNaN(date.getTime())) return dateStr;
+                                        return date.toLocaleDateString('tr-TR', {
+                                            weekday: 'long',
+                                            year: 'numeric',
+                                            month: 'long',
+                                            day: 'numeric'
+                                        });
+                                    } catch {
+                                        return dateStr;
+                                    }
+                                })()}
                             </div>
                             <div className="info-time">
-                                {new Date(session.startTime).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })} -
-                                {new Date(session.endTime).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}
+                                {(() => {
+                                    // Backend LocalTime formatında dönüyor: "HH:mm:ss" veya "HH:mm"
+                                    const formatTime = (timeStr: string) => {
+                                        if (!timeStr) return '-';
+                                        const parts = timeStr.split(':');
+                                        if (parts.length >= 2) {
+                                            return `${parts[0]}:${parts[1]}`;
+                                        }
+                                        return timeStr;
+                                    };
+                                    return `${formatTime(session.startTime)} - ${formatTime(session.endTime)}`;
+                                })()}
                             </div>
                         </div>
                     </CardContent>

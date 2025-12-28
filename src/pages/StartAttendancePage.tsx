@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation } from 'react-query';
 import { toast } from 'react-toastify';
@@ -51,6 +51,31 @@ export const StartAttendancePage: React.FC = () => {
   const [date, setDate] = useState<string>(new Date().toISOString().split('T')[0]);
   const [startTime, setStartTime] = useState<string>('09:00');
   const [endTime, setEndTime] = useState<string>('09:30');
+
+  // GPS koordinatları için state
+  const [latitude, setLatitude] = useState<number | null>(null);
+  const [longitude, setLongitude] = useState<number | null>(null);
+  const [_gpsError, setGpsError] = useState<string>('');
+
+  // Sayfa yüklendiğinde GPS konumunu al
+  useEffect(() => {
+    if ('geolocation' in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setLatitude(position.coords.latitude);
+          setLongitude(position.coords.longitude);
+          console.log('📍 GPS konumu alındı:', position.coords.latitude, position.coords.longitude);
+        },
+        (error) => {
+          console.warn('⚠️ GPS hatası:', error.message);
+          setGpsError('Konum alınamadı - varsayılan konum kullanılacak');
+        },
+        { enableHighAccuracy: true, timeout: 10000 }
+      );
+    } else {
+      setGpsError('Tarayıcınız konum servisini desteklemiyor');
+    }
+  }, []);
 
   // Semester ve year state'leri (manuel seçim için)
   const [selectedSemester, setSelectedSemester] = useState<string>('');
@@ -239,12 +264,27 @@ export const StartAttendancePage: React.FC = () => {
       return;
     }
 
+    // Backend LocalDateTime bekliyor (Java)
+    // ISO 8601 formatında ama timezone olmadan: "2025-12-28T14:00:00"
+    // toISOString() UTC'ye çevirir ve 'Z' ekler, biz local time istiyoruz
+    const formatLocalDateTime = (d: Date): string => {
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      const hours = String(d.getHours()).padStart(2, '0');
+      const minutes = String(d.getMinutes()).padStart(2, '0');
+      const seconds = String(d.getSeconds()).padStart(2, '0');
+      return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
+    };
+
     const data: CreateAttendanceSessionRequest = {
       sectionId: selectedSectionId,
       date: date,
-      startTime: startDateTime.toISOString(),
-      endTime: endDateTime.toISOString(),
+      startTime: formatLocalDateTime(startDateTime),
+      endTime: formatLocalDateTime(endDateTime),
       geofenceRadius: geofenceRadius,
+      latitude: latitude || undefined,
+      longitude: longitude || undefined,
     };
 
     createSessionMutation.mutate(data);

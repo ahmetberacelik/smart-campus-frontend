@@ -347,15 +347,12 @@ export const GradesPage: React.FC = () => {
         ) : (
           <div className="grades-grid">
             {grades.map((grade: any) => {
-              const section = grade.section || {};
-              const course = section.course || {};
-
               return (
                 <div key={grade.id} className="grade-card">
                   <div className="grade-card-header">
                     <div>
-                      <h3 className="course-code">{course.code}</h3>
-                      <h4 className="course-name">{course.name}</h4>
+                      <h3 className="course-code">{grade.courseCode}</h3>
+                      <h4 className="course-name">{grade.courseName}</h4>
                     </div>
                     {grade.letterGrade && (
                       <span className={`grade-badge-large grade-${grade.letterGrade.toLowerCase()}`}>
@@ -368,25 +365,25 @@ export const GradesPage: React.FC = () => {
                     {grade.midtermGrade !== null && grade.midtermGrade !== undefined && (
                       <div className="grade-item">
                         <span className="grade-label">Vize:</span>
-                        <span className="grade-value">{grade.midtermGrade.toFixed(2)}</span>
+                        <span className="grade-value">{Number(grade.midtermGrade).toFixed(2)}</span>
                       </div>
                     )}
                     {grade.finalGrade !== null && grade.finalGrade !== undefined && (
                       <div className="grade-item">
                         <span className="grade-label">Final:</span>
-                        <span className="grade-value">{grade.finalGrade.toFixed(2)}</span>
+                        <span className="grade-value">{Number(grade.finalGrade).toFixed(2)}</span>
                       </div>
                     )}
                     {grade.gradePoint !== null && grade.gradePoint !== undefined && (
                       <div className="grade-item">
                         <span className="grade-label">Not Puanı:</span>
-                        <span className="grade-value">{grade.gradePoint.toFixed(2)}</span>
+                        <span className="grade-value">{Number(grade.gradePoint).toFixed(2)}</span>
                       </div>
                     )}
                     <div className="grade-item">
                       <span className="grade-label">Dönem:</span>
                       <span className="grade-value">
-                        {section.semester} {section.year}
+                        {grade.semester} {grade.year}
                       </span>
                     </div>
                   </div>

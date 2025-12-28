@@ -13,6 +13,8 @@ export interface CreateAttendanceSessionRequest {
   startTime: string; // ISO datetime string
   endTime: string; // ISO datetime string
   geofenceRadius?: number; // Metre cinsinden, varsayılan 15m
+  latitude?: number; // Öğretim üyesinin konumu (sınıf konumu olarak kullanılır)
+  longitude?: number; // Öğretim üyesinin konumu
 }
 
 export interface CheckInRequest {

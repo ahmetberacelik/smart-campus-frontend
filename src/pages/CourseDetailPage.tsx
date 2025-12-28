@@ -23,7 +23,7 @@ export const CourseDetailPage: React.FC = () => {
   const [enrollModalOpen, setEnrollModalOpen] = useState(false);
 
   const isStudent = user?.role?.toLowerCase() === 'student' || user?.role === 'STUDENT';
-  const isAdmin = user?.role?.toLowerCase() === 'admin' || user?.role === 'ADMIN';
+  // const isAdmin = user?.role?.toLowerCase() === 'admin' || user?.role === 'ADMIN';
 
   // Course details
   const { data: courseData, isLoading: courseLoading, error: courseError } = useQuery(
@@ -63,7 +63,7 @@ export const CourseDetailPage: React.FC = () => {
         const currentYear = new Date().getFullYear();
         const currentMonth = new Date().getMonth();
         const currentSemester = currentMonth >= 8 ? 'FALL' : currentMonth >= 1 ? 'SPRING' : 'SUMMER';
-        
+
         const sections = response?.data || [];
         // Önce mevcut dönem için section bul
         const currentSection = sections.find(
@@ -304,8 +304,8 @@ export const CourseDetailPage: React.FC = () => {
                       {enrollMutation.isLoading
                         ? 'Kayıt Yapılıyor...'
                         : (availableSectionForEnroll.enrolledCount || 0) >= (availableSectionForEnroll.capacity || 0)
-                        ? 'Ders Dolu'
-                        : 'Derse Kayıt Ol'}
+                          ? 'Ders Dolu'
+                          : 'Derse Kayıt Ol'}
                     </Button>
                   </div>
                 </div>
