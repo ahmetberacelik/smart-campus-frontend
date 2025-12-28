@@ -6,11 +6,13 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
+import { useTheme } from '@/context/ThemeContext';
 import { NotificationBell } from '@/components/notifications/NotificationBell';
 import './CorporateHeader.css';
 
 export const CorporateHeader: React.FC = () => {
   const { user, logout, isAuthenticated } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const [isScrolled, setIsScrolled] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
@@ -79,6 +81,24 @@ export const CorporateHeader: React.FC = () => {
 
           {/* Notification Bell */}
           <NotificationBell />
+
+          {/* Theme Toggle Button */}
+          <button
+            className="corporate-header__theme-toggle"
+            onClick={toggleTheme}
+            aria-label={theme === 'dark' ? 'Açık moda geç' : 'Karanlık moda geç'}
+            title={theme === 'dark' ? 'Açık moda geç' : 'Karanlık moda geç'}
+          >
+            {theme === 'dark' ? (
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 6V3M12 21V18M6 12H3M21 12H18M7.05 7.05L5.64 5.64M18.36 18.36L16.95 16.95M7.05 16.95L5.64 18.36M18.36 5.64L16.95 7.05M16 12C16 14.2091 14.2091 16 12 16C9.79086 16 8 14.2091 8 12C8 9.79086 9.79086 8 12 8C14.2091 8 16 9.79086 16 12Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            ) : (
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            )}
+          </button>
 
           {/* User Menu */}
           <div className="corporate-header__user-menu">

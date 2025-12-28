@@ -1,22 +1,32 @@
 .sidebar {
   width: 300px;
-  background: linear-gradient(to bottom, #ffffff 0%, #f8fafc 100%);
-  border-right: 2px solid #e2e8f0;
+  background: linear-gradient(to bottom, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+  border-right: 2px solid var(--border-color);
   min-height: calc(100vh - 80px);
   display: flex;
   flex-direction: column;
   position: relative;
   overflow: hidden;
   box-shadow: 2px 0 8px rgba(0, 0, 0, 0.04);
+  transition: background var(--transition-base), border-color var(--transition-base);
+}
+
+[data-theme='dark'] .sidebar {
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.3);
 }
 
 /* User Profile Section */
 .sidebar-profile {
   padding: var(--spacing-2xl);
-  border-bottom: 2px solid #e2e8f0;
-  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  border-bottom: 2px solid var(--border-color);
+  background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
   position: relative;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+  transition: background var(--transition-base), border-color var(--transition-base), box-shadow var(--transition-base);
+}
+
+[data-theme='dark'] .sidebar-profile {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .sidebar-profile-header {
@@ -33,14 +43,14 @@
   border-radius: var(--radius-full);
   overflow: hidden;
   flex-shrink: 0;
-  border: 4px solid #e2e8f0;
+  border: 4px solid var(--border-color);
   box-shadow: var(--shadow-lg);
   transition: all 0.3s ease;
 }
 
 .sidebar-profile-avatar:hover {
   transform: scale(1.05);
-  border-color: #40e0d0;
+  border-color: var(--color-accent);
   box-shadow: var(--shadow-xl);
 }
 
@@ -53,8 +63,8 @@
 .sidebar-profile-avatar-placeholder {
   width: 100%;
   height: 100%;
-  background: linear-gradient(135deg, #40e0d0 0%, #2eb8a8 100%);
-  color: #ffffff;
+  background: linear-gradient(135deg, var(--color-accent) 0%, var(--color-accent-dark) 100%);
+  color: var(--text-inverse);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -68,13 +78,13 @@
   right: -2px;
   width: 20px;
   height: 20px;
-  background: #f59e0b;
+  background: var(--color-warning);
   border-radius: var(--radius-full);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #fff;
-  border: 2px solid #ffffff;
+  color: var(--text-inverse);
+  border: 2px solid var(--bg-primary);
 }
 
 .sidebar-profile-info {
@@ -85,7 +95,7 @@
 .sidebar-profile-name {
   font-size: var(--font-size-lg);
   font-weight: var(--font-weight-bold);
-  color: #0f172a;
+  color: var(--text-primary);
   margin-bottom: var(--spacing-xs);
   white-space: nowrap;
   overflow: hidden;
@@ -93,13 +103,15 @@
   text-transform: capitalize;
   letter-spacing: -0.02em;
   line-height: var(--line-height-tight);
+  transition: color var(--transition-base);
 }
 
 .sidebar-profile-role {
   font-size: var(--font-size-base);
-  color: #64748b;
+  color: var(--text-secondary);
   font-weight: var(--font-weight-medium);
   letter-spacing: 0.01em;
+  transition: color var(--transition-base);
 }
 
 .sidebar-profile-warning {
@@ -107,12 +119,19 @@
   align-items: center;
   gap: var(--spacing-xs);
   padding: var(--spacing-sm) var(--spacing-md);
-  background: #fef3c7;
-  border: 1px solid #fbbf24;
+  background: var(--color-warning-light);
+  border: 1px solid var(--color-warning);
   border-radius: var(--radius-md);
-  color: #d97706;
+  color: var(--color-warning);
   font-size: var(--font-size-xs);
   font-weight: 500;
+  transition: background var(--transition-base), border-color var(--transition-base), color var(--transition-base);
+}
+
+[data-theme='dark'] .sidebar-profile-warning {
+  background: rgba(245, 158, 11, 0.2);
+  border-color: rgba(245, 158, 11, 0.4);
+  color: #fbbf24;
 }
 
 .sidebar-profile-warning svg {
@@ -136,11 +155,12 @@
 .sidebar-nav-label {
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-bold);
-  color: #64748b;
+  color: var(--text-tertiary);
   text-transform: uppercase;
   letter-spacing: 0.15em;
   padding: var(--spacing-lg) var(--spacing-md) var(--spacing-sm);
   margin-bottom: var(--spacing-sm);
+  transition: color var(--transition-base);
 }
 
 .sidebar-item {
@@ -150,7 +170,7 @@
   padding: var(--spacing-md) var(--spacing-lg);
   border-radius: var(--radius-lg);
   text-decoration: none;
-  color: #475569;
+  color: var(--text-secondary);
   font-weight: var(--font-weight-medium);
   font-size: var(--font-size-base);
   position: relative;
@@ -160,18 +180,22 @@
 }
 
 .sidebar-item:hover {
-  background: linear-gradient(90deg, #f1f5f9 0%, #f8fafc 100%);
-  color: #334155;
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
   transform: translateX(4px);
-  border-left-color: #cbd5e1;
+  border-left-color: var(--border-color-dark);
 }
 
 .sidebar-item.active {
-  background: linear-gradient(90deg, #ecfeff 0%, #f0fdfa 100%);
-  color: #0d9488;
-  border-left: 4px solid #40e0d0;
+  background: linear-gradient(90deg, rgba(64, 224, 208, 0.1) 0%, rgba(64, 224, 208, 0.05) 100%);
+  color: var(--color-accent);
+  border-left: 4px solid var(--color-accent);
   box-shadow: var(--shadow-sm);
   font-weight: var(--font-weight-semibold);
+}
+
+[data-theme='dark'] .sidebar-item.active {
+  background: linear-gradient(90deg, rgba(64, 224, 208, 0.15) 0%, rgba(64, 224, 208, 0.08) 100%);
 }
 
 .sidebar-icon {
@@ -190,7 +214,7 @@
 }
 
 .sidebar-item.active .sidebar-icon {
-  color: #40e0d0;
+  color: var(--color-accent);
   filter: drop-shadow(0 2px 4px rgba(64, 224, 208, 0.3));
 }
 
@@ -207,7 +231,7 @@
   width: 6px;
   height: 6px;
   border-radius: var(--radius-full);
-  background: #40e0d0;
+  background: var(--color-accent);
 }
 
 /* Scrollbar Styling */
@@ -216,16 +240,16 @@
 }
 
 .sidebar-nav::-webkit-scrollbar-track {
-  background: #f3f4f6;
+  background: var(--bg-tertiary);
 }
 
 .sidebar-nav::-webkit-scrollbar-thumb {
-  background: #d1d5db;
+  background: var(--border-color-dark);
   border-radius: var(--radius-full);
 }
 
 .sidebar-nav::-webkit-scrollbar-thumb:hover {
-  background: #9ca3af;
+  background: var(--text-tertiary);
 }
 
 @media (max-width: 768px) {
@@ -233,7 +257,7 @@
     width: 100%;
     min-height: auto;
     border-right: none;
-    border-bottom: 1px solid #e5e7eb;
+    border-bottom: 1px solid var(--border-color);
     max-height: 200px;
   }
 

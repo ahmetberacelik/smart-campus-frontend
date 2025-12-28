@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from 'react-query'
 import { ToastContainer } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
 import { AuthProvider } from './context/AuthContext'
+import { ThemeProvider, useTheme } from './context/ThemeContext'
 import { ProtectedRoute } from './components/common/ProtectedRoute'
 import { MainLayout } from './components/layout/MainLayout'
 import './App.css'
@@ -54,12 +55,13 @@ const queryClient = new QueryClient({
   },
 })
 
-function App() {
+function AppContent() {
+  const { theme } = useTheme();
+
   return (
-    <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <AuthProvider>
-          <Routes>
+    <>
+      <AuthProvider>
+        <Routes>
             {/* Public Routes */}
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
@@ -373,21 +375,32 @@ function App() {
 
             {/* 404 */}
             <Route path="*" element={<NotFoundPage />} />
-          </Routes>
+        </Routes>
 
-          <ToastContainer
-            position="top-right"
-            autoClose={3000}
-            hideProgressBar={false}
-            newestOnTop={false}
-            closeOnClick
-            rtl={false}
-            pauseOnFocusLoss
-            draggable
-            pauseOnHover
-            theme="light"
-          />
-        </AuthProvider>
+        <ToastContainer
+          position="top-right"
+          autoClose={3000}
+          hideProgressBar={false}
+          newestOnTop={false}
+          closeOnClick
+          rtl={false}
+          pauseOnFocusLoss
+          draggable
+          pauseOnHover
+          theme={theme}
+        />
+      </AuthProvider>
+    </>
+  );
+}
+
+function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter>
+        <ThemeProvider>
+          <AppContent />
+        </ThemeProvider>
       </BrowserRouter>
     </QueryClientProvider>
   )
